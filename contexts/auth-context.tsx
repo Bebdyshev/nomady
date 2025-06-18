@@ -9,6 +9,7 @@ interface User {
   name: string
   type: string
   created_at: string
+  picture?: string // Google profile picture URL
 }
 
 interface AuthContextType {

@@ -3,6 +3,7 @@ import { useRouter, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { useAuth } from "@/contexts/auth-context"
 import { useTheme } from "@/components/shared/theme-provider"
 import {
@@ -90,13 +91,6 @@ export function AppSidebar({
     {
       icon: Bell,
       label: "Updates",
-      href: "/chat",
-      color: "text-slate-600 dark:text-slate-400",
-      activeColor: "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300",
-    },
-    {
-      icon: Lightbulb,
-      label: "Inspiration",
       href: "/chat",
       color: "text-slate-600 dark:text-slate-400",
       activeColor: "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300",
@@ -295,10 +289,16 @@ export function AppSidebar({
       <div className={`${collapsed ? 'p-2' : 'p-4'} border-t border-slate-200 dark:border-slate-700 mt-auto`}>
         {!collapsed && (
         <div className="flex items-center space-x-3">
-          {/* Update user profile avatar */}
-          <div className="h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center">
-            <User className="h-5 w-5 text-white" />
-          </div>
+          {/* User profile avatar with Google picture when available */}
+          <Avatar>
+            {user?.picture ? (
+              <AvatarImage src={user.picture} alt={user.name || "User"} />
+            ) : (
+              <AvatarFallback className="bg-blue-600 text-white">
+                {user?.name ? user.name.charAt(0).toUpperCase() : <User className="h-5 w-5" />}
+              </AvatarFallback>
+            )}
+          </Avatar>
           <div className="flex-1 min-w-0">
             <div className="text-sm font-medium text-slate-900 dark:text-white truncate">{user?.name || "User"}</div>
             <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{user?.email}</div>
@@ -307,9 +307,15 @@ export function AppSidebar({
         )}
         {collapsed && (
           <div className="flex justify-center">
-            <div className="h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center">
-              <User className="h-4 w-4 text-white" />
-            </div>
+            <Avatar className="h-8 w-8">
+              {user?.picture ? (
+                <AvatarImage src={user.picture} alt={user.name || "User"} />
+              ) : (
+                <AvatarFallback className="bg-blue-600 text-white text-xs">
+                  {user?.name ? user.name.charAt(0).toUpperCase() : <User className="h-4 w-4" />}
+                </AvatarFallback>
+              )}
+            </Avatar>
           </div>
         )}
       </div>
