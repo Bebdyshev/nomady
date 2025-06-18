@@ -16,26 +16,11 @@ interface AuthContextType {
   loading: boolean
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   register: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>
-  googleLogin: (credential: string) => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
   isAuthenticated: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
-// Cookie utilities for SSR compatibility
-const getCookie = (name: string): string | null => {
-  if (typeof document !== "undefined") {
-    const nameEQ = name + "="
-    const ca = document.cookie.split(";")
-    for (let i = 0; i < ca.length; i++) {
-      let c = ca[i]
-      while (c.charAt(0) === " ") c = c.substring(1, c.length)
-      if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length)
-    }
-  }
-  return null
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -47,14 +32,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAuth = async () => {
     try {
-      const token = getCookie("access_token")
+      const token = localStorage.getItem("access_token")
       if (token) {
         apiClient.setToken(token)
         const { data, error } = await apiClient.getMe()
         if (data && !error) {
           setUser(data as User)
         } else {
-          apiClient.clearToken()
+          localStorage.removeItem("access_token")
         }
       }
     } catch (error) {
@@ -92,20 +77,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const googleLogin = async (credential: string) => {
-    try {
-      const { data, error } = await apiClient.googleLogin(credential)
-      if (data && !error) {
-        apiClient.setToken(data.access_token)
-        await checkAuth()
-        return { success: true }
-      }
-      return { success: false, error: error || "Google login failed" }
-    } catch (error) {
-      return { success: false, error: "Google login failed" }
-    }
-  }
-
   const logout = async () => {
     try {
       await apiClient.logout()
@@ -124,7 +95,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         login,
         register,
-        googleLogin,
         logout,
         isAuthenticated: !!user,
       }}
