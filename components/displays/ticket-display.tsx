@@ -192,29 +192,30 @@ const FlightCard = ({ item, onBook, isBooked, isBooking }: any) => {
           >
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600" />
 
-            <CardHeader className="p-3">
+            <CardHeader className="p-2 md:p-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                    <Plane className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <div className="flex items-center space-x-1 md:space-x-2 min-w-0">
+                  <div className="p-1 md:p-2 bg-blue-100 dark:bg-blue-900 rounded-lg flex-shrink-0">
+                    <Plane className="h-4 w-4 md:h-5 md:w-5 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <div>
-                    <CardTitle className="text-sm md:text-base lg:text-lg font-bold text-slate-900 dark:text-white">
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="text-xs md:text-sm lg:text-base xl:text-lg font-bold text-slate-900 dark:text-white truncate">
                       {item.validating_airline}
                     </CardTitle>
-                    <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-[9px] md:text-[10px] lg:text-xs text-slate-500 dark:text-slate-400 truncate">
                       {item.flights_to?.[0]?.from} → {item.flights_to?.[item.flights_to.length - 1]?.to}
                     </p>
                   </div>
                 </div>
 
-                <div className="text-right">
-                  <div className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">{formatPrice(item.price)}</div>
-                  <div className="flex items-center space-x-1 text-sm">
+                <div className="text-right flex-shrink-0">
+                  <div className="text-sm md:text-lg lg:text-xl font-bold text-slate-900 dark:text-white">{formatPrice(item.price)}</div>
+                  <div className="flex items-center space-x-1 text-xs md:text-sm">
                     {item.refundable && (
-                      <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-                        <Shield className="h-3 w-3 mr-1" />
-                        Refundable
+                      <Badge variant="outline" className="text-[8px] md:text-xs bg-green-50 text-green-700 border-green-200 px-1 md:px-2">
+                        <Shield className="h-2 w-2 md:h-3 md:w-3 mr-0.5 md:mr-1" />
+                        <span className="hidden md:inline">Refundable</span>
+                        <span className="md:hidden">Ref</span>
                       </Badge>
                     )}
                   </div>
@@ -222,52 +223,52 @@ const FlightCard = ({ item, onBook, isBooked, isBooking }: any) => {
               </div>
             </CardHeader>
 
-            <CardContent className="pt-0">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center space-x-4">
+            <CardContent className="pt-0 p-2 md:p-3">
+              <div className="space-y-2 md:space-y-4">
+                <div className="flex items-center justify-between text-xs md:text-sm">
+                  <div className="flex items-center space-x-2 md:space-x-4 flex-1 min-w-0">
                     <div className="text-center min-w-0">
-                      <div className="font-semibold text-slate-900 dark:text-white truncate max-w-[4rem] text-xs md:text-sm">
+                      <div className="font-semibold text-slate-900 dark:text-white truncate text-[10px] md:text-xs lg:text-sm">
                         {item.flights_to?.[0]?.departure_time}
                       </div>
-                      <div className="text-[9px] md:text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[5rem]">
+                      <div className="text-[8px] md:text-[9px] lg:text-[10px] text-slate-500 dark:text-slate-400 truncate">
                         {item.flights_to?.[0]?.departure_date}
                       </div>
                     </div>
 
                     <div className="flex-1 flex items-center justify-center overflow-hidden">
                       <div className="flex items-center space-x-1 md:space-x-2">
-                        <div className="h-0.5 w-8 bg-slate-300 dark:bg-slate-600" />
-                        <Plane className="h-4 w-4 text-slate-400 rotate-90" />
-                        <div className="h-0.5 w-8 bg-slate-300 dark:bg-slate-600" />
+                        <div className="h-0.5 w-4 md:w-8 bg-slate-300 dark:bg-slate-600" />
+                        <Plane className="h-3 w-3 md:h-4 md:w-4 text-slate-400 rotate-90" />
+                        <div className="h-0.5 w-4 md:w-8 bg-slate-300 dark:bg-slate-600" />
                       </div>
                     </div>
 
                     <div className="text-center min-w-0">
-                      <div className="font-semibold text-slate-900 dark:text-white truncate max-w-[4rem] text-xs md:text-sm">
+                      <div className="font-semibold text-slate-900 dark:text-white truncate text-[10px] md:text-xs lg:text-sm">
                         {item.flights_to?.[item.flights_to.length - 1]?.arrival_time}
                       </div>
-                      <div className="text-[9px] md:text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[5rem]">
+                      <div className="text-[8px] md:text-[9px] lg:text-[10px] text-slate-500 dark:text-slate-400 truncate">
                         {item.flights_to?.[item.flights_to.length - 1]?.arrival_date}
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between text-[9px] md:text-[10px] text-slate-500 dark:text-slate-400">
+                <div className="flex items-center justify-between text-[8px] md:text-[9px] lg:text-[10px] text-slate-500 dark:text-slate-400">
                   <span>Duration: {formatDuration(totalDuration)}</span>
-                  <span>
+                  <span className="hidden sm:inline">
                     {item.flights_to && item.flights_to.length > 1
                       ? `${item.flights_to.length - 1} stop${item.flights_to.length > 2 ? "s" : ""}`
                       : "Direct"}
                   </span>
-                  <span>Seats: {item.flights_to?.[0]?.seats}</span>
+                  <span className="hidden md:inline">Seats: {item.flights_to?.[0]?.seats}</span>
                 </div>
 
                 {isBooked && (
                   <div className="flex items-center justify-center space-x-2 text-green-600 dark:text-green-400">
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span className="text-sm font-medium">Booked</span>
+                    <CheckCircle2 className="h-3 w-3 md:h-4 md:w-4" />
+                    <span className="text-xs md:text-sm font-medium">Booked</span>
                   </div>
                 )}
               </div>
@@ -276,41 +277,43 @@ const FlightCard = ({ item, onBook, isBooked, isBooking }: any) => {
         </motion.div>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[90vw] md:max-w-4xl max-h-[90vh] overflow-y-auto mx-2 md:mx-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-3">
             <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
               <Plane className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <div className="text-xl font-bold">{item.validating_airline}</div>
+              <div className="text-lg md:text-xl font-bold">{item.validating_airline}</div>
               <div className="text-sm text-slate-500 dark:text-slate-400 font-normal">Flight Details & Booking</div>
             </div>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           {/* Price and Key Info */}
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 rounded-xl p-6">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 rounded-xl p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-3xl font-bold text-slate-900 dark:text-white">{formatPrice(item.price)}</div>
-                <div className="text-sm text-slate-600 dark:text-slate-300">Total for 1 passenger</div>
+                <div className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">{formatPrice(item.price)}</div>
+                <div className="text-xs md:text-sm text-slate-600 dark:text-slate-300">Total for 1 passenger</div>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1 md:gap-2">
                 {item.refundable && (
-                  <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                  <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-xs">
                     <Shield className="h-3 w-3 mr-1" />
                     Refundable
                   </Badge>
                 )}
-                <Badge variant="outline">
+                <Badge variant="outline" className="text-xs">
                   <Luggage className="h-3 w-3 mr-1" />
-                  Baggage Included
+                  <span className="hidden sm:inline">Baggage Included</span>
+                  <span className="sm:hidden">Baggage</span>
                 </Badge>
-                <Badge variant="outline">
+                <Badge variant="outline" className="text-xs">
                   <Wifi className="h-3 w-3 mr-1" />
-                  WiFi Available
+                  <span className="hidden sm:inline">WiFi Available</span>
+                  <span className="sm:hidden">WiFi</span>
                 </Badge>
               </div>
             </div>
@@ -318,11 +321,11 @@ const FlightCard = ({ item, onBook, isBooked, isBooking }: any) => {
 
           {/* Flight Path Visualization */}
           {item.flights_to && (
-            <div className="space-y-6 md:space-y-0 md:flex md:space-x-6">
+            <div className="space-y-6 lg:space-y-0 lg:flex lg:space-x-6">
               {/* Outbound */}
               <div className="flex-1 space-y-4">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center">
-                  <ArrowRight className="h-5 w-5 mr-2 text-blue-600" />
+                <h3 className="text-base md:text-lg font-semibold text-slate-900 dark:text-white flex items-center">
+                  <ArrowRight className="h-4 w-4 md:h-5 md:w-5 mr-2 text-blue-600" />
                   Outbound
                 </h3>
                 {/* Detailed Segments */}
@@ -334,7 +337,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking }: any) => {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
                       transition={{ duration: 0.3, delay: index * 0.05 }}
-                      className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700 text-xs md:text-sm shadow-sm"
+                      className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 md:p-4 border border-slate-200 dark:border-slate-700 text-xs md:text-sm shadow-sm"
                     >
                       <div className="flex justify-between"><span>{segment.from} → {segment.to}</span><span>{segment.duration}</span></div>
                       <div className="flex justify-between text-slate-500"><span>{segment.departure_time}</span><span>{segment.arrival_time}</span></div>
@@ -345,9 +348,9 @@ const FlightCard = ({ item, onBook, isBooked, isBooking }: any) => {
 
               {/* Return if exists */}
               {item.flights_return && (
-                <div className="flex-1 space-y-4 mt-10 md:mt-0">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center">
-                    <ArrowRight className="h-5 w-5 mr-2 text-orange-600 rotate-180" />
+                <div className="flex-1 space-y-4 mt-6 lg:mt-0">
+                  <h3 className="text-base md:text-lg font-semibold text-slate-900 dark:text-white flex items-center">
+                    <ArrowRight className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-600 rotate-180" />
                     Return
                   </h3>
 
@@ -359,7 +362,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking }: any) => {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 20 }}
                         transition={{ duration: 0.3, delay: index * 0.05 }}
-                        className="bg-orange-50 dark:bg-orange-950/20 rounded-lg p-4 border border-orange-200 dark:border-orange-700 text-xs md:text-sm shadow-sm"
+                        className="bg-orange-50 dark:bg-orange-950/20 rounded-lg p-3 md:p-4 border border-orange-200 dark:border-orange-700 text-xs md:text-sm shadow-sm"
                       >
                         <div className="flex justify-between"><span>{segment.from} → {segment.to}</span><span>{segment.duration}</span></div>
                         <div className="flex justify-between text-slate-500"><span>{segment.departure_time}</span><span>{segment.arrival_time}</span></div>
@@ -372,32 +375,32 @@ const FlightCard = ({ item, onBook, isBooked, isBooking }: any) => {
           )}
         </div>
 
-        <DialogFooter className="pt-6 border-t border-slate-200 dark:border-slate-700">
-          <div className="flex items-center justify-between w-full">
-            <div className="text-left">
-              <div className="text-2xl font-bold text-slate-900 dark:text-white">{formatPrice(item.price)}</div>
-              <div className="text-sm text-slate-500 dark:text-slate-400">Total price for 1 passenger</div>
+        <DialogFooter className="pt-4 md:pt-6 border-t border-slate-200 dark:border-slate-700">
+          <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-4">
+            <div className="text-center sm:text-left">
+              <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">{formatPrice(item.price)}</div>
+              <div className="text-xs md:text-sm text-slate-500 dark:text-slate-400">Total price for 1 passenger</div>
             </div>
 
             <Button
               size="sm"
               onClick={() => onBook?.(item, "flights")}
               disabled={isBooking || isBooked}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-200 w-full sm:w-auto"
             >
               {isBooking ? (
                 <>
-                  <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                  <Loader2 className="h-4 w-4 md:h-5 md:w-5 animate-spin mr-2" />
                   Booking...
                 </>
               ) : isBooked ? (
                 <>
-                  <CheckCircle2 className="h-5 w-5 mr-2" />
+                  <CheckCircle2 className="h-4 w-4 md:h-5 md:w-5 mr-2" />
                   Booked
                 </>
               ) : (
                 <>
-                  <CreditCard className="h-5 w-5 mr-2" />
+                  <CreditCard className="h-4 w-4 md:h-5 md:w-5 mr-2" />
                   Book Flight
                 </>
               )}

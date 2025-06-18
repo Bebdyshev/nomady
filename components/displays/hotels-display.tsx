@@ -275,10 +275,10 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
         {[...Array(5)].map((_: undefined, i: number) => (
           <Star
             key={i}
-            className={`h-3 w-3 ${i < Math.floor(rating) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
+            className={`h-2.5 w-2.5 md:h-3 md:w-3 ${i < Math.floor(rating) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
           />
         ))}
-        <span className="text-xs text-slate-600 dark:text-slate-300 ml-1">{rating.toFixed(1)}</span>
+        <span className="text-[9px] md:text-xs text-slate-600 dark:text-slate-300 ml-1">{rating.toFixed(1)}</span>
       </div>
     )
   }
@@ -310,7 +310,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
 
             {/* Compact Hotel Image */}
             {hotel.images && hotel.images.length > 0 ? (
-              <div className="h-24 w-full overflow-hidden">
+              <div className="h-20 md:h-24 w-full overflow-hidden">
                 <img 
                   src={hotel.images[0]} 
                   alt={hotel.name}
@@ -318,36 +318,36 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                 />
               </div>
             ) : (
-              <div className="h-24 w-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center">
-                <Hotel className="h-8 w-8 text-slate-400" />
+              <div className="h-20 md:h-24 w-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center">
+                <Hotel className="h-6 w-6 md:h-8 md:w-8 text-slate-400" />
               </div>
             )}
 
-            <CardHeader className="p-3">
+            <CardHeader className="p-2 md:p-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                    <Hotel className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                <div className="flex items-center space-x-1 md:space-x-2 min-w-0">
+                  <div className="p-1 md:p-2 bg-purple-100 dark:bg-purple-900 rounded-lg flex-shrink-0">
+                    <Hotel className="h-4 w-4 md:h-5 md:w-5 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <CardTitle className="text-sm md:text-base lg:text-lg font-bold text-slate-900 dark:text-white truncate">
+                    <CardTitle className="text-xs md:text-sm lg:text-base xl:text-lg font-bold text-slate-900 dark:text-white truncate">
                       {hotel.name}
                     </CardTitle>
-                    <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 truncate">
+                    <p className="text-[9px] md:text-[10px] lg:text-xs text-slate-500 dark:text-slate-400 truncate">
                       {hotel.hotel_class || hotel.type}
                     </p>
                   </div>
                 </div>
 
-                <div className="text-right">
-                  <div className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">{formatPrice(hotel.rate_per_night)}</div>
-                  <div className="text-[9px] md:text-[10px] text-slate-500 dark:text-slate-400">per night</div>
+                <div className="text-right flex-shrink-0">
+                  <div className="text-sm md:text-lg lg:text-xl font-bold text-slate-900 dark:text-white">{formatPrice(hotel.rate_per_night)}</div>
+                  <div className="text-[8px] md:text-[9px] lg:text-[10px] text-slate-500 dark:text-slate-400">per night</div>
                 </div>
               </div>
             </CardHeader>
 
-            <CardContent className="pt-0 p-3">
-              <div className="space-y-3">
+            <CardContent className="pt-0 p-2 md:p-3">
+              <div className="space-y-2 md:space-y-3">
                 {/* Rating */}
                 {hotel.overall_rating && (
                   <div className="flex items-center justify-between">
@@ -361,27 +361,27 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                     {hotel.amenities.slice(0, 3).map((amenity: string, index: number) => (
                       <div
                         key={index}
-                        className="flex items-center bg-slate-100 dark:bg-slate-700 rounded-full px-2 py-1"
+                        className="flex items-center bg-slate-100 dark:bg-slate-700 rounded-full px-1.5 md:px-2 py-1"
                       >
                         {getAmenityIcon(amenity)}
                       </div>
                     ))}
                     {hotel.amenities.length > 3 && (
-                      <span className="text-xs text-slate-500 dark:text-slate-400">+{hotel.amenities.length - 3}</span>
+                      <span className="text-[9px] md:text-xs text-slate-500 dark:text-slate-400">+{hotel.amenities.length - 3}</span>
                     )}
                   </div>
                 )}
 
                 {/* Duration info */}
-                <div className="flex items-center justify-between text-[9px] md:text-[10px] text-slate-500 dark:text-slate-400">
+                <div className="flex items-center justify-between text-[8px] md:text-[9px] lg:text-[10px] text-slate-500 dark:text-slate-400">
                   <span>{nights} nights</span>
                   <span>Total: {formatPrice(hotel.total_rate)}</span>
                 </div>
 
                 {isBooked && (
                   <div className="flex items-center justify-center space-x-2 text-green-600 dark:text-green-400">
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span className="text-sm font-medium">Booked</span>
+                    <CheckCircle2 className="h-3 w-3 md:h-4 md:w-4" />
+                    <span className="text-xs md:text-sm font-medium">Booked</span>
                   </div>
                 )}
               </div>
@@ -391,7 +391,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
       </DialogTrigger>
 
       {/* Detailed Hotel Dialog */}
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[90vw] md:max-w-4xl max-h-[90vh] overflow-y-auto mx-2 md:mx-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-3">
             <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
@@ -602,28 +602,28 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
         className="space-y-4"
       >
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 rounded-lg">
-              <Hotel className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center space-x-2 md:space-x-3">
+            <div className="p-1.5 md:p-2 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 rounded-lg">
+              <Hotel className="h-5 w-5 md:h-6 md:w-6 text-purple-600 dark:text-purple-400" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+              <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">
                 Hotels in {toolOutput.search_parameters.query}
               </h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400">
                 {toolOutput.total_results.toLocaleString()} properties found
               </p>
             </div>
           </div>
 
           {/* Sort Options */}
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-slate-600 dark:text-slate-300">Sort by:</span>
+          <div className="flex items-center space-x-1 md:space-x-2 w-full sm:w-auto">
+            <span className="text-xs md:text-sm text-slate-600 dark:text-slate-300 flex-shrink-0">Sort by:</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="text-sm border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1 bg-white dark:bg-slate-800"
+              className="text-xs md:text-sm border border-slate-200 dark:border-slate-700 rounded-lg px-2 md:px-3 py-1 bg-white dark:bg-slate-800 flex-1 sm:flex-none min-w-0"
             >
               <option value="price">Price</option>
               <option value="rating">Rating</option>
@@ -633,7 +633,7 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
         </div>
 
         {/* Hotels Grid */}
-        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))' }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 md:gap-4">
           <AnimatePresence>
             {sortedHotels.slice(0, 9).map((hotel: HotelProperty, index: number) => {
               const itemId = hotel.link || `${hotel.name}-${index}`
@@ -665,7 +665,7 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
           <div className="text-center">
             <Button
               variant="ghost"
-              className="text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950"
+              className="text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950 text-xs md:text-sm"
             >
               View {toolOutput.properties.length - 9} more hotels
             </Button>
