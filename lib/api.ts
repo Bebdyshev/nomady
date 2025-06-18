@@ -5,6 +5,34 @@ interface ApiResponse<T> {
   error?: string
 }
 
+// Cookie utilities
+const setCookie = (name: string, value: string, days = 7) => {
+  if (typeof document !== "undefined") {
+    const expires = new Date()
+    expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000)
+    document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;secure;samesite=strict`
+  }
+}
+
+const getCookie = (name: string): string | null => {
+  if (typeof document !== "undefined") {
+    const nameEQ = name + "="
+    const ca = document.cookie.split(";")
+    for (let i = 0; i < ca.length; i++) {
+      let c = ca[i]
+      while (c.charAt(0) === " ") c = c.substring(1, c.length)
+      if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length)
+    }
+  }
+  return null
+}
+
+const deleteCookie = (name: string) => {
+  if (typeof document !== "undefined") {
+    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`
+  }
+}
+
 class ApiClient {
   private baseURL: string
   private token: string | null = null
@@ -12,30 +40,26 @@ class ApiClient {
   constructor(baseURL: string) {
     this.baseURL = baseURL
     if (typeof window !== "undefined") {
-      this.token = localStorage.getItem("access_token")
+      this.token = getCookie("access_token")
     }
   }
 
   setToken(token: string) {
     this.token = token
-    if (typeof window !== "undefined") {
-      localStorage.setItem("access_token", token)
-    }
+    setCookie("access_token", token, 7) // Store for 7 days
   }
 
   clearToken() {
     this.token = null
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("access_token")
-    }
+    deleteCookie("access_token")
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     try {
       const url = `${this.baseURL}${endpoint}`
-      const headers: HeadersInit = {
+      const headers: Record<string, string> = {
         "Content-Type": "application/json",
-        ...options.headers,
+        ...(options.headers as Record<string, string>),
       }
 
       if (this.token) {
@@ -127,6 +151,111 @@ class ApiClient {
 
   async getConversation(conversationId: string) {
     return this.request(`/chat/conversation/${conversationId}`)
+  }
+
+  async getConversationSearchResults(conversationId: string) {
+    return this.request<any[]>(`/chat/conversation/${conversationId}/search-results`)
+  }
+
+  // Booking methods
+  async getBookings() {
+    return this.request<
+      Array<{
+        id: number
+        user_id: number
+        booking_type: string
+        data: Record<string, any>
+        created_at: string
+      }>
+    >("/book/")
+  }
+
+  async createBooking(bookingType: string, data: Record<string, any>) {
+    return this.request<{
+      id: number
+      user_id: number
+      booking_type: string
+      data: Record<string, any>
+      created_at: string
+    }>("/book/", {
+      method: "POST",
+      body: JSON.stringify({
+        booking_type: bookingType,
+        data: data,
+      }),
+    })
+  }
+
+  async bookTicket(ticketData: Record<string, any>) {
+    return this.request<{
+      id: number
+      booking_type: string
+      data: Record<string, any>
+      is_selected: boolean
+      created_at: string
+    }>("/book/ticket", {
+      method: "POST",
+      body: JSON.stringify(ticketData),
+    })
+  }
+
+  async bookHotel(hotelData: Record<string, any>) {
+    return this.request<{
+      id: number
+      booking_type: string
+      data: Record<string, any>
+      is_selected: boolean
+      created_at: string
+    }>("/book/hotel", {
+      method: "POST",
+      body: JSON.stringify(hotelData),
+    })
+  }
+
+  async bookRestaurant(restaurantData: Record<string, any>) {
+    return this.request<{
+      id: number
+      booking_type: string
+      data: Record<string, any>
+      is_selected: boolean
+      created_at: string
+    }>("/book/restaurant", {
+      method: "POST",
+      body: JSON.stringify(restaurantData),
+    })
+  }
+
+  async bookActivity(activityData: Record<string, any>) {
+    return this.request<{
+      id: number
+      booking_type: string
+      data: Record<string, any>
+      is_selected: boolean
+      created_at: string
+    }>("/book/activity", {
+      method: "POST",
+      body: JSON.stringify(activityData),
+    })
+  }
+
+  async getBooking(bookingId: number) {
+    return this.request<{
+      id: number
+      user_id: number
+      booking_type: string
+      data: Record<string, any>
+      created_at: string
+    }>(`/book/${bookingId}`)
+  }
+
+  async getRoadmap(conversationId: string) {
+    return this.request<{
+      conversation_id: string
+      tickets?: any[]
+      hotels?: any[]
+      restaurants?: any[]
+      activities?: any[]
+    }>(`/roadmap/${conversationId}`)
   }
 }
 
