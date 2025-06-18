@@ -186,7 +186,7 @@ class ApiClient {
     })
   }
 
-  async bookTicket(ticketData: Record<string, any>) {
+  async bookTicket(selection: { search_result_id: number; selected_item_id: string }) {
     return this.request<{
       id: number
       booking_type: string
@@ -195,11 +195,11 @@ class ApiClient {
       created_at: string
     }>("/book/ticket", {
       method: "POST",
-      body: JSON.stringify(ticketData),
+      body: JSON.stringify(selection),
     })
   }
 
-  async bookHotel(hotelData: Record<string, any>) {
+  async bookHotel(selection: { search_result_id: number; selected_item_id: string }) {
     return this.request<{
       id: number
       booking_type: string
@@ -208,11 +208,11 @@ class ApiClient {
       created_at: string
     }>("/book/hotel", {
       method: "POST",
-      body: JSON.stringify(hotelData),
+      body: JSON.stringify(selection),
     })
   }
 
-  async bookRestaurant(restaurantData: Record<string, any>) {
+  async bookRestaurant(selection: { search_result_id: number; selected_item_id: string }) {
     return this.request<{
       id: number
       booking_type: string
@@ -221,11 +221,11 @@ class ApiClient {
       created_at: string
     }>("/book/restaurant", {
       method: "POST",
-      body: JSON.stringify(restaurantData),
+      body: JSON.stringify(selection),
     })
   }
 
-  async bookActivity(activityData: Record<string, any>) {
+  async bookActivity(selection: { search_result_id: number; selected_item_id: string }) {
     return this.request<{
       id: number
       booking_type: string
@@ -234,7 +234,7 @@ class ApiClient {
       created_at: string
     }>("/book/activity", {
       method: "POST",
-      body: JSON.stringify(activityData),
+      body: JSON.stringify(selection),
     })
   }
 

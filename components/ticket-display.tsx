@@ -236,10 +236,17 @@ export function TicketDisplay({ toolOutput, bookedIds, onBooked }: TicketDisplay
 
   const formatPrice = (price: string | number | undefined) => {
     if (!price) return null
+    const symbol = "₸"
     if (typeof price === "number") {
-      return `$${price}`
+      return `${symbol}${price}`
     }
-    return price.toString().includes("$") ? price : `$${price}`
+    let str = price.toString()
+    str = str.replace(/^\$\s?/, symbol)
+    str = str.replace(/KZT\s?/i, symbol)
+    if (!str.includes(symbol)) {
+      str = `${symbol}${str}`
+    }
+    return str
   }
 
   const renderStars = (rating: number | undefined) => {
@@ -354,7 +361,7 @@ export function TicketDisplay({ toolOutput, bookedIds, onBooked }: TicketDisplay
                 </Button>
               </DialogTrigger>
 
-              <DialogContent className="sm:max-w-[560px] text-base">
+              <DialogContent className="sm:max-w-[720px] lg:max-w-[840px] text-base">
                 <DialogHeader>
                   <DialogTitle>{item.name}</DialogTitle>
                   {item.location && (
@@ -410,8 +417,11 @@ export function TicketDisplay({ toolOutput, bookedIds, onBooked }: TicketDisplay
                     {item.flights_to.map((seg: any, i: number) => (
                       <div key={i} className="border p-3 rounded-md bg-slate-50 dark:bg-slate-900 text-sm space-y-0.5">
                         <div className="flex justify-between"><span>{seg.from} → {seg.to}</span><span>{seg.duration}</span></div>
-                        <div className="flex justify-between text-muted-foreground"><span>{seg.departure_time}</span><span>{seg.arrival_time}</span></div>
-                        <div className="flex justify-between"><span>{seg.airline}</span><span>{seg.flight_number}</span></div>
+                        <div className="flex justify-between text-muted-foreground text-xs"><span>{seg.departure_time}</span><span>{seg.arrival_time}</span></div>
+                        <div className="flex justify-between text-xs"><span>{seg.airline} • {seg.airplane}</span><span>{seg.flight_number}</span></div>
+                        {seg.seats && (
+                          <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400"><span>Seats</span><span>{seg.seats}</span></div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -423,8 +433,11 @@ export function TicketDisplay({ toolOutput, bookedIds, onBooked }: TicketDisplay
                     {item.flights_return.map((seg: any, i: number) => (
                       <div key={i} className="border p-3 rounded-md bg-slate-50 dark:bg-slate-900 text-sm space-y-0.5">
                         <div className="flex justify-between"><span>{seg.from} → {seg.to}</span><span>{seg.duration}</span></div>
-                        <div className="flex justify-between text-muted-foreground"><span>{seg.departure_time}</span><span>{seg.arrival_time}</span></div>
-                        <div className="flex justify-between"><span>{seg.airline}</span><span>{seg.flight_number}</span></div>
+                        <div className="flex justify-between text-muted-foreground text-xs"><span>{seg.departure_time}</span><span>{seg.arrival_time}</span></div>
+                        <div className="flex justify-between text-xs"><span>{seg.airline} • {seg.airplane}</span><span>{seg.flight_number}</span></div>
+                        {seg.seats && (
+                          <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400"><span>Seats</span><span>{seg.seats}</span></div>
+                        )}
                       </div>
                     ))}
                   </div>

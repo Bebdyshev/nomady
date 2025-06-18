@@ -1,39 +1,46 @@
 "use client"
 
-import type React from "react"
-import { useState } from "react"
+import React from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
-import { apiClient } from "@/lib/api"
 import { 
   Plane, 
   Hotel, 
   Car, 
   Utensils, 
   MapPin, 
-  Clock, 
-  Star, 
-  Calendar,
-  DollarSign,
-  Users,
-  Loader2
+  Loader2,
+  ArrowRight,
+  Wifi,
+  Luggage,
+  Shield,
+  CreditCard,
+  CheckCircle2,
 } from "lucide-react"
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog"
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+
+interface FlightSegment {
+  from: string
+  to: string
+  departure_date?: string
+  departure_time?: string
+  arrival_date?: string
+  arrival_time?: string
+  flight_number?: string
+  airline?: string
+  airplane?: string
+  duration?: string
+  seats?: string
+}
 
 interface SearchResult {
   type?: "flights" | "hotels" | "restaurants" | "activities" | "cars"
   id?: string
+  combination_id?: string
   name?: string
   description?: string
   price?: string | number
@@ -50,129 +57,358 @@ interface SearchResult {
   check_out?: string
   images?: string[]
   amenities?: string[]
-  flights_to?: Array<{
-    from: string
-    to: string
-    departure_date?: string
-    departure_time?: string
-    arrival_date?: string
-    arrival_time?: string
-    flight_number?: string
-    airline?: string
-    airplane?: string
-    duration?: string
-    seats?: string
-  }>
-  flights_return?: Array<{
-    from: string
-    to: string
-    departure_date?: string
-    departure_time?: string
-    arrival_date?: string
-    arrival_time?: string
-    flight_number?: string
-    airline?: string
-    airplane?: string
-    duration?: string
-    seats?: string
-  }>
-  hotels?: Array<{
-    id?: string
-    name?: string
-    description?: string
-    price?: string | number
-    rating?: number
-    location?: string
-    duration?: string
-    category?: string
-    availability?: string
-    image_url?: string
-    is_selected?: boolean
-    [key: string]: any
-  }>
-  restaurants?: Array<{
-    id?: string
-    name?: string
-    description?: string
-    price?: string | number
-    rating?: number
-    location?: string
-    duration?: string
-    category?: string
-    availability?: string
-    image_url?: string
-    is_selected?: boolean
-    [key: string]: any
-  }>
-  items?: Array<{
-    id?: string
-    name: string
-    description?: string
-    price?: string | number
-    rating?: number
-    location?: string
-    duration?: string
-    category?: string
-    availability?: string
-    image_url?: string
-    is_selected?: boolean
-    [key: string]: any
-  }>
+  flights_to?: FlightSegment[]
+  flights_return?: FlightSegment[]
+  hotels?: any[]
+  restaurants?: any[]
+  items?: any[]
   [key: string]: any
 }
 
 interface TicketDisplayProps {
   toolOutput: SearchResult | SearchResult[]
-  bookedIds: Set<string>
-  onBooked: (item: any, id: string, type: string) => void
+  bookedIds?: Set<string>
+  onBooked?: (item: any, id: string, type: string) => void
 }
 
-function HotelMedia({ images }: { images: string[] | undefined }) {
-  const [idx, setIdx] = useState(0)
-  if (!images || images.length === 0) return null
-  const safeIdx = Math.max(0, Math.min(idx, images.length - 1))
+// Animated Flight Path Component
+const FlightPath = ({ segments, isReturn = false }: { segments: FlightSegment[]; isReturn?: boolean }) => {
+  const [animationProgress, setAnimationProgress] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAnimationProgress((prev) => (prev + 1) % 100)
+    }, 50)
+    return () => clearInterval(interval)
+  }, [])
+
   return (
-    <div className="space-y-2">
-      <div className="relative w-full h-56">
-        <img
-          src={images[safeIdx]}
-          alt="hotel"
-          className="w-full h-full object-cover rounded-lg"
-        />
-        {images.length > 1 && (
-          <>
-            <button
-              onClick={(e)=>{e.stopPropagation();setIdx((safeIdx-1+images.length)%images.length)}}
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full h-6 w-6 flex items-center justify-center"
-            >
-              ‹
-            </button>
-            <button
-              onClick={(e)=>{e.stopPropagation();setIdx((safeIdx+1)%images.length)}}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full h-6 w-6 flex items-center justify-center"
-            >
-              ›
-            </button>
-          </>
-        )}
+    <div className="relative py-6">
+      <div className="flex items-center justify-between relative">
+        {segments.map((segment, index) => (
+          <React.Fragment key={index}>
+            <div className="flex flex-col items-center space-y-2 z-10">
+              <div className="w-3 h-3 bg-blue-600 rounded-full border-2 border-white shadow-lg" />
+              <div className="text-center">
+                <div className="font-semibold text-sm text-slate-900 dark:text-white">{segment.from}</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">{segment.departure_time}</div>
+              </div>
+            </div>
+
+            {index < segments.length - 1 && (
+              <div className="flex-1 relative mx-4">
+                <div className="h-0.5 bg-slate-200 dark:bg-slate-700 relative overflow-hidden rounded-full">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
+                    initial={{ width: "0%" }}
+                    animate={{ width: "100%" }}
+                    transition={{ duration: 2, delay: index * 0.5, repeat: Number.POSITIVE_INFINITY, repeatDelay: 3 }}
+                  />
+                </div>
+                <motion.div
+                  className="absolute top-1/2 -translate-y-1/2 text-blue-600"
+                  animate={{ x: [0, 50, 100, 150] }}
+                  transition={{ duration: 2, delay: index * 0.5, repeat: Number.POSITIVE_INFINITY, repeatDelay: 3 }}
+                >
+                  <Plane className="h-4 w-4 rotate-90" />
+                </motion.div>
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                  {segment.duration}
+                </div>
+              </div>
+            )}
+          </React.Fragment>
+        ))}
+
+        <div className="flex flex-col items-center space-y-2 z-10">
+          <div className="w-3 h-3 bg-green-600 rounded-full border-2 border-white shadow-lg" />
+          <div className="text-center">
+            <div className="font-semibold text-sm text-slate-900 dark:text-white">
+              {segments[segments.length - 1]?.to}
+            </div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">
+              {segments[segments.length - 1]?.arrival_time}
+            </div>
+          </div>
+        </div>
       </div>
-      {images.length > 1 && (
-        <div className="flex gap-1 overflow-x-auto">
-          {images.map((src,i)=>(
-            <img
-              key={i}
-              src={src}
-              onClick={(e)=>{e.stopPropagation();setIdx(i)}}
-              className={`h-12 w-16 object-cover rounded-md cursor-pointer ${i===safeIdx? 'ring-2 ring-blue-500':'opacity-70'}`}
-            />
-          ))}
+
+      {isReturn && (
+        <div className="absolute top-0 right-0">
+          <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200">
+            Return
+          </Badge>
         </div>
       )}
     </div>
   )
 }
 
-export function TicketDisplay({ toolOutput, bookedIds, onBooked }: TicketDisplayProps) {
+// Enhanced Flight Card Component
+const FlightCard = ({ item, onBook, isBooked, isBooking }: any) => {
+  const [currentPage, setCurrentPage] = useState(0)
+  const itemId = item.combination_id || item.id || `flight-${Date.now()}`
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "KZT",
+      minimumFractionDigits: 0,
+    }).format(price)
+  }
+
+  const totalDuration =
+    item.flights_to?.reduce((acc: number, flight: FlightSegment) => {
+      const duration = flight.duration?.match(/(\d+)ч\s*(\d+)?м?/)
+      if (duration) {
+        const hours = Number.parseInt(duration[1]) || 0
+        const minutes = Number.parseInt(duration[2]) || 0
+        return acc + hours * 60 + minutes
+      }
+      return acc
+    }, 0) || 0
+
+  const formatDuration = (minutes: number) => {
+    const hours = Math.floor(minutes / 60)
+    const mins = minutes % 60
+    return `${hours}h ${mins}m`
+  }
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <motion.div
+          whileHover={{ scale: 1.02, y: -4 }}
+          whileTap={{ scale: 0.98 }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        >
+          <Card
+            className={`relative overflow-hidden cursor-pointer border-2 transition-all duration-300 ${
+              isBooked
+                ? "border-green-500 bg-green-50 dark:bg-green-950/20"
+                : "border-slate-200 dark:border-slate-700 hover:border-blue-300 hover:shadow-xl"
+            }`}
+          >
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600" />
+
+            <CardHeader className="p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                    <Plane className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-sm md:text-base lg:text-lg font-bold text-slate-900 dark:text-white">
+                      {item.validating_airline}
+                    </CardTitle>
+                    <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400">
+                      {item.flights_to?.[0]?.from} → {item.flights_to?.[item.flights_to.length - 1]?.to}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <div className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">{formatPrice(item.price)}</div>
+                  <div className="flex items-center space-x-1 text-sm">
+                    {item.refundable && (
+                      <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                        <Shield className="h-3 w-3 mr-1" />
+                        Refundable
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+
+            <CardContent className="pt-0">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center space-x-4">
+                    <div className="text-center min-w-0">
+                      <div className="font-semibold text-slate-900 dark:text-white truncate max-w-[4rem] text-xs md:text-sm">
+                        {item.flights_to?.[0]?.departure_time}
+                      </div>
+                      <div className="text-[9px] md:text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[5rem]">
+                        {item.flights_to?.[0]?.departure_date}
+                      </div>
+                    </div>
+
+                    <div className="flex-1 flex items-center justify-center overflow-hidden">
+                      <div className="flex items-center space-x-1 md:space-x-2">
+                        <div className="h-0.5 w-8 bg-slate-300 dark:bg-slate-600" />
+                        <Plane className="h-4 w-4 text-slate-400 rotate-90" />
+                        <div className="h-0.5 w-8 bg-slate-300 dark:bg-slate-600" />
+                      </div>
+                    </div>
+
+                    <div className="text-center min-w-0">
+                      <div className="font-semibold text-slate-900 dark:text-white truncate max-w-[4rem] text-xs md:text-sm">
+                        {item.flights_to?.[item.flights_to.length - 1]?.arrival_time}
+                      </div>
+                      <div className="text-[9px] md:text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[5rem]">
+                        {item.flights_to?.[item.flights_to.length - 1]?.arrival_date}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-[9px] md:text-[10px] text-slate-500 dark:text-slate-400">
+                  <span>Duration: {formatDuration(totalDuration)}</span>
+                  <span>
+                    {item.flights_to && item.flights_to.length > 1
+                      ? `${item.flights_to.length - 1} stop${item.flights_to.length > 2 ? "s" : ""}`
+                      : "Direct"}
+                  </span>
+                  <span>Seats: {item.flights_to?.[0]?.seats}</span>
+                </div>
+
+                {isBooked && (
+                  <div className="flex items-center justify-center space-x-2 text-green-600 dark:text-green-400">
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span className="text-sm font-medium">Booked</span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </DialogTrigger>
+
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center space-x-3">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+              <Plane className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <div className="text-xl font-bold">{item.validating_airline}</div>
+              <div className="text-sm text-slate-500 dark:text-slate-400 font-normal">Flight Details & Booking</div>
+            </div>
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Price and Key Info */}
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 rounded-xl p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-3xl font-bold text-slate-900 dark:text-white">{formatPrice(item.price)}</div>
+                <div className="text-sm text-slate-600 dark:text-slate-300">Total for 1 passenger</div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {item.refundable && (
+                  <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                    <Shield className="h-3 w-3 mr-1" />
+                    Refundable
+                  </Badge>
+                )}
+                <Badge variant="outline">
+                  <Luggage className="h-3 w-3 mr-1" />
+                  Baggage Included
+                </Badge>
+                <Badge variant="outline">
+                  <Wifi className="h-3 w-3 mr-1" />
+                  WiFi Available
+                </Badge>
+              </div>
+            </div>
+          </div>
+
+          {/* Flight Path Visualization */}
+          {item.flights_to && (
+            <div className="space-y-6 md:space-y-0 md:flex md:space-x-6">
+              {/* Outbound */}
+              <div className="flex-1 space-y-4">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center">
+                  <ArrowRight className="h-5 w-5 mr-2 text-blue-600" />
+                  Outbound
+                </h3>
+                {/* Detailed Segments */}
+                <div className="space-y-3">
+                  {item.flights_to.map((segment: FlightSegment, index: number) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700 text-xs md:text-sm shadow-sm"
+                    >
+                      <div className="flex justify-between"><span>{segment.from} → {segment.to}</span><span>{segment.duration}</span></div>
+                      <div className="flex justify-between text-slate-500"><span>{segment.departure_time}</span><span>{segment.arrival_time}</span></div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Return if exists */}
+              {item.flights_return && (
+                <div className="flex-1 space-y-4 mt-10 md:mt-0">
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center">
+                    <ArrowRight className="h-5 w-5 mr-2 text-orange-600 rotate-180" />
+                    Return
+                  </h3>
+
+                  <div className="space-y-3">
+                    {item.flights_return.map((segment: FlightSegment, index: number) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                        className="bg-orange-50 dark:bg-orange-950/20 rounded-lg p-4 border border-orange-200 dark:border-orange-700 text-xs md:text-sm shadow-sm"
+                      >
+                        <div className="flex justify-between"><span>{segment.from} → {segment.to}</span><span>{segment.duration}</span></div>
+                        <div className="flex justify-between text-slate-500"><span>{segment.departure_time}</span><span>{segment.arrival_time}</span></div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="pt-6 border-t border-slate-200 dark:border-slate-700">
+          <div className="flex items-center justify-between w-full">
+            <div className="text-left">
+              <div className="text-2xl font-bold text-slate-900 dark:text-white">{formatPrice(item.price)}</div>
+              <div className="text-sm text-slate-500 dark:text-slate-400">Total price for 1 passenger</div>
+            </div>
+
+            <Button
+              size="lg"
+              onClick={() => onBook?.(item, "flights")}
+              disabled={isBooking || isBooked}
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+            >
+              {isBooking ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                  Booking...
+                </>
+              ) : isBooked ? (
+                <>
+                  <CheckCircle2 className="h-5 w-5 mr-2" />
+                  Booked
+                </>
+              ) : (
+                <>
+                  <CreditCard className="h-5 w-5 mr-2" />
+                  Book Flight
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: TicketDisplayProps) {
   const [bookingStates, setBookingStates] = useState<Record<string, boolean>>({})
   const { toast } = useToast()
 
@@ -181,37 +417,18 @@ export function TicketDisplay({ toolOutput, bookedIds, onBooked }: TicketDisplay
 
   const handleBooking = async (item: any, type: string) => {
     const itemId = item.id || item.combination_id || `${type}-${Date.now()}`
-    setBookingStates(prev => ({ ...prev, [itemId]: true }))
+    setBookingStates((prev) => ({ ...prev, [itemId]: true }))
 
     try {
-      let response
-      switch (type) {
-        case "flights":
-          response = await apiClient.bookTicket(item)
-          break
-        case "hotels":
-          response = await apiClient.bookHotel(item)
-          break
-        case "restaurants":
-          response = await apiClient.bookRestaurant(item)
-          break
-        case "activities":
-          response = await apiClient.bookActivity(item)
-          break
-        default:
-          throw new Error(`Unknown booking type: ${type}`)
-      }
+      // Simulate booking API call
+      await new Promise((resolve) => setTimeout(resolve, 2000))
 
-      if (response.data) {
         toast({
-          title: "Booking Successful!",
-          description: `${item.name} has been booked successfully.`,
+        title: "Booking Successful! ✈️",
+        description: `Your ${type} has been booked successfully.`,
         })
 
-        onBooked(item, itemId, type)
-      } else {
-        throw new Error(response.error || "Booking failed")
-      }
+      onBooked?.(item, itemId, type)
     } catch (error) {
       console.error("Booking error:", error)
       toast({
@@ -220,12 +437,13 @@ export function TicketDisplay({ toolOutput, bookedIds, onBooked }: TicketDisplay
         variant: "destructive",
       })
     } finally {
-      setBookingStates(prev => ({ ...prev, [itemId]: false }))
+      setBookingStates((prev) => ({ ...prev, [itemId]: false }))
     }
   }
 
   // Group search results by type
-  const groupedResults = outputArray.reduce((acc, result) => {
+  const groupedResults = outputArray.reduce(
+    (acc, result) => {
     if (result.flights) {
       acc.flights = [...(acc.flights || []), ...result.flights]
     }
@@ -240,11 +458,13 @@ export function TicketDisplay({ toolOutput, bookedIds, onBooked }: TicketDisplay
       acc[type] = [...(acc[type] || []), ...result.items]
     }
     // Handle direct result items
-    if (result.type && result.name) {
+      if (result.type && (result.name || result.combination_id)) {
       acc[result.type] = [...(acc[result.type] || []), result]
     }
     return acc
-  }, {} as Record<string, any[]>)
+    },
+    {} as Record<string, any[]>,
+  )
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -280,361 +500,110 @@ export function TicketDisplay({ toolOutput, bookedIds, onBooked }: TicketDisplay
     }
   }
 
-  const formatPrice = (price: string | number | undefined) => {
-    if (!price) return null
-    if (typeof price === "number") {
-      return `$${price}`
-    }
-    return price.toString().includes("$") ? price : `$${price}`
-  }
-
-  const renderStars = (rating: number | undefined) => {
-    if (!rating) return null
     return (
-      <div className="flex items-center space-x-1">
-        {[...Array(5)].map((_, i) => (
-          <Star
-            key={i}
-            className={`h-3 w-3 ${
-              i < Math.floor(rating)
-                ? "text-yellow-400 fill-current"
-                : "text-gray-300"
-            }`}
-          />
-        ))}
-        <span className="text-xs text-slate-600 dark:text-slate-400 ml-1">
-          {rating.toFixed(1)}
-        </span>
-      </div>
-    )
-  }
-
-  const renderItemCard = (item: any, type: string, index: number) => {
-    if (type === "hotels") {
-      const itemId = item.id || item.combination_id || `${type}-${index}`
-      const isBooking = bookingStates[itemId] || false
-      const isSelected = bookedIds.has(itemId) || item.is_selected
-
-      return (
-        <Dialog key={itemId}>
-          <DialogTrigger asChild>
-            <Card
-              className={`relative overflow-hidden rounded-xl cursor-pointer group border border-slate-200 dark:border-slate-700 p-0 h-40 ${
-                isSelected ? "ring-2 ring-green-500" : ""
-              }`}
-            >
-              {item.image_url ? (
-                <img
-                  src={item.image_url}
-                  alt={item.name}
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-              ) : (
-                <div className="absolute inset-0 w-full h-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500">
-                  No Image
-                </div>
-              )}
-
-              {/* dark overlay on hover for readability */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
-
-              {/* bottom info */}
-              <div className="absolute bottom-0 left-0 right-0 p-2 text-xs text-white flex justify-between items-center">
-                <span className="font-semibold truncate max-w-[9rem]">{item.name}</span>
-                {item.price && <span className="ml-1">{formatPrice(item.price)}</span>}
-              </div>
-
-              {isSelected && (
-                <Badge className="absolute top-2 left-2 bg-green-600/90 text-white text-[10px] px-1.5 py-0.5">Selected</Badge>
-              )}
-            </Card>
-          </DialogTrigger>
-
-          {/* Dialog with full details - reuse same structure for hotels */}
-          <DialogContent className="sm:max-w-[560px] text-base">
-            <DialogHeader>
-              <DialogTitle>{item.name}</DialogTitle>
-            </DialogHeader>
-
-            <div className="space-y-3 text-sm">
-              <HotelMedia images={item.images || (item.image_url ? [item.image_url] : undefined)} />
-
-              {item.description && <p>{item.description}</p>}
-
-              <div className="flex flex-wrap gap-2 text-sm">
-                {item.price && <Badge variant="secondary">Price: {formatPrice(item.price)}</Badge>}
-                {item.rating && (
-                  <Badge variant="secondary" className="flex items-center gap-1">
-                    {renderStars(item.rating)}
-                  </Badge>
-                )}
-                {item.check_in && <Badge variant="secondary">Check-in: {item.check_in}</Badge>}
-                {item.check_out && <Badge variant="secondary">Check-out: {item.check_out}</Badge>}
-              </div>
-
-              {item.amenities && (
-                <div className="pt-3">
-                  <h4 className="font-medium mb-1">Amenities</h4>
-                  <div className="flex flex-wrap gap-1 text-xs">
-                    {item.amenities.slice(0, 20).map((am: string, i: number) => (
-                      <Badge key={i} variant="outline" className="mb-1">
-                        {am}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <DialogFooter className="pt-4">
-              <Button
-                size="sm"
-                onClick={() => handleBooking(item, type)}
-                disabled={isBooking || isSelected}
-                className="text-base bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white disabled:opacity-50 shadow"
-              >
-                {isBooking ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : isSelected ? (
-                  "Booked"
-                ) : (
-                  "Book"
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )
-    }
-
-    const itemId = item.id || item.combination_id || `${type}-${index}`
-    const isBooking = bookingStates[itemId] || false
-    const isSelected = bookedIds.has(itemId) || item.is_selected
-
-    return (
-      <Card 
-        key={itemId} 
-        className={`border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 hover:shadow-xl hover:scale-105 transition-transform duration-200 text-base ${
-          isSelected ? 'ring-2 ring-green-500 bg-green-50 dark:bg-green-950' : ''
-        }`}
-      >
-        <CardHeader className="p-4 pb-3">
-          <div className="flex items-start justify-between">
-            <CardTitle className="text-base font-semibold text-slate-900 dark:text-white line-clamp-1">
-              {item.name}
-              {isSelected && (
-                <Badge className="ml-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-[10px] px-1.5 py-0.5">
-                  Selected
-                </Badge>
-              )}
-            </CardTitle>
-            {item.price && (
-              <Badge variant="secondary" className="ml-2 flex-shrink-0 text-xs px-2 py-0.5">
-                {formatPrice(item.price)}
-              </Badge>
-            )}
-          </div>
-          {item.rating && renderStars(item.rating)}
-        </CardHeader>
-        
-        <CardContent className="pt-0 px-4 pb-4 space-y-3">
-          {/* Compact view: hide long description */}
-          {/* Location & duration */}
-          <div className="space-y-1">
-            {type === "flights" && item.flights_to && (
-              <div className="flex items-center space-x-1 text-sm text-slate-600 dark:text-slate-300">
-                <Plane className="h-3 w-3" />
-                <span className="truncate max-w-[7rem]">
-                  {item.flights_to[0].from}→{item.flights_to[item.flights_to.length-1].to}
-                </span>
-              </div>
-            )}
-            {type === "flights" && item.flights_to && (
-              <div className="flex items-center space-x-2 text-xs text-slate-500 dark:text-slate-400">
-                <span>{item.flights_to[0].departure_date} {item.flights_to[0].departure_time}</span>
-                <span>•</span>
-                <span>{item.flights_to[item.flights_to.length-1].arrival_date} {item.flights_to[item.flights_to.length-1].arrival_time}</span>
-              </div>
-            )}
-            {item.location && (
-              <div className="flex items-center space-x-1 text-sm text-slate-600 dark:text-slate-300">
-                <MapPin className="h-3 w-3" />
-                <span className="truncate max-w-[7rem]">{item.location}</span>
-              </div>
-            )}
-            {item.duration && (
-              <div className="flex items-center space-x-1 text-sm text-slate-600 dark:text-slate-300">
-                <Clock className="h-3 w-3" />
-                <span>{item.duration}</span>
-              </div>
-            )}
-          </div>
-          
-          {type === "flights" && (
-            <div className="flex flex-wrap gap-1 text-xs">
-              {item.refundable && <Badge variant="outline">Refundable</Badge>}
-              {item.flights_to && item.flights_to.length > 1 && (
-                <Badge variant="outline">{item.flights_to.length - 1} stops</Badge>
-              )}
-              {item.validating_airline && (
-                <Badge variant="outline">{item.validating_airline}</Badge>
-              )}
-            </div>
-          )}
-
-          <div className="flex items-center justify-between pt-1">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="h-7 px-3 text-sm text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-950"
-                >
-                  Details
-                </Button>
-              </DialogTrigger>
-
-              <DialogContent className="sm:max-w-[560px] text-base">
-                <DialogHeader>
-                  <DialogTitle>{item.name}</DialogTitle>
-                  {item.location && (
-                    <DialogDescription className="flex items-center space-x-1 text-xs">
-                      <MapPin className="h-3 w-3" />
-                      <span>{item.location}</span>
-                    </DialogDescription>
-                  )}
-                </DialogHeader>
-
-                <div className="space-y-3 text-sm">
-                  <HotelMedia images={item.images || (item.image_url ? [item.image_url] : undefined)} />
-
-                  {item.description && <p>{item.description}</p>}
-
-                  <div className="flex flex-wrap gap-2 text-sm">
-                    {item.price && (
-                      <Badge variant="secondary">Price: {formatPrice(item.price)}</Badge>
-                    )}
-                    {item.rating && (
-                      <Badge variant="secondary" className="flex items-center gap-1">
-                        {renderStars(item.rating)}
-                      </Badge>
-                    )}
-                    {item.duration && (
-                      <Badge variant="secondary">Duration: {item.duration}</Badge>
-                    )}
-                    {item.category && (
-                      <Badge variant="secondary">{item.category}</Badge>
-                    )}
-                    {item.availability && (
-                      <Badge variant="secondary">{item.availability}</Badge>
-                    )}
-                    {type === "flights" && item.validating_airline && (
-                      <Badge variant="secondary" className="ml-1 flex-shrink-0 text-[10px] px-1.5 py-0.5">
-                        {item.validating_airline}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-
-                {type === "flights" && (
-                  <div className="space-y-3">
-                    <h4 className="font-medium">Outbound</h4>
-                    {item.flights_to.map((seg: any, i: number) => (
-                      <div key={i} className="border p-3 rounded-md bg-slate-50 dark:bg-slate-900 text-sm space-y-0.5">
-                        <div className="flex justify-between"><span>{seg.from} → {seg.to}</span><span>{seg.duration}</span></div>
-                        <div className="flex justify-between text-muted-foreground"><span>{seg.departure_time}</span><span>{seg.arrival_time}</span></div>
-                        <div className="flex justify-between"><span>{seg.airline}</span><span>{seg.flight_number}</span></div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {type === "flights" && item.flights_return && (
-                  <div className="space-y-3 pt-4">
-                    <h4 className="font-medium">Return</h4>
-                    {item.flights_return.map((seg: any, i: number) => (
-                      <div key={i} className="border p-3 rounded-md bg-slate-50 dark:bg-slate-900 text-sm space-y-0.5">
-                        <div className="flex justify-between"><span>{seg.from} → {seg.to}</span><span>{seg.duration}</span></div>
-                        <div className="flex justify-between text-muted-foreground"><span>{seg.departure_time}</span><span>{seg.arrival_time}</span></div>
-                        <div className="flex justify-between"><span>{seg.airline}</span><span>{seg.flight_number}</span></div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <DialogFooter className="pt-4">
-                  <Button
-                    size="sm"
-                    onClick={() => handleBooking(item, type)}
-                    disabled={isBooking || isSelected}
-                    className="text-base bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white disabled:opacity-50 shadow"
-                  >
-                    {isBooking ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : isSelected ? (
-                      "Booked"
-                    ) : (
-                      "Book"
-                    )}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  return (
-    <div className="mt-4 space-y-6">
+    <div className="mt-6 space-y-8">
       {Object.entries(groupedResults).map(([type, items]) => (
-        <div key={type} className="space-y-3">
-          <div className="flex items-center space-x-2">
-            {getIcon(type)}
-            <h3 className="font-semibold text-slate-900 dark:text-white capitalize text-sm">
-              {type}
-            </h3>
-            <Badge className={`${getTypeColor(type)} text-[11px]`}> 
-              {items.length}
-            </Badge>
+        <motion.div
+          key={type}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="space-y-4"
+        >
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 rounded-lg">
+              {getIcon(type)}
+                </div>
+            <div>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white capitalize">{type}</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                {items.length} option{items.length !== 1 ? "s" : ""} found
+              </p>
+            </div>
+            <Badge className={`${getTypeColor(type)} ml-auto`}>{items.length}</Badge>
           </div>
-          
+
           {(() => {
-            const hasBooked = items.some((it: any, idx: number) => {
+            const hasBooked = items.some((it: any, idx:number)=>{
               const itId = it.id || it.combination_id || `${type}-${idx}`
               return bookedIds.has(itId) || it.is_selected
             })
-            const visibleItems = hasBooked ? items.filter((it: any, idx:number)=>{
+            const displayItems = hasBooked ? items.filter((it: any, idx:number)=>{
               const itId = it.id || it.combination_id || `${type}-${idx}`
               return bookedIds.has(itId) || it.is_selected
-            }) : items.slice(0,8)
+            }) : items.slice(0,6)
+
             return (
-              <div className="grid gap-3 max-w-full grid-cols-[repeat(auto-fill,minmax(160px,1fr))]">
-                <AnimatePresence>
-                  {visibleItems.map((item,index)=>(
-                    <motion.div key={item.id||item.combination_id||index}
-                      initial={{opacity:0,scale:0.9}}
-                      animate={{opacity:1,scale:1}}
-                      exit={{opacity:0,scale:0.9}}
-                      transition={{duration:0.2}}
+            <>
+            <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))' }}>
+              <AnimatePresence>
+                {displayItems.map((item, index) => {
+                  const itemId = item.id || item.combination_id || `${type}-${index}`
+                  const isBooked = bookedIds.has(itemId) || item.is_selected
+                  const isBooking = bookingStates[itemId] || false
+
+                  if (type === "flights") {
+                    return (
+                      <motion.div
+                        key={itemId}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ duration: 0.3, delay: index * 0.1 }}
+                      >
+                        <FlightCard item={item} onBook={handleBooking} isBooked={isBooked} isBooking={isBooking} />
+                      </motion.div>
+                    )
+                  }
+
+                  // For other types, render simplified cards
+    return (
+                      <motion.div
+        key={itemId} 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ duration: 0.3, delay: index * 0.1 }}
+                      >
+                        <Card className="hover:shadow-lg transition-all duration-300">
+                          <CardHeader>
+                            <CardTitle className="text-lg">{item.name}</CardTitle>
+        </CardHeader>
+                          <CardContent>
+                            <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">{item.description}</p>
+                            <div className="flex items-center justify-between">
+                              <span className="font-semibold text-lg">₸{item.price}</span>
+                    <Button
+                      onClick={() => handleBooking(item, type)}
+                              disabled={isBooking || isBooked}
+                              className="bg-blue-600 hover:bg-blue-700"
                     >
-                      {renderItemCard(item,type,index)}
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </div>
-            )
-          })()}
-          
-          {items.length > 8 && (
-            <div className="text-center">
-              <Button variant="ghost" className="text-xs text-blue-600 dark:text-blue-400">
-                View {items.length - 8} more
-              </Button>
+                      {isBooking ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : isBooked ? (
+                        "Booked"
+                      ) : (
+                                "Book Now"
+                      )}
+                    </Button>
+          </div>
+        </CardContent>
+      </Card>
+                      </motion.div>
+                    )
+                  })}
+              </AnimatePresence>
             </div>
-          )}
-        </div>
+            {!hasBooked && items.length > 6 && (
+              <div className="text-center">
+                <Button variant="ghost" className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950">
+                  View {items.length - 6} more {type}
+                </Button>
+              </div>
+            )}
+            </>)
+          })()}
+        </motion.div>
       ))}
     </div>
   )

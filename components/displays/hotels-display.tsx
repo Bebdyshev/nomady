@@ -31,8 +31,10 @@ interface HotelsDisplayProps {
 
 export function HotelsDisplay({ toolOutput, bookedIds, onBooked }: HotelsDisplayProps) {
   // Transform the incoming API shape into TicketDisplay-compatible shape
+  const searchResultId = (toolOutput as any).search_result_id
   const hotels = toolOutput.properties.map((prop, idx) => ({
     id: prop.link || `${prop.name}-${idx}`,
+    search_result_id: searchResultId,
     name: prop.name,
     description: prop.hotel_class || undefined,
     price: prop.rate_per_night ?? undefined,

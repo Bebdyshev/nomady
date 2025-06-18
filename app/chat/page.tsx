@@ -146,12 +146,24 @@ export default function ChatPage() {
       })
 
       if (data && !error) {
+        // Prepare tool output combined with search_result_id
+        let combinedOutput: any = data.tool_output
+        const srArr = (data as any).search_results
+        if (srArr && Array.isArray(srArr) && srArr.length > 0) {
+          const mapped = srArr.map((sr: any) => ({
+            ...sr.data,
+            type: sr.search_type,
+            search_result_id: sr.id,
+          }))
+          combinedOutput = mapped.length === 1 ? mapped[0] : mapped
+        }
+
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: "assistant",
           content: data.response,
           timestamp: new Date(),
-          toolOutput: data.tool_output,
+          toolOutput: combinedOutput,
         }
 
         setMessages((prev) => [...prev, assistantMessage])
