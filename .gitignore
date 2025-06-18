@@ -1,0 +1,48 @@
+# Node.js
+node_modules/
+.env
+.env.local
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log*
+
+# Next.js build output
+.next/
+out/
+
+# TypeScript
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# VSCode
+.vscode/
+
+# Coverage / testing
+coverage/
+jest-test-results.json
+
+# Optional runtime
+*.pid
+*.seed
+*.pid.lock
+
+# Build cache
+.cache/
+.cache-loader/
+
+# Misc
+*.tgz
+*.swp
+
+# Tailwind JIT cache
+.tailwind/
