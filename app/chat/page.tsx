@@ -15,7 +15,7 @@ import { useTheme } from "@/components/shared/theme-provider"
 import { motion, AnimatePresence } from "framer-motion"
 import { AppSidebar } from "@/components/shared/app-sidebar"
 import { TicketDisplay } from "@/components/displays/ticket-display"
-import { HotelsDisplay } from "@/components/displays/hotels-display"
+import { HotelDisplay } from "@/components/displays/hotels-display"
 import { InteractiveMap } from "@/components/interactive-map"
 
 interface Message {
@@ -150,11 +150,45 @@ export default function ChatPage() {
         let combinedOutput: any = data.tool_output
         const srArr = (data as any).search_results
         if (srArr && Array.isArray(srArr) && srArr.length > 0) {
-          const mapped = srArr.map((sr: any) => ({
-            ...sr.data,
-            type: sr.search_type,
-            search_result_id: sr.id,
-          }))
+          const mapped = srArr.map((sr: any) => {
+            // Create a copy of the search result data
+            const resultData = { ...sr.data }
+            
+            // Add search_result_id to the main object
+            resultData.search_result_id = sr.id
+            resultData.type = sr.search_type
+            
+            // Propagate search_result_id to all nested items
+            if (resultData.flights && Array.isArray(resultData.flights)) {
+              resultData.flights = resultData.flights.map((flight: any) => ({
+                ...flight,
+                search_result_id: sr.id
+              }))
+            }
+            
+            if (resultData.hotels && Array.isArray(resultData.hotels)) {
+              resultData.hotels = resultData.hotels.map((hotel: any) => ({
+                ...hotel,
+                search_result_id: sr.id
+              }))
+            }
+            
+            if (resultData.restaurants && Array.isArray(resultData.restaurants)) {
+              resultData.restaurants = resultData.restaurants.map((restaurant: any) => ({
+                ...restaurant,
+                search_result_id: sr.id
+              }))
+            }
+            
+            if (resultData.items && Array.isArray(resultData.items)) {
+              resultData.items = resultData.items.map((item: any) => ({
+                ...item,
+                search_result_id: sr.id
+              }))
+            }
+            
+            return resultData
+          })
           combinedOutput = mapped.length === 1 ? mapped[0] : mapped
         }
 
@@ -199,13 +233,94 @@ export default function ChatPage() {
   const loadConversation = async (conversationId: string) => {
     const { data } = await apiClient.getConversation(conversationId)
     if (data && (data as any).messages) {
-      const loadedMessages: Message[] = (data as any).messages.map((msg: any) => ({
-        id: msg.id.toString(),
-        role: msg.role,
-        content: msg.content,
-        timestamp: new Date(msg.timestamp),
-        toolOutput: msg.tool_output,
-      }))
+      // Load search results for the conversation
+      const { data: searchResults } = await apiClient.getConversationSearchResults(conversationId)
+      
+      console.log("Search results:", searchResults)
+      console.log("Search results detailed:", {
+        searchResults,
+        length: searchResults?.length,
+        firstResult: searchResults?.[0],
+        firstResultKeys: searchResults?.[0] ? Object.keys(searchResults[0]) : [],
+        firstResultData: searchResults?.[0]?.data,
+        firstResultDataKeys: searchResults?.[0]?.data ? Object.keys(searchResults[0].data) : []
+      })
+
+      const loadedMessages: Message[] = (data as any).messages.map((msg: any) => {
+        let toolOutput = msg.tool_output
+        
+        console.log("Processing message:", {
+          msgId: msg.id,
+          role: msg.role,
+          hasToolOutput: !!toolOutput,
+          toolOutputKeys: toolOutput ? Object.keys(toolOutput) : []
+        })
+        
+        // If this message has tool_output and we have search results, process it
+        if (toolOutput && searchResults && Array.isArray(searchResults)) {
+          const srArr = searchResults
+          if (srArr.length > 0) {
+            console.log("Replacing toolOutput with search results for message", msg.id)
+            
+            const mapped = srArr.map((sr: any) => {
+              // Create a copy of the search result data
+              const resultData = { ...sr.data }
+              
+              // Add search_result_id to the main object
+              resultData.search_result_id = sr.id
+              resultData.type = sr.search_type
+              
+              // Propagate search_result_id to all nested items
+              if (resultData.flights && Array.isArray(resultData.flights)) {
+                resultData.flights = resultData.flights.map((flight: any) => ({
+                  ...flight,
+                  search_result_id: sr.id
+                }))
+              }
+              
+              if (resultData.hotels && Array.isArray(resultData.hotels)) {
+                resultData.hotels = resultData.hotels.map((hotel: any) => ({
+                  ...hotel,
+                  search_result_id: sr.id
+                }))
+              }
+              
+              if (resultData.restaurants && Array.isArray(resultData.restaurants)) {
+                resultData.restaurants = resultData.restaurants.map((restaurant: any) => ({
+                  ...restaurant,
+                  search_result_id: sr.id
+                }))
+              }
+              
+              if (resultData.items && Array.isArray(resultData.items)) {
+                resultData.items = resultData.items.map((item: any) => ({
+                  ...item,
+                  search_result_id: sr.id
+                }))
+              }
+              
+              return resultData
+            })
+            
+            const newToolOutput = mapped.length === 1 ? mapped[0] : mapped
+            console.log("New toolOutput:", {
+              original: toolOutput,
+              new: newToolOutput,
+              mapped: mapped
+            })
+            
+            toolOutput = newToolOutput
+          }
+        }
+        
+        return {
+          id: msg.id.toString(),
+          role: msg.role,
+          content: msg.content,
+          timestamp: new Date(msg.timestamp),
+          toolOutput: toolOutput,
+        }
+      })
       setMessages(loadedMessages)
       setCurrentConversationId(conversationId)
       loadRoadmap(conversationId)
@@ -396,7 +511,7 @@ export default function ChatPage() {
                             <p className="text-sm leading-relaxed whitespace-pre-wrap">{parsedContent.text}</p>
                             {parsedContent.showTickets && parsedContent.toolOutput && (
                               (parsedContent.toolOutput.properties ? (
-                                <HotelsDisplay
+                                <HotelDisplay
                                   toolOutput={parsedContent.toolOutput}
                                   bookedIds={bookedIds}
                                   onBooked={(bookedItem, id, type) => {

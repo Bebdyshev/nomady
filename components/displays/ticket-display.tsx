@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
+import { apiClient } from "@/lib/api"
 import { 
   Plane, 
   Hotel, 
@@ -379,10 +380,10 @@ const FlightCard = ({ item, onBook, isBooked, isBooking }: any) => {
             </div>
 
             <Button
-              size="lg"
+              size="sm"
               onClick={() => onBook?.(item, "flights")}
               disabled={isBooking || isBooked}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
             >
               {isBooking ? (
                 <>
@@ -412,21 +413,71 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
   const [bookingStates, setBookingStates] = useState<Record<string, boolean>>({})
   const { toast } = useToast()
 
-  // Normalize toolOutput to array for consistent processing
   const outputArray: SearchResult[] = Array.isArray(toolOutput) ? toolOutput : [toolOutput]
+  
+  const isFromLoadedConversation = outputArray.length > 0 && outputArray[0]?.search_result_id
 
   const handleBooking = async (item: any, type: string) => {
-    const itemId = item.id || item.combination_id || `${type}-${Date.now()}`
+    const items = groupedResults[type] || []
+    const index = items.findIndex(it => 
+      (it.id && it.id === item.id) || 
+      (it.combination_id && it.combination_id === item.combination_id) ||
+      it === item
+    )
+    const itemId = item.id || item.combination_id || `${type}-${index}`
     setBookingStates((prev) => ({ ...prev, [itemId]: true }))
 
     try {
-      // Simulate booking API call
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      // Debug: Log the item data to understand what's missing
+      console.log("Booking item:", {
+        item,
+        search_result_id: item.search_result_id,
+        type,
+        itemId,
+        allKeys: Object.keys(item)
+      })
 
+      // Check if search_result_id is available
+      if (!item.search_result_id) {
+        console.error("Missing search_result_id. Full item data:", item)
         toast({
+          title: "Booking Not Available",
+          description: "This item is from an older search. Please make a new search to book items.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      const selected_item_id = item.id || item.combination_id || `${index}`
+      const bookingData = {
+        search_result_id: item.search_result_id,
+        selected_item_id: selected_item_id
+      }
+
+      let response
+      switch (type) {
+        case "flights":
+          response = await apiClient.bookTicket(bookingData)
+          break
+        case "hotels":
+          response = await apiClient.bookHotel(bookingData)
+          break
+        case "restaurants":
+          response = await apiClient.bookRestaurant(bookingData)
+          break
+        case "activities":
+          response = await apiClient.bookActivity(bookingData)
+          break
+        default:
+          throw new Error(`Unsupported booking type: ${type}`)
+      }
+
+      console.log("Booking response:", response)
+
+      toast({
         title: "Booking Successful! ✈️",
         description: `Your ${type} has been booked successfully.`,
-        })
+      })
 
       onBooked?.(item, itemId, type)
     } catch (error) {
@@ -515,93 +566,172 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
               {getIcon(type)}
                 </div>
             <div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white capitalize">{type}</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white capitalize">{type}</h3>
+              <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400">
                 {items.length} option{items.length !== 1 ? "s" : ""} found
               </p>
             </div>
-            <Badge className={`${getTypeColor(type)} ml-auto`}>{items.length}</Badge>
+            <Badge className={`${getTypeColor(type)} ml-auto text-xs`}>{items.length}</Badge>
           </div>
-
+          
           {(() => {
-            const hasBooked = items.some((it: any, idx:number)=>{
-              const itId = it.id || it.combination_id || `${type}-${idx}`
-              return bookedIds.has(itId) || it.is_selected
-            })
-            const displayItems = hasBooked ? items.filter((it: any, idx:number)=>{
-              const itId = it.id || it.combination_id || `${type}-${idx}`
-              return bookedIds.has(itId) || it.is_selected
-            }) : items.slice(0,6)
+            // Check if this data is from a loaded conversation (all items should have search_result_id)
+            const isFromLoadedConversation = items.length > 0 && items[0]?.search_result_id
+            
+            if (isFromLoadedConversation) {
+              // For loaded conversations, API already filtered to show only booked items
+              // So display all items returned by the API
+              const displayItems = items
+              
+              return (
+                <>
+                  {/* Responsive grid: 1 col on mobile, 2 on tablet, 3+ on desktop */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 md:gap-4">
+                    <AnimatePresence>
+                      {displayItems.map((item, index) => {
+                        const itemId = item.id || item.combination_id || `${type}-${index}`
+                        const isBooked = bookedIds.has(itemId) || item.is_selected
+                        const isBooking = bookingStates[itemId] || false
 
-            return (
-            <>
-            <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))' }}>
-              <AnimatePresence>
-                {displayItems.map((item, index) => {
-                  const itemId = item.id || item.combination_id || `${type}-${index}`
-                  const isBooked = bookedIds.has(itemId) || item.is_selected
-                  const isBooking = bookingStates[itemId] || false
+                        if (type === "flights") {
+                          return (
+                            <motion.div
+                              key={itemId}
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.9 }}
+                              transition={{ duration: 0.3, delay: index * 0.1 }}
+                            >
+                              <FlightCard item={item} onBook={handleBooking} isBooked={isBooked} isBooking={isBooking} />
+                            </motion.div>
+                          )
+                        }
 
-                  if (type === "flights") {
-                    return (
-                      <motion.div
-                        key={itemId}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
-                        transition={{ duration: 0.3, delay: index * 0.1 }}
-                      >
-                        <FlightCard item={item} onBook={handleBooking} isBooked={isBooked} isBooking={isBooking} />
-                      </motion.div>
-                    )
-                  }
+                        // For other types, render simplified cards
+                        return (
+                          <motion.div
+                            key={itemId}
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            transition={{ duration: 0.3, delay: index * 0.1 }}
+                          >
+                            <Card className="hover:shadow-lg transition-all duration-300">
+                              <CardHeader className="p-3 md:p-4">
+                                <CardTitle className="text-sm md:text-base lg:text-lg">{item.name}</CardTitle>
+                              </CardHeader>
+                              <CardContent className="p-3 md:p-4 pt-0">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-300 mb-4">{item.description}</p>
+                                <div className="flex items-center justify-between">
+                                  <span className="font-semibold text-sm md:text-lg">₸{item.price}</span>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleBooking(item, type)}
+                                    disabled={isBooking || isBooked}
+                                    className="bg-blue-600 hover:bg-blue-700 px-2 md:px-3 py-1 text-xs md:text-sm"
+                                  >
+                                    {isBooking ? (
+                                      <Loader2 className="h-3 w-3 md:h-4 md:w-4 animate-spin" />
+                                    ) : isBooked ? (
+                                      "Booked"
+                                    ) : (
+                                      "Book Now"
+                                    )}
+                                  </Button>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </motion.div>
+                        )
+                      })}
+                    </AnimatePresence>
+                  </div>
+                </>
+              )
+            } else {
+              // For new searches, use the existing logic (show booked items or first 6)
+              const hasBooked = items.some((it: any, idx: number) => {
+                const itId = it.id || it.combination_id || `${type}-${idx}`
+                return bookedIds.has(itId) || it.is_selected
+              })
+              const displayItems = hasBooked ? items.filter((it: any, idx: number) => {
+                const itId = it.id || it.combination_id || `${type}-${idx}`
+                return bookedIds.has(itId) || it.is_selected
+              }) : items.slice(0, 6)
 
-                  // For other types, render simplified cards
-    return (
-                      <motion.div
-        key={itemId} 
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
-                        transition={{ duration: 0.3, delay: index * 0.1 }}
-                      >
-                        <Card className="hover:shadow-lg transition-all duration-300">
-                          <CardHeader>
-                            <CardTitle className="text-lg">{item.name}</CardTitle>
-        </CardHeader>
-                          <CardContent>
-                            <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">{item.description}</p>
-                            <div className="flex items-center justify-between">
-                              <span className="font-semibold text-lg">₸{item.price}</span>
-                    <Button
-                      onClick={() => handleBooking(item, type)}
-                              disabled={isBooking || isBooked}
-                              className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      {isBooking ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : isBooked ? (
-                        "Booked"
-                      ) : (
-                                "Book Now"
-                      )}
-                    </Button>
-          </div>
-        </CardContent>
-      </Card>
-                      </motion.div>
-                    )
-                  })}
-              </AnimatePresence>
-            </div>
-            {!hasBooked && items.length > 6 && (
-              <div className="text-center">
-                <Button variant="ghost" className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950">
-                  View {items.length - 6} more {type}
-                </Button>
-              </div>
-            )}
-            </>)
+              return (
+                <>
+                  {/* Responsive grid: 1 col on mobile, 2 on tablet, 3+ on desktop */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 md:gap-4">
+                    <AnimatePresence>
+                      {displayItems.map((item, index) => {
+                        const itemId = item.id || item.combination_id || `${type}-${index}`
+                        const isBooked = bookedIds.has(itemId) || item.is_selected
+                        const isBooking = bookingStates[itemId] || false
+
+                        if (type === "flights") {
+                          return (
+                            <motion.div
+                              key={itemId}
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.9 }}
+                              transition={{ duration: 0.3, delay: index * 0.1 }}
+                            >
+                              <FlightCard item={item} onBook={handleBooking} isBooked={isBooked} isBooking={isBooking} />
+                            </motion.div>
+                          )
+                        }
+
+                        // For other types, render simplified cards
+                        return (
+                          <motion.div
+                            key={itemId}
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            transition={{ duration: 0.3, delay: index * 0.1 }}
+                          >
+                            <Card className="hover:shadow-lg transition-all duration-300">
+                              <CardHeader className="p-3 md:p-4">
+                                <CardTitle className="text-sm md:text-base lg:text-lg">{item.name}</CardTitle>
+                              </CardHeader>
+                              <CardContent className="p-3 md:p-4 pt-0">
+                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-300 mb-4">{item.description}</p>
+                                <div className="flex items-center justify-between">
+                                  <span className="font-semibold text-sm md:text-lg">₸{item.price}</span>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleBooking(item, type)}
+                                    disabled={isBooking || isBooked}
+                                    className="bg-blue-600 hover:bg-blue-700 px-2 md:px-3 py-1 text-xs md:text-sm"
+                                  >
+                                    {isBooking ? (
+                                      <Loader2 className="h-3 w-3 md:h-4 md:w-4 animate-spin" />
+                                    ) : isBooked ? (
+                                      "Booked"
+                                    ) : (
+                                      "Book Now"
+                                    )}
+                                  </Button>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </motion.div>
+                        )
+                      })}
+                    </AnimatePresence>
+                  </div>
+                  {!hasBooked && items.length > 6 && (
+                    <div className="text-center">
+                      <Button variant="ghost" className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950 text-xs md:text-sm">
+                        View {items.length - 6} more {type}
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )
+            }
           })()}
         </motion.div>
       ))}
