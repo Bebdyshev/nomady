@@ -175,9 +175,9 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-slate-900">
       {/* Header */}
-      <header className={`sticky top-0 z-50 transition-all duration-300 ${
+      <header className={`sticky top-0 z-50 transition-all duration-500 ${
         isScrolled 
-          ? 'bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 shadow-sm' 
+          ? 'bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-700/50 shadow-lg shadow-slate-200/20 dark:shadow-slate-900/20' 
           : 'bg-transparent'
       }`}>
         <div className="container mx-auto px-6 py-4">
@@ -185,56 +185,96 @@ export default function LandingPage() {
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="flex items-center space-x-2"
+              transition={{ duration: 0.8, type: "spring", bounce: 0.3 }}
+              className="flex items-center space-x-3 group"
             >
-              <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Sparkles className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-xl font-bold text-blue-600 dark:text-blue-400">TravelAI</span>
+              <motion.div 
+                className="h-10 w-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-blue-500/25 transition-all duration-300 group-hover:scale-110"
+                whileHover={{ rotate: 360 }}
+                transition={{ duration: 0.6 }}
+              >
+                <Sparkles className="h-6 w-6 text-white" />
+              </motion.div>
+              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent">
+                TravelAI
+              </span>
             </motion.div>
 
-            <nav className="hidden md:flex items-center space-x-8">
-              <a
-                href="#features"
-                className="text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-              >
-                Features
-              </a>
-              <a
-                href="#how-it-works"
-                className="text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-              >
-                How it Works
-              </a>
-              <a
-                href="#pricing"
-                className="text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-              >
-                Pricing
-              </a>
-              <a
-                href="#testimonials"
-                className="text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-              >
-                Reviews
-              </a>
+            <nav className="hidden md:flex items-center space-x-1">
+              {[
+                { href: "#features", label: "Features" },
+                { href: "#how-it-works", label: "How it Works" },
+                { href: "#pricing", label: "Pricing" },
+                { href: "#testimonials", label: "Reviews" }
+              ].map((item, index) => (
+                <motion.a
+                  key={item.href}
+                  href={item.href}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="relative px-4 py-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 rounded-lg hover:bg-slate-100/50 dark:hover:bg-slate-800/50 group"
+                >
+                  {item.label}
+                  <span className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-blue-600 to-blue-800 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-full"></span>
+                </motion.a>
+              ))}
             </nav>
 
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+            <div className="flex items-center space-x-3">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
               >
-                {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-              </Button>
-              <Button variant="ghost" onClick={() => router.push("/auth")} className="hidden md:inline-flex">
-                Sign In
-              </Button>
-              <Button onClick={() => router.push("/auth")} className="bg-blue-600 hover:bg-blue-700 text-white">
-                Get Started
-              </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="relative rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-300 hover:scale-110 group"
+                >
+                  <motion.div
+                    initial={false}
+                    animate={{ rotate: theme === "dark" ? 180 : 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {theme === "dark" ? (
+                      <Sun className="h-5 w-5 text-amber-500" />
+                    ) : (
+                      <Moon className="h-5 w-5 text-slate-600" />
+                    )}
+                  </motion.div>
+                  <span className="absolute -inset-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
+                </Button>
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
+                <Button 
+                  variant="ghost" 
+                  onClick={() => router.push("/auth")} 
+                  className="hidden md:inline-flex hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-300 rounded-lg px-4 py-2 hover:scale-105"
+                >
+                  Sign In
+                </Button>
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+              >
+                <Button 
+                  onClick={() => router.push("/auth")} 
+                  className="relative bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-lg shadow-lg hover:shadow-blue-500/25 transition-all duration-300 hover:scale-105 overflow-hidden group"
+                >
+                  <span className="relative z-10">Get Started</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </Button>
+              </motion.div>
             </div>
           </div>
         </div>
@@ -245,7 +285,7 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-slate-50 dark:from-blue-950/20 dark:to-slate-900" />
         
         {/* Background Globe */}
-        <div className="absolute bottom-[300px] left-1/2 -translate-x-1/2 w-full h-full opacity-30 dark:opacity-15 z-0">
+        <div className="absolute bottom-[150px] left-1/2 -translate-x-1/2 w-full h-full opacity-30 dark:opacity-15 z-0">
           <GlobeComponent className="w-full h-full" />
         </div>
         
@@ -304,69 +344,68 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 50, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.8, delay: 1, type: "spring", bounce: 0.3 }}
+              className="max-w-2xl mx-auto mb-16"
             >
-              <Card className="p-8 max-w-2xl mx-auto mb-12 shadow-xl border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm hover:shadow-2xl transition-all duration-300 hover:scale-105">
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <motion.div 
-                    className="relative"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6, delay: 1.2 }}
-                  >
-                    <Input
-                      type="text"
-                      placeholder="I want to plan a 5-day trip to Tokyo for 2 people..."
-                      value={tripPrompt}
-                      onChange={(e) => setTripPrompt(e.target.value)}
-                      className="text-lg py-6 px-6 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-slate-700 transition-all duration-300 focus:scale-[1.02]"
-                      disabled={isLoading}
-                    />
-                  </motion.div>
+              <form onSubmit={handleSubmit} className="relative">
+                <motion.div 
+                  className="relative"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 1.2 }}
+                >
+                  <Input
+                    type="text"
+                    placeholder="I want to plan a 5-day trip to Tokyo for 2 people..."
+                    value={tripPrompt}
+                    onChange={(e) => setTripPrompt(e.target.value)}
+                    className="text-lg py-6 px-6 pr-16 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-slate-700 transition-all duration-300 focus:scale-[1.02] shadow-lg"
+                    disabled={isLoading}
+                  />
+                  
                   <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 1.4 }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                    initial={false}
+                    animate={{
+                      opacity: tripPrompt.trim() ? 1 : 0,
+                      scale: tripPrompt.trim() ? 1 : 0.8,
+                      x: tripPrompt.trim() ? 0 : 10,
+                    }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
                   >
                     <Button
                       type="submit"
-                      size="lg"
+                      size="icon"
                       disabled={!tripPrompt.trim() || isLoading}
-                      className="w-full py-6 text-lg font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
+                      className="h-10 w-10 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
                     >
                       {isLoading ? (
-                        <div className="flex items-center space-x-2">
-                          <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          <span>Planning your trip...</span>
-                        </div>
+                        <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       ) : (
-                        <div className="flex items-center space-x-2">
-                          <Sparkles className="h-5 w-5" />
-                          <span>Start Planning for Free</span>
-                          <ArrowRight className="h-5 w-5" />
-                        </div>
+                        <ArrowRight className="h-4 w-4" />
                       )}
                     </Button>
                   </motion.div>
-                </form>
-                <motion.p 
-                  className="text-sm text-slate-500 dark:text-slate-400 mt-4 text-center"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.6, delay: 1.6 }}
-                >
-                  No credit card required • Get started in 30 seconds
-                </motion.p>
-              </Card>
+                </motion.div>
+              </form>
+              
+              <motion.p 
+                className="text-sm text-slate-500 dark:text-slate-400 mt-4 text-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 1.6 }}
+              >
+                No credit card required • Get started in 30 seconds
+              </motion.p>
             </motion.div>
 
                           {/* Backed by nFactorial Badge */}
                           <motion.div 
-                initial={{ opacity: 0, y: -10 }} 
-                animate={{ opacity: 1, y: 0 }} 
-                transition={{ duration: 0.6, delay: 0.1 }}
+                initial={{ opacity: 0, y: -10, scale: 0.8 }} 
+                animate={{ opacity: 1, y: 0, scale: 1 }} 
+                transition={{ duration: 0.8, delay: 1.8, type: "spring", bounce: 0.5 }}
                 className="flex items-center justify-center mb-6"
               >
-                <div className="group relative mx-auto flex items-center justify-center rounded-full px-4 py-2 shadow-[inset_0_-8px_10px_#ff8f8f1f] transition-shadow duration-500 ease-out hover:shadow-[inset_0_-5px_10px_#ff8f8f3f]">
+                <div className="group relative mx-auto flex items-center justify-center rounded-full px-4 py-2 shadow-[inset_0_-8px_10px_#ff8f8f1f] transition-all duration-500 ease-out hover:shadow-[inset_0_-5px_10px_#ff8f8f3f] hover:scale-110">
                   <span
                     className={cn(
                       "absolute inset-0 block h-full w-full animate-gradient rounded-[inherit] bg-gradient-to-r from-[#ef4444]/50 via-[#dc2626]/50 to-[#ef4444]/50 bg-[length:300%_100%] p-[1px]",
@@ -677,13 +716,6 @@ export default function LandingPage() {
                   Start Planning for Free
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-4 text-lg font-semibold"
-                >
-                  Watch Demo
-                </Button>
               </div>
             </div>
           </motion.div>
@@ -787,9 +819,9 @@ export default function LandingPage() {
           </div>
 
           <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-slate-400 text-sm">© 2024 TravelAI. All rights reserved.</p>
+            <p className="text-slate-400 text-sm">© 2025 TravelAI. All rights reserved.</p>
             <div className="flex items-center space-x-6 mt-4 md:mt-0">
-              <span className="text-slate-400 text-sm">Made with ❤️ for travelers</span>
+              <span className="text-slate-400 text-sm">Made with ❤️ by Bebdtshev</span>
             </div>
           </div>
         </div>
