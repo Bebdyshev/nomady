@@ -10,6 +10,9 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+  .animate-gradient {
+    animation: gradient 8s linear infinite;
+  }
 }
 
 @layer base {
@@ -82,6 +85,10 @@ body {
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+  .theme {
+    --animate-gradient: gradient 8s linear infinite;
+    --animate-line-shadow: line-shadow 15s linear infinite;
+  }
 }
 
 @layer base {
@@ -142,4 +149,20 @@ body {
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+@theme inline {
+  @keyframes gradient {
+  to {
+    background-position: var(--bg-size, 300%) 0;
+    }
+  }
+  @keyframes line-shadow {
+  0% {
+    background-position: 0 0;
+    }
+  100% {
+    background-position: 100% -100%;
+    }
+  }
 }

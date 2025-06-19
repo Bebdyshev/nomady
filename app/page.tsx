@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,12 +27,26 @@ import {
 } from "lucide-react"
 import { useTheme } from "@/components/shared/theme-provider"
 import { motion } from "framer-motion"
+import { Globe as GlobeComponent } from "@/components/magicui/globe"
+import { AnimatedGradientText } from "@/components/magicui/animated-gradient-text"
+import { VideoText } from "@/components/magicui/video-text"
+import { cn } from "@/lib/utils"
 
 export default function LandingPage() {
   const [tripPrompt, setTripPrompt] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
   const router = useRouter()
   const { theme, setTheme } = useTheme()
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50)
+    }
+    
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -80,24 +94,6 @@ export default function LandingPage() {
       title: "Travel Safety",
       description: "Real-time safety updates and travel advisories for peace of mind",
       color: "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300",
-    },
-  ]
-
-  const benefits = [
-    {
-      icon: <Clock className="h-6 w-6" />,
-      title: "Save 10+ Hours",
-      description: "Skip the endless research. Get personalized recommendations instantly.",
-    },
-    {
-      icon: <TrendingUp className="h-6 w-6" />,
-      title: "Save 30% on Average",
-      description: "AI finds the best deals and optimal booking times for maximum savings.",
-    },
-    {
-      icon: <Zap className="h-6 w-6" />,
-      title: "Instant Planning",
-      description: "Complete itineraries generated in seconds, not hours of planning.",
     },
   ]
 
@@ -179,7 +175,11 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-slate-900">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700">
+      <header className={`sticky top-0 z-50 transition-all duration-300 ${
+        isScrolled 
+          ? 'bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 shadow-sm' 
+          : 'bg-transparent'
+      }`}>
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <motion.div
@@ -243,89 +243,147 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="relative py-20 lg:py-32 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-slate-50 dark:from-blue-950/20 dark:to-slate-900" />
+        
+        {/* Background Globe */}
+        <div className="absolute bottom-[300px] left-1/2 -translate-x-1/2 w-full h-full opacity-30 dark:opacity-15 z-0">
+          <GlobeComponent className="w-full h-full" />
+        </div>
+        
         <div className="container mx-auto px-6 relative">
           <div className="text-center max-w-4xl mx-auto">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-              <div className="inline-flex items-center space-x-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-4 py-2 rounded-full text-sm font-medium mb-6">
+
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, delay: 0.2, type: "spring", bounce: 0.4 }}
+                className="inline-flex items-center space-x-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-4 py-2 rounded-full text-sm font-medium mb-6"
+              >
                 <Sparkles className="h-4 w-4" />
-                <span>AI-Powered Travel Planning</span>
-              </div>
+                <AnimatedGradientText className="text-sm" colorFrom="#1d4ed8" colorTo="#3b82f6">
+                  AI-Powered Travel Planning
+                </AnimatedGradientText>
+              </motion.div>
+              
+              <motion.h1 
+                className="text-5xl md:text-7xl font-bold mb-6 text-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1, delay: 0.3 }}
+              >
+                <motion.span 
+                  className="text-slate-900 dark:text-white block"
+                  initial={{ y: 50, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.8, delay: 0.4, type: "spring", bounce: 0.3 }}
+                >
+                  Plan Your Perfect
+                </motion.span>
+                <motion.span 
+                  className="bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent block"
+                  initial={{ y: 50, opacity: 0, scale: 0.8 }}
+                  animate={{ y: 0, opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.8, delay: 0.6, type: "spring", bounce: 0.3 }}
+                >
+                  Trip in Seconds
+                </motion.span>
+              </motion.h1>
 
-              <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-                <span className="text-slate-900 dark:text-white">Plan Your Perfect</span>
-                <br />
-                <span className="text-blue-600 dark:text-blue-400">Trip in Seconds</span>
-              </h1>
-
-              <p className="text-xl md:text-2xl text-slate-600 dark:text-slate-300 mb-12 leading-relaxed max-w-3xl mx-auto">
-                Skip the endless research. Our AI creates personalized itineraries with flights, hotels, restaurants,
-                and activities tailored to your preferences and budget.
-              </p>
+              <motion.p 
+                className="text-xl md:text-2xl text-slate-600 dark:text-slate-300 mb-12 leading-relaxed max-w-3xl mx-auto"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.8, type: "spring", bounce: 0.2 }}
+              >
+                Skip the endless research. 
+              </motion.p>
             </motion.div>
 
             {/* Trip Prompt Form */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.8, delay: 1, type: "spring", bounce: 0.3 }}
             >
-              <Card className="p-8 max-w-2xl mx-auto mb-12 shadow-xl border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
+              <Card className="p-8 max-w-2xl mx-auto mb-12 shadow-xl border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm hover:shadow-2xl transition-all duration-300 hover:scale-105">
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="relative">
+                  <motion.div 
+                    className="relative"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6, delay: 1.2 }}
+                  >
                     <Input
                       type="text"
                       placeholder="I want to plan a 5-day trip to Tokyo for 2 people..."
                       value={tripPrompt}
                       onChange={(e) => setTripPrompt(e.target.value)}
-                      className="text-lg py-6 px-6 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-slate-700"
+                      className="text-lg py-6 px-6 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-slate-700 transition-all duration-300 focus:scale-[1.02]"
                       disabled={isLoading}
                     />
-                  </div>
-                  <Button
-                    type="submit"
-                    size="lg"
-                    disabled={!tripPrompt.trim() || isLoading}
-                    className="w-full py-6 text-lg font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200 shadow-lg hover:shadow-xl"
+                  </motion.div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 1.4 }}
                   >
-                    {isLoading ? (
-                      <div className="flex items-center space-x-2">
-                        <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Planning your trip...</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center space-x-2">
-                        <Sparkles className="h-5 w-5" />
-                        <span>Start Planning for Free</span>
-                        <ArrowRight className="h-5 w-5" />
-                      </div>
-                    )}
-                  </Button>
+                    <Button
+                      type="submit"
+                      size="lg"
+                      disabled={!tripPrompt.trim() || isLoading}
+                      className="w-full py-6 text-lg font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
+                    >
+                      {isLoading ? (
+                        <div className="flex items-center space-x-2">
+                          <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>Planning your trip...</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <Sparkles className="h-5 w-5" />
+                          <span>Start Planning for Free</span>
+                          <ArrowRight className="h-5 w-5" />
+                        </div>
+                      )}
+                    </Button>
+                  </motion.div>
                 </form>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-4 text-center">
+                <motion.p 
+                  className="text-sm text-slate-500 dark:text-slate-400 mt-4 text-center"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.6, delay: 1.6 }}
+                >
                   No credit card required • Get started in 30 seconds
-                </p>
+                </motion.p>
               </Card>
             </motion.div>
 
-            {/* Benefits */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto"
-            >
-              {benefits.map((benefit, index) => (
-                <div key={index} className="flex items-center space-x-3 text-left">
-                  <div className="flex-shrink-0 h-12 w-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                    <div className="text-blue-600 dark:text-blue-400">{benefit.icon}</div>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-900 dark:text-white">{benefit.title}</h3>
-                    <p className="text-sm text-slate-600 dark:text-slate-300">{benefit.description}</p>
-                  </div>
+                          {/* Backed by nFactorial Badge */}
+                          <motion.div 
+                initial={{ opacity: 0, y: -10 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="flex items-center justify-center mb-6"
+              >
+                <div className="group relative mx-auto flex items-center justify-center rounded-full px-4 py-2 shadow-[inset_0_-8px_10px_#ff8f8f1f] transition-shadow duration-500 ease-out hover:shadow-[inset_0_-5px_10px_#ff8f8f3f]">
+                  <span
+                    className={cn(
+                      "absolute inset-0 block h-full w-full animate-gradient rounded-[inherit] bg-gradient-to-r from-[#ef4444]/50 via-[#dc2626]/50 to-[#ef4444]/50 bg-[length:300%_100%] p-[1px]",
+                    )}
+                    style={{
+                      WebkitMask:
+                        "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                      WebkitMaskComposite: "destination-out",
+                      mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                      maskComposite: "subtract",
+                      WebkitClipPath: "padding-box",
+                    }}
+                  />
+                  <img src="/nfactorial-logo.png" alt="nFactorial Incubator" className="h-5 w-5 mr-2" />
+                  <span className="text-slate-600 dark:text-slate-300 text-sm font-medium mr-1">Backed by nFactorial Incubator</span>
                 </div>
-              ))}
-            </motion.div>
+              </motion.div>
           </div>
         </div>
       </section>
@@ -364,7 +422,9 @@ export default function LandingPage() {
               viewport={{ once: true }}
             >
               <h2 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4">
-                Everything You Need to Plan
+                <AnimatedGradientText colorFrom="#0f172a" colorTo="#475569" className="text-4xl md:text-5xl font-bold dark:from-white dark:to-slate-300">
+                  Everything You Need to Plan
+                </AnimatedGradientText>
               </h2>
               <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
                 Our AI-powered platform handles every aspect of your trip planning, from flights to local experiences.
@@ -404,7 +464,11 @@ export default function LandingPage() {
               transition={{ duration: 0.6 }}
               viewport={{ once: true }}
             >
-              <h2 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4">How It Works</h2>
+              <h2 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4">
+                <AnimatedGradientText colorFrom="#3b82f6" colorTo="#1d4ed8" className="text-4xl md:text-5xl font-bold">
+                  How It Works
+                </AnimatedGradientText>
+              </h2>
               <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
                 Get from idea to itinerary in three simple steps
               </p>
@@ -471,7 +535,9 @@ export default function LandingPage() {
               viewport={{ once: true }}
             >
               <h2 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4">
-                Loved by Travelers Worldwide
+                <AnimatedGradientText colorFrom="#f59e0b" colorTo="#d97706" className="text-4xl md:text-5xl font-bold">
+                  Loved by Travelers Worldwide
+                </AnimatedGradientText>
               </h2>
               <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
                 See what our users say about their TravelAI experience
