@@ -39,6 +39,36 @@ export default function LandingPage() {
   const router = useRouter()
   const { theme, setTheme } = useTheme()
 
+  // Dynamic placeholders that cycle every few seconds
+  const placeholders = [
+    "Plan a 5-day trip to Tokyo for 2 people...",
+    "Budget-friendly weekend in Barcelona...",
+    "Romantic honeymoon in Bali for 7 days...",
+    "Family adventure in Disneyland next summer...",
+    "Solo backpacking across South America for a month...",
+  ]
+  const [placeholderIndex, setPlaceholderIndex] = useState(0)
+
+  // Typing effect for placeholder
+  const [charIndex, setCharIndex] = useState(0)
+
+  useEffect(() => {
+    const currentText = placeholders[placeholderIndex]
+    let timeout: NodeJS.Timeout
+
+    if (charIndex < currentText.length) {
+      timeout = setTimeout(() => setCharIndex((i) => i + 1), 80)
+    } else {
+      // After full text typed, wait then move to next placeholder
+      timeout = setTimeout(() => {
+        setCharIndex(0)
+        setPlaceholderIndex((i) => (i + 1) % placeholders.length)
+      }, 2000)
+    }
+
+    return () => clearTimeout(timeout)
+  }, [charIndex, placeholderIndex, placeholders])
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50)
@@ -344,7 +374,7 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 50, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.8, delay: 1, type: "spring", bounce: 0.3 }}
-              className="max-w-2xl mx-auto mb-16"
+              className="max-w-xl mx-auto mb-16"
             >
               <form onSubmit={handleSubmit} className="relative">
                 <motion.div 
@@ -355,15 +385,15 @@ export default function LandingPage() {
                 >
                   <Input
                     type="text"
-                    placeholder="I want to plan a 5-day trip to Tokyo for 2 people..."
+                    placeholder={placeholders[placeholderIndex].slice(0, charIndex)}
                     value={tripPrompt}
                     onChange={(e) => setTripPrompt(e.target.value)}
-                    className="text-lg py-6 px-6 pr-16 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-slate-700 transition-all duration-300 focus:scale-[1.02] shadow-lg"
+                    className="text-[1.2rem] py-6 px-6 pr-16 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-slate-700 transition-all duration-300 focus:scale-[1.02] shadow-lg"
                     disabled={isLoading}
                   />
                   
                   <motion.div
-                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                    className="absolute right-1 inset-y-0 flex items-center"
                     initial={false}
                     animate={{
                       opacity: tripPrompt.trim() ? 1 : 0,
