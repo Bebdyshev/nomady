@@ -184,7 +184,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking }: any) => {
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
         >
           <Card
-            className={`relative overflow-hidden cursor-pointer border-2 transition-all duration-300 flex flex-col min-h-[280px] card-layout ${
+            className={`relative overflow-hidden cursor-pointer border-2 transition-all duration-300 flex flex-col min-h-[320px] card-layout ${
               isBooked
                 ? "border-green-500 bg-green-50 dark:bg-green-950/20"
                 : "border-slate-200 dark:border-slate-700 hover:border-blue-300 hover:shadow-xl"
@@ -583,8 +583,8 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
               
               return (
                 <>
-                  {/* Responsive grid with auto-fitting columns */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {/* Auto-responsive grid that adapts to screen width */}
+                  <div className="grid-auto-cards">
                     <AnimatePresence>
                       {displayItems.map((item, index) => {
                         const itemId = item.id || item.combination_id || `${type}-${index}`
@@ -691,8 +691,8 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
 
               return (
                 <>
-                  {/* Responsive grid with auto-fitting columns */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {/* Auto-responsive grid that adapts to screen width */}
+                  <div className="grid-auto-cards">
                     <AnimatePresence>
                       {displayItems.map((item, index) => {
                         const itemId = item.id || item.combination_id || `${type}-${index}`
