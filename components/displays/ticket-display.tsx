@@ -559,17 +559,19 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
           transition={{ duration: 0.5 }}
           className="space-y-6"
         >
-          <div className="flex items-center space-x-4 pb-2">
-            <div className="p-3 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 rounded-lg">
-              {getIcon(type)}
+          <div className="max-w-6xl mx-auto px-4">
+            <div className="flex items-center space-x-4 pb-2">
+              <div className="p-3 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 rounded-lg">
+                {getIcon(type)}
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white capitalize text-horizontal">{type}</h3>
+                <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 text-horizontal">
+                  {items.length} option{items.length !== 1 ? "s" : ""} found
+                </p>
+              </div>
+              <Badge className={`${getTypeColor(type)} text-sm px-3 py-1 text-horizontal`}>{items.length}</Badge>
             </div>
-            <div className="flex-1">
-              <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white capitalize text-horizontal">{type}</h3>
-              <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 text-horizontal">
-                {items.length} option{items.length !== 1 ? "s" : ""} found
-              </p>
-            </div>
-            <Badge className={`${getTypeColor(type)} text-sm px-3 py-1 text-horizontal`}>{items.length}</Badge>
           </div>
           
           {(() => {
@@ -582,7 +584,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
               const displayItems = items
               
               return (
-                <>
+                <div className="max-w-6xl mx-auto px-4">
                   {/* Auto-responsive grid that adapts to screen width */}
                   <div className="grid-auto-cards">
                     <AnimatePresence>
@@ -676,7 +678,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                       })}
                     </AnimatePresence>
                   </div>
-                </>
+                </div>
               )
             } else {
               // For new searches, use the existing logic (show booked items or first 6)
@@ -690,7 +692,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
               }) : items.slice(0, 6)
 
               return (
-                <>
+                <div className="max-w-6xl mx-auto px-4">
                   {/* Auto-responsive grid that adapts to screen width */}
                   <div className="grid-auto-cards">
                     <AnimatePresence>
@@ -785,13 +787,13 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                     </AnimatePresence>
                   </div>
                   {!hasBooked && items.length > 6 && (
-                    <div className="text-center">
+                    <div className="text-center mt-6">
                       <Button variant="ghost" className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950 text-xs md:text-sm">
                         View {items.length - 6} more {type}
                       </Button>
                     </div>
                   )}
-                </>
+                </div>
               )
             }
           })()}
