@@ -50,6 +50,8 @@ export default function ChatPage() {
   const [bookedItems, setBookedItems] = useState<Record<string, any>>({})
   const [bookedIds, setBookedIds] = useState<Set<string>>(new Set())
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [mapWidth, setMapWidth] = useState(35) // Map width as percentage
+  const [isResizing, setIsResizing] = useState(false)
 
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -405,6 +407,36 @@ export default function ChatPage() {
     }
   }
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsResizing(true)
+    e.preventDefault()
+  }
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing) return
+      
+      const containerWidth = window.innerWidth - 320 // Subtract sidebar width
+      const rightOffset = window.innerWidth - e.clientX
+      const newMapWidth = Math.max(20, Math.min(60, (rightOffset / containerWidth) * 100))
+      setMapWidth(newMapWidth)
+    }
+
+    const handleMouseUp = () => {
+      setIsResizing(false)
+    }
+
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isResizing])
+
   console.log(messages)
 
   return (
@@ -573,8 +605,10 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* Main Content Area with Chat and Map */}
+      <div className="flex-1 flex min-w-0">
+        {/* Chat Area */}
+        <div className="flex flex-col min-w-0" style={{ width: `${100 - mapWidth}%` }}>
         {/* Mobile Header */}
         <div className="md:hidden flex items-center justify-between p-3 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
           <button
@@ -590,7 +624,7 @@ export default function ChatPage() {
         {/* Messages Container */}
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-4xl mx-auto p-3 md:p-6">
-            {messages.length === 0 ? (
+            {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full min-h-[60vh] text-center">
                 <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4 md:mb-6">
                   <MessageCircle className="w-8 h-8 md:w-10 md:h-10 text-white" />
@@ -621,7 +655,9 @@ export default function ChatPage() {
                   ))}
                 </div>
               </div>
-            ) : (
+            )}
+
+            {messages.length > 0 && (
               <div className="space-y-4 md:space-y-6">
                 {messages.map((message, index) => (
                   <div
@@ -696,6 +732,24 @@ export default function ChatPage() {
               </div>
             </form>
           </div>
+          </div>
+        </div>
+
+        {/* Resize Handle */}
+        <div
+          className="w-1 bg-slate-200 dark:bg-slate-700 hover:bg-blue-500 cursor-col-resize transition-colors relative group"
+          onMouseDown={handleMouseDown}
+        >
+          <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-500/20" />
+        </div>
+
+        {/* Map Area */}
+        <div className="bg-slate-50 dark:bg-slate-900 border-l border-slate-200 dark:border-slate-700" style={{ width: `${mapWidth}%` }}>
+          <InteractiveMap
+            selectedItems={Object.values(bookedItems)}
+            onRemoveItem={handleRemoveItem}
+            onClearAll={handleClearAll}
+          />
         </div>
       </div>
     </div>

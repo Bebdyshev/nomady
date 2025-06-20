@@ -10,6 +10,27 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+  
+  /* Prevent vertical text layout issues */
+  .text-horizontal {
+    writing-mode: horizontal-tb;
+    text-orientation: mixed;
+  }
+  
+  /* Ensure proper card flex layout */
+  .card-layout {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+  }
+  
+  /* Prevent text breaking issues */
+  .text-wrap-normal {
+    word-wrap: normal;
+    word-break: normal;
+    overflow-wrap: normal;
+  }
 }
 
 @layer base {

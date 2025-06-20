@@ -91,8 +91,8 @@ const FlightPath = ({ segments, isReturn = false }: { segments: FlightSegment[];
             <div className="flex flex-col items-center space-y-2 z-10">
               <div className="w-3 h-3 bg-blue-600 rounded-full border-2 border-white shadow-lg" />
               <div className="text-center">
-                <div className="font-semibold text-sm text-slate-900 dark:text-white">{segment.from}</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">{segment.departure_time}</div>
+                <div className="font-semibold text-sm text-slate-900 dark:text-white text-horizontal">{segment.from}</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 text-horizontal">{segment.departure_time}</div>
               </div>
             </div>
 
@@ -113,7 +113,7 @@ const FlightPath = ({ segments, isReturn = false }: { segments: FlightSegment[];
                 >
                   <Plane className="h-4 w-4 rotate-90" />
                 </motion.div>
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 text-xs text-slate-500 dark:text-slate-400 text-horizontal whitespace-nowrap">
                   {segment.duration}
                 </div>
               </div>
@@ -124,10 +124,10 @@ const FlightPath = ({ segments, isReturn = false }: { segments: FlightSegment[];
         <div className="flex flex-col items-center space-y-2 z-10">
           <div className="w-3 h-3 bg-green-600 rounded-full border-2 border-white shadow-lg" />
           <div className="text-center">
-            <div className="font-semibold text-sm text-slate-900 dark:text-white">
+            <div className="font-semibold text-sm text-slate-900 dark:text-white text-horizontal">
               {segments[segments.length - 1]?.to}
             </div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">
+            <div className="text-xs text-slate-500 dark:text-slate-400 text-horizontal">
               {segments[segments.length - 1]?.arrival_time}
             </div>
           </div>
@@ -184,7 +184,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking }: any) => {
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
         >
           <Card
-            className={`relative overflow-hidden cursor-pointer border-2 transition-all duration-300 ${
+            className={`relative overflow-hidden cursor-pointer border-2 transition-all duration-300 flex flex-col min-h-[280px] card-layout ${
               isBooked
                 ? "border-green-500 bg-green-50 dark:bg-green-950/20"
                 : "border-slate-200 dark:border-slate-700 hover:border-blue-300 hover:shadow-xl"
@@ -192,83 +192,78 @@ const FlightCard = ({ item, onBook, isBooked, isBooking }: any) => {
           >
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600" />
 
-            <CardHeader className="p-2 md:p-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-1 md:space-x-2 min-w-0">
-                  <div className="p-1 md:p-2 bg-blue-100 dark:bg-blue-900 rounded-lg flex-shrink-0">
-                    <Plane className="h-4 w-4 md:h-5 md:w-5 text-blue-600 dark:text-blue-400" />
+            <CardHeader className="p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center space-x-3 flex-1">
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                    <Plane className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <CardTitle className="text-xs md:text-sm lg:text-base xl:text-lg font-bold text-slate-900 dark:text-white truncate">
+                  <div className="flex-1">
+                    <CardTitle className="text-lg font-bold text-slate-900 dark:text-white text-horizontal text-wrap-normal">
                       {item.validating_airline}
                     </CardTitle>
-                    <p className="text-[9px] md:text-[10px] lg:text-xs text-slate-500 dark:text-slate-400 truncate">
+                    <p className="text-sm text-slate-500 dark:text-slate-400 text-horizontal text-wrap-normal">
                       {item.flights_to?.[0]?.from} → {item.flights_to?.[item.flights_to.length - 1]?.to}
                     </p>
                   </div>
                 </div>
 
-                <div className="text-right flex-shrink-0">
-                  <div className="text-sm md:text-lg lg:text-xl font-bold text-slate-900 dark:text-white">{formatPrice(item.price)}</div>
-                  <div className="flex items-center space-x-1 text-xs md:text-sm">
-                    {item.refundable && (
-                      <Badge variant="outline" className="text-[8px] md:text-xs bg-green-50 text-green-700 border-green-200 px-1 md:px-2">
-                        <Shield className="h-2 w-2 md:h-3 md:w-3 mr-0.5 md:mr-1" />
-                        <span className="hidden md:inline">Refundable</span>
-                        <span className="md:hidden">Ref</span>
-                      </Badge>
-                    )}
-                  </div>
+                <div className="text-right">
+                  <div className="text-xl font-bold text-slate-900 dark:text-white text-horizontal">{formatPrice(item.price)}</div>
+                  {item.refundable && (
+                    <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200 mt-1">
+                      <Shield className="h-3 w-3 mr-1" />
+                      <span className="text-horizontal">Refundable</span>
+                    </Badge>
+                  )}
                 </div>
               </div>
             </CardHeader>
 
-            <CardContent className="pt-0 p-2 md:p-3">
-              <div className="space-y-2 md:space-y-4">
-                <div className="flex items-center justify-between text-xs md:text-sm">
-                  <div className="flex items-center space-x-2 md:space-x-4 flex-1 min-w-0">
-                    <div className="text-center min-w-0">
-                      <div className="font-semibold text-slate-900 dark:text-white truncate text-[10px] md:text-xs lg:text-sm">
-                        {item.flights_to?.[0]?.departure_time}
-                      </div>
-                      <div className="text-[8px] md:text-[9px] lg:text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                        {item.flights_to?.[0]?.departure_date}
-                      </div>
+            <CardContent className="p-4 pt-0 flex-1">
+              <div className="space-y-4">
+                {/* Flight times and route */}
+                <div className="flex items-center justify-between">
+                  <div className="text-center">
+                    <div className="font-semibold text-slate-900 dark:text-white text-sm text-horizontal">
+                      {item.flights_to?.[0]?.departure_time}
                     </div>
-
-                    <div className="flex-1 flex items-center justify-center overflow-hidden">
-                      <div className="flex items-center space-x-1 md:space-x-2">
-                        <div className="h-0.5 w-4 md:w-8 bg-slate-300 dark:bg-slate-600" />
-                        <Plane className="h-3 w-3 md:h-4 md:w-4 text-slate-400 rotate-90" />
-                        <div className="h-0.5 w-4 md:w-8 bg-slate-300 dark:bg-slate-600" />
-                      </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 text-horizontal">
+                      {item.flights_to?.[0]?.departure_date}
                     </div>
+                  </div>
 
-                    <div className="text-center min-w-0">
-                      <div className="font-semibold text-slate-900 dark:text-white truncate text-[10px] md:text-xs lg:text-sm">
-                        {item.flights_to?.[item.flights_to.length - 1]?.arrival_time}
-                      </div>
-                      <div className="text-[8px] md:text-[9px] lg:text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                        {item.flights_to?.[item.flights_to.length - 1]?.arrival_date}
-                      </div>
+                  <div className="flex items-center space-x-2 px-4">
+                    <div className="h-0.5 w-8 bg-slate-300 dark:bg-slate-600" />
+                    <Plane className="h-4 w-4 text-slate-400 rotate-90" />
+                    <div className="h-0.5 w-8 bg-slate-300 dark:bg-slate-600" />
+                  </div>
+
+                  <div className="text-center">
+                    <div className="font-semibold text-slate-900 dark:text-white text-sm text-horizontal">
+                      {item.flights_to?.[item.flights_to.length - 1]?.arrival_time}
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 text-horizontal">
+                      {item.flights_to?.[item.flights_to.length - 1]?.arrival_date}
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between text-[8px] md:text-[9px] lg:text-[10px] text-slate-500 dark:text-slate-400">
-                  <span>Duration: {formatDuration(totalDuration)}</span>
-                  <span className="hidden sm:inline">
+                {/* Flight details */}
+                <div className="grid grid-cols-3 gap-2 text-xs text-slate-500 dark:text-slate-400 text-center">
+                  <div className="text-horizontal">Duration: {formatDuration(totalDuration)}</div>
+                  <div className="text-horizontal">
                     {item.flights_to && item.flights_to.length > 1
                       ? `${item.flights_to.length - 1} stop${item.flights_to.length > 2 ? "s" : ""}`
                       : "Direct"}
-                  </span>
-                  <span className="hidden md:inline">Seats: {item.flights_to?.[0]?.seats}</span>
+                  </div>
+                  <div className="text-horizontal">Seats: {item.flights_to?.[0]?.seats || "Available"}</div>
                 </div>
 
                 {isBooked && (
-                  <div className="flex items-center justify-center space-x-2 text-green-600 dark:text-green-400">
-                    <CheckCircle2 className="h-3 w-3 md:h-4 md:w-4" />
-                    <span className="text-xs md:text-sm font-medium">Booked</span>
+                  <div className="flex items-center justify-center space-x-2 text-green-600 dark:text-green-400 pt-2">
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span className="text-sm font-medium text-horizontal">Booked</span>
                   </div>
                 )}
               </div>
@@ -562,19 +557,19 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="space-y-4"
+          className="space-y-6"
         >
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 rounded-lg">
+          <div className="flex items-center space-x-4 pb-2">
+            <div className="p-3 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 rounded-lg">
               {getIcon(type)}
-                </div>
-            <div>
-              <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white capitalize">{type}</h3>
-              <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400">
+            </div>
+            <div className="flex-1">
+              <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white capitalize text-horizontal">{type}</h3>
+              <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 text-horizontal">
                 {items.length} option{items.length !== 1 ? "s" : ""} found
               </p>
             </div>
-            <Badge className={`${getTypeColor(type)} ml-auto text-xs`}>{items.length}</Badge>
+            <Badge className={`${getTypeColor(type)} text-sm px-3 py-1 text-horizontal`}>{items.length}</Badge>
           </div>
           
           {(() => {
@@ -588,8 +583,8 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
               
               return (
                 <>
-                  {/* Responsive grid: 1 col on mobile, 2 on tablet, 3+ on desktop */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 md:gap-4">
+                  {/* Responsive grid with auto-fitting columns */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                     <AnimatePresence>
                       {displayItems.map((item, index) => {
                         const itemId = item.id || item.combination_id || `${type}-${index}`
@@ -619,26 +614,58 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                             exit={{ opacity: 0, scale: 0.9 }}
                             transition={{ duration: 0.3, delay: index * 0.1 }}
                           >
-                            <Card className="hover:shadow-lg transition-all duration-300">
-                              <CardHeader className="p-3 md:p-4">
-                                <CardTitle className="text-sm md:text-base lg:text-lg">{item.name}</CardTitle>
+                            <Card className="hover:shadow-lg transition-all duration-300 flex flex-col min-h-[250px] card-layout">
+                              <CardHeader className="p-4">
+                                <CardTitle className="text-lg font-semibold mb-2 text-horizontal text-wrap-normal">{item.name}</CardTitle>
+                                {item.location && (
+                                  <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center">
+                                    <MapPin className="h-4 w-4 mr-2" />
+                                    <span className="text-horizontal text-wrap-normal">{item.location}</span>
+                                  </p>
+                                )}
                               </CardHeader>
-                              <CardContent className="p-3 md:p-4 pt-0">
-                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-300 mb-4">{item.description}</p>
-                                <div className="flex items-center justify-between">
-                                  <span className="font-semibold text-sm md:text-lg">₸{item.price}</span>
+                              <CardContent className="p-4 pt-0 flex-1 flex flex-col">
+                                <div className="flex-1">
+                                  <p className="text-sm text-slate-600 dark:text-slate-300 mb-4 text-horizontal text-wrap-normal">{item.description}</p>
+                                  {item.rating && (
+                                    <div className="flex items-center mb-4">
+                                      <div className="flex items-center">
+                                        {[...Array(5)].map((_, i) => (
+                                          <span
+                                            key={i}
+                                            className={`text-lg ${
+                                              i < Math.floor(item.rating)
+                                                ? 'text-yellow-400'
+                                                : 'text-slate-300 dark:text-slate-600'
+                                            }`}
+                                          >
+                                            ★
+                                          </span>
+                                        ))}
+                                        <span className="ml-2 text-sm text-slate-500 text-horizontal">{item.rating}</span>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex items-center justify-between mt-auto pt-4">
+                                  <span className="font-semibold text-xl text-slate-900 dark:text-white text-horizontal">
+                                    {item.price ? `₸${item.price}` : 'Price on request'}
+                                  </span>
                                   <Button
                                     size="sm"
                                     onClick={() => handleBooking(item, type)}
                                     disabled={isBooking || isBooked}
-                                    className="bg-blue-600 hover:bg-blue-700 px-2 md:px-3 py-1 text-xs md:text-sm"
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm font-medium transition-colors"
                                   >
                                     {isBooking ? (
-                                      <Loader2 className="h-3 w-3 md:h-4 md:w-4 animate-spin" />
+                                      <Loader2 className="h-4 w-4 animate-spin" />
                                     ) : isBooked ? (
-                                      "Booked"
+                                      <>
+                                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                                        <span className="text-horizontal">Booked</span>
+                                      </>
                                     ) : (
-                                      "Book Now"
+                                      <span className="text-horizontal">Book Now</span>
                                     )}
                                   </Button>
                                 </div>
@@ -664,8 +691,8 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
 
               return (
                 <>
-                  {/* Responsive grid: 1 col on mobile, 2 on tablet, 3+ on desktop */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 md:gap-4">
+                  {/* Responsive grid with auto-fitting columns */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                     <AnimatePresence>
                       {displayItems.map((item, index) => {
                         const itemId = item.id || item.combination_id || `${type}-${index}`
@@ -695,26 +722,58 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                             exit={{ opacity: 0, scale: 0.9 }}
                             transition={{ duration: 0.3, delay: index * 0.1 }}
                           >
-                            <Card className="hover:shadow-lg transition-all duration-300">
-                              <CardHeader className="p-3 md:p-4">
-                                <CardTitle className="text-sm md:text-base lg:text-lg">{item.name}</CardTitle>
+                            <Card className="hover:shadow-lg transition-all duration-300 flex flex-col min-h-[250px] card-layout">
+                              <CardHeader className="p-4">
+                                <CardTitle className="text-lg font-semibold mb-2 text-horizontal text-wrap-normal">{item.name}</CardTitle>
+                                {item.location && (
+                                  <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center">
+                                    <MapPin className="h-4 w-4 mr-2" />
+                                    <span className="text-horizontal text-wrap-normal">{item.location}</span>
+                                  </p>
+                                )}
                               </CardHeader>
-                              <CardContent className="p-3 md:p-4 pt-0">
-                                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-300 mb-4">{item.description}</p>
-                                <div className="flex items-center justify-between">
-                                  <span className="font-semibold text-sm md:text-lg">₸{item.price}</span>
+                              <CardContent className="p-4 pt-0 flex-1 flex flex-col">
+                                <div className="flex-1">
+                                  <p className="text-sm text-slate-600 dark:text-slate-300 mb-4 text-horizontal text-wrap-normal">{item.description}</p>
+                                  {item.rating && (
+                                    <div className="flex items-center mb-4">
+                                      <div className="flex items-center">
+                                        {[...Array(5)].map((_, i) => (
+                                          <span
+                                            key={i}
+                                            className={`text-lg ${
+                                              i < Math.floor(item.rating)
+                                                ? 'text-yellow-400'
+                                                : 'text-slate-300 dark:text-slate-600'
+                                            }`}
+                                          >
+                                            ★
+                                          </span>
+                                        ))}
+                                        <span className="ml-2 text-sm text-slate-500 text-horizontal">{item.rating}</span>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex items-center justify-between mt-auto pt-4">
+                                  <span className="font-semibold text-xl text-slate-900 dark:text-white text-horizontal">
+                                    {item.price ? `₸${item.price}` : 'Price on request'}
+                                  </span>
                                   <Button
                                     size="sm"
                                     onClick={() => handleBooking(item, type)}
                                     disabled={isBooking || isBooked}
-                                    className="bg-blue-600 hover:bg-blue-700 px-2 md:px-3 py-1 text-xs md:text-sm"
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm font-medium transition-colors"
                                   >
                                     {isBooking ? (
-                                      <Loader2 className="h-3 w-3 md:h-4 md:w-4 animate-spin" />
+                                      <Loader2 className="h-4 w-4 animate-spin" />
                                     ) : isBooked ? (
-                                      "Booked"
+                                      <>
+                                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                                        <span className="text-horizontal">Booked</span>
+                                      </>
                                     ) : (
-                                      "Book Now"
+                                      <span className="text-horizontal">Book Now</span>
                                     )}
                                   </Button>
                                 </div>
