@@ -46,7 +46,12 @@ interface SearchResult {
   description?: string
   price?: string | number
   rating?: number
-  location?: string
+  location?: string | {
+    address?: string
+    distance_from_center?: string
+    coordinates?: { latitude: number; longitude: number }
+    [key: string]: any
+  }
   duration?: string
   category?: string
   availability?: string
@@ -415,6 +420,22 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
   
   const isFromLoadedConversation = outputArray.length > 0 && outputArray[0]?.search_result_id
 
+  // Helper function to safely extract location string
+  const getLocationString = (location: any): string => {
+    if (typeof location === 'string' && location !== 'N/A') {
+      return location
+    }
+    if (typeof location === 'object' && location !== null) {
+      if (location.address && location.address !== 'N/A') {
+        return location.address
+      }
+      if (location.distance_from_center && location.distance_from_center !== 'N/A') {
+        return location.distance_from_center
+      }
+    }
+    return ''
+  }
+
   const handleBooking = async (item: any, type: string) => {
     const items = groupedResults[type] || []
     const index = items.findIndex(it => 
@@ -619,10 +640,10 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                             <Card className="hover:shadow-lg transition-all duration-300 flex flex-col min-h-[250px] card-layout">
                               <CardHeader className="p-4">
                                 <CardTitle className="text-lg font-semibold mb-2 text-horizontal text-wrap-normal">{item.name}</CardTitle>
-                                {item.location && (
+                                {getLocationString(item.location) && (
                                   <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center">
                                     <MapPin className="h-4 w-4 mr-2" />
-                                    <span className="text-horizontal text-wrap-normal">{item.location}</span>
+                                    <span className="text-horizontal text-wrap-normal">{getLocationString(item.location)}</span>
                                   </p>
                                 )}
                               </CardHeader>
@@ -727,10 +748,10 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                             <Card className="hover:shadow-lg transition-all duration-300 flex flex-col min-h-[250px] card-layout">
                               <CardHeader className="p-4">
                                 <CardTitle className="text-lg font-semibold mb-2 text-horizontal text-wrap-normal">{item.name}</CardTitle>
-                                {item.location && (
+                                {getLocationString(item.location) && (
                                   <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center">
                                     <MapPin className="h-4 w-4 mr-2" />
-                                    <span className="text-horizontal text-wrap-normal">{item.location}</span>
+                                    <span className="text-horizontal text-wrap-normal">{getLocationString(item.location)}</span>
                                   </p>
                                 )}
                               </CardHeader>
