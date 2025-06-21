@@ -210,12 +210,12 @@ const FlightCard = ({ item, onBook, isBooked, isBooking }: any) => {
 
                 <div className="text-right">
                   <div className="text-xl font-bold text-slate-900 dark:text-white text-horizontal">{formatPrice(item.price)}</div>
-                  {item.refundable && (
+                    {item.refundable && (
                     <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200 mt-1">
                       <Shield className="h-3 w-3 mr-1" />
                       <span className="text-horizontal">Refundable</span>
-                    </Badge>
-                  )}
+                      </Badge>
+                    )}
                 </div>
               </div>
             </CardHeader>
@@ -226,25 +226,25 @@ const FlightCard = ({ item, onBook, isBooked, isBooking }: any) => {
                 <div className="flex items-center justify-between">
                   <div className="text-center">
                     <div className="font-semibold text-slate-900 dark:text-white text-sm text-horizontal">
-                      {item.flights_to?.[0]?.departure_time}
-                    </div>
+                        {item.flights_to?.[0]?.departure_time}
+                      </div>
                     <div className="text-xs text-slate-500 dark:text-slate-400 text-horizontal">
-                      {item.flights_to?.[0]?.departure_date}
+                        {item.flights_to?.[0]?.departure_date}
+                      </div>
                     </div>
-                  </div>
 
                   <div className="flex items-center space-x-2 px-4">
                     <div className="h-0.5 w-8 bg-slate-300 dark:bg-slate-600" />
                     <Plane className="h-4 w-4 text-slate-400 rotate-90" />
                     <div className="h-0.5 w-8 bg-slate-300 dark:bg-slate-600" />
-                  </div>
+                      </div>
 
                   <div className="text-center">
                     <div className="font-semibold text-slate-900 dark:text-white text-sm text-horizontal">
                       {item.flights_to?.[item.flights_to.length - 1]?.arrival_time}
                     </div>
                     <div className="text-xs text-slate-500 dark:text-slate-400 text-horizontal">
-                      {item.flights_to?.[item.flights_to.length - 1]?.arrival_date}
+                        {item.flights_to?.[item.flights_to.length - 1]?.arrival_date}
                     </div>
                   </div>
                 </div>
@@ -562,13 +562,13 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
           <div className="max-w-6xl mx-auto px-4">
             <div className="flex items-center space-x-4 pb-2">
               <div className="p-3 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 rounded-lg">
-                {getIcon(type)}
-              </div>
+              {getIcon(type)}
+                </div>
               <div className="flex-1">
                 <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white capitalize text-horizontal">{type}</h3>
                 <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 text-horizontal">
-                  {items.length} option{items.length !== 1 ? "s" : ""} found
-                </p>
+                {items.length} option{items.length !== 1 ? "s" : ""} found
+              </p>
               </div>
               <Badge className={`${getTypeColor(type)} text-sm px-3 py-1 text-horizontal`}>{items.length}</Badge>
             </div>

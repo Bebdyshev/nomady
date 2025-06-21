@@ -49,68 +49,56 @@ import {
 } from "lucide-react"
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 
-interface HotelProperty {
+interface Hotel {
   name: string
-  type: string
-  hotel_class: string | null
-  link: string
-  overall_rating: number | null
-  rate_per_night: number | null
-  total_rate: number | null
-  currency: string
+  type?: string
+  hotel_class?: string | null
+  link?: string
+  detail_url?: string
+  overall_rating?: number | null
+  rate_per_night?: number | null
+  total_rate?: number | null
+  currency?: string
   coordinates?: { latitude: number; longitude: number }
   check_in?: string | null
   check_out?: string | null
   amenities?: string[]
   images?: string[]
-}
-
-// New hotel data structure
-interface NewHotelData {
-  name: string
-  price: string
-  rating: string
-  location: string
-  image_url: string
-  detail_url: string
-  details: {
-    name: string
-    rating_score: string
-    rating_text: string
+  price?: string | number
+  details?: {
+    rating_score?: string
     [key: string]: any
   }
+  image_url?: string
+  location?: string
 }
 
 interface HotelsAPIResponse {
-  search_parameters: {
+  search_parameters?: {
     query: string
     check_in_date: string
     check_out_date: string
     adults: number
     currency: string
   }
-  total_results: number
-  properties: HotelProperty[]
-}
-
-// New hotel search response structure
-interface NewHotelSearchResponse {
-  success: boolean
-  destination: string
-  total_found: number
-  hotels: NewHotelData[]
-  search_params: {
+  total_results?: number
+  properties?: Hotel[]
+  
+  // For new structure from user
+  destination?: string
+  hotels?: Hotel[]
+  search_params?: {
     destination: string
     check_in_date: string
     check_out_date: string
     adults: number
+    currency: string
   }
-  scraped_at: string
-  search_url: string
+  total_found?: number
 }
 
 interface HotelDisplayProps {
-  toolOutput: HotelsAPIResponse | NewHotelSearchResponse
+  toolOutput: HotelsAPIResponse
   bookedIds?: Set<string>
   onBooked?: (item: any, id: string, type: string) => void
 }
@@ -293,21 +281,24 @@ const getAmenityIcon = (amenity: string) => {
 
 // Enhanced Hotel Card Component - Compact version to match ticket cards
 const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) => {
-  const formatPrice = (price: number | null) => {
-    if (!price || price === 0) return "Price on request"
-    
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: hotel.currency || "KZT",
-      minimumFractionDigits: 0,
-    }).format(price)
+  const formatPrice = (priceInput: number | string | null | undefined) => {
+    if (typeof priceInput === 'number') {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: hotel.currency || "USD",
+        minimumFractionDigits: 0,
+      }).format(priceInput)
+    }
+    if (typeof priceInput === 'string' && priceInput.toLowerCase() !== 'n/a') {
+      return priceInput
+    }
+    return "N/A"
   }
 
-  const renderStars = (rating: number | null) => {
-    if (!rating || rating === 0) {
-      return <span className="text-xs text-slate-500 dark:text-slate-400 text-horizontal">No rating</span>
-    }
+  const ratingValue = hotel.overall_rating ?? (hotel.details?.rating_score ? parseFloat(hotel.details.rating_score) : null)
 
+  const renderStars = (rating: number) => {
+    if (rating === 0) return null
     return (
       <div className="flex items-center space-x-1">
         {[...Array(5)].map((_: undefined, i: number) => (
@@ -322,16 +313,15 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
   }
 
   const calculateNights = () => {
-    if (!searchParams?.check_in_date || !searchParams?.check_out_date) return 1
-    
+    if (!searchParams?.check_in_date || !searchParams?.check_out_date) return 0
     const checkIn = new Date(searchParams.check_in_date)
     const checkOut = new Date(searchParams.check_out_date)
-    const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24))
-    return nights > 0 ? nights : 1
+    return Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24))
   }
 
   const nights = calculateNights()
-  const totalPrice = hotel.rate_per_night ? hotel.rate_per_night * nights : hotel.total_rate
+
+  const hotelImages = hotel.images || (hotel.image_url && hotel.image_url.toLowerCase() !== 'n/a' ? [hotel.image_url] : [])
 
   return (
     <Dialog>
@@ -351,23 +341,12 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600" />
 
             {/* Hotel Image */}
-            {hotel.images && hotel.images.length > 0 ? (
+            {hotelImages.length > 0 ? (
               <div className="h-32 w-full overflow-hidden">
                 <img 
-                  src={hotel.images[0]} 
+                  src={hotelImages[0]} 
                   alt={hotel.name}
                   className="w-full h-full object-cover"
-                  onError={(e) => {
-                    // Fallback to placeholder if image fails to load
-                    e.currentTarget.style.display = 'none'
-                    e.currentTarget.parentElement!.innerHTML = `
-                      <div class="h-32 w-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center">
-                        <svg class="h-8 w-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                        </svg>
-                      </div>
-                    `
-                  }}
                 />
               </div>
             ) : (
@@ -387,23 +366,14 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                       {hotel.name}
                     </CardTitle>
                     <p className="text-sm text-slate-500 dark:text-slate-400 text-horizontal text-wrap-normal">
-                      {hotel.hotel_class || hotel.type || "Hotel"}
+                      {hotel.hotel_class || hotel.type || hotel.location}
                     </p>
-                    {hotel.location && hotel.location !== "N/A" && (
-                      <p className="text-xs text-slate-400 dark:text-slate-500 text-horizontal text-wrap-normal mt-1">
-                        📍 {hotel.location}
-                      </p>
-                    )}
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <div className="text-xl font-bold text-slate-900 dark:text-white text-horizontal">
-                    {formatPrice(hotel.rate_per_night)}
-                  </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 text-horizontal">
-                    {hotel.rate_per_night ? "per night" : ""}
-                  </div>
+                  <div className="text-xl font-bold text-slate-900 dark:text-white text-horizontal">{formatPrice(hotel.rate_per_night ?? hotel.price)}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 text-horizontal">per night</div>
                 </div>
               </div>
             </CardHeader>
@@ -411,11 +381,13 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
             <CardContent className="p-4 pt-0 flex-1 flex flex-col">
               <div className="space-y-4 flex-1">
                 {/* Rating */}
-                <div className="flex items-center justify-center">
-                  {renderStars(hotel.overall_rating)}
-                </div>
+                {ratingValue && (
+                  <div className="flex items-center justify-center">
+                    {renderStars(ratingValue)}
+                  </div>
+                )}
 
-                {/* Amenities Preview - Show if available */}
+                {/* Amenities Preview */}
                 {hotel.amenities && hotel.amenities.length > 0 && (
                   <div className="flex items-center justify-center space-x-2 overflow-hidden">
                     {hotel.amenities.slice(0, 3).map((amenity: string, index: number) => (
@@ -433,12 +405,12 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                 )}
 
                 {/* Duration info */}
-                <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
-                  <span className="text-horizontal">{nights} night{nights !== 1 ? 's' : ''}</span>
-                  {totalPrice && (
-                    <span className="text-horizontal">Total: {formatPrice(totalPrice)}</span>
-                  )}
-                </div>
+                {nights > 0 && (
+                  <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
+                    <span className="text-horizontal">{nights} nights</span>
+                    <span className="text-horizontal">Total: {formatPrice(hotel.total_rate ?? hotel.price)}</span>
+                  </div>
+                )}
 
                 {isBooked && (
                   <div className="flex items-center justify-center space-x-2 text-green-600 dark:text-green-400 pt-2">
@@ -463,10 +435,10 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
               <div className="text-xl font-bold text-horizontal">{hotel.name}</div>
               <div className="text-sm text-slate-500 dark:text-slate-400 font-normal flex items-center space-x-2">
                 {hotel.hotel_class && <span className="text-horizontal">{hotel.hotel_class}</span>}
-                {hotel.overall_rating && (
+                {ratingValue && (
                   <>
                     <span>•</span>
-                    {renderStars(hotel.overall_rating)}
+                    {renderStars(ratingValue)}
                   </>
                 )}
               </div>
@@ -477,54 +449,54 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
         <div className="space-y-6">
           {/* Enhanced Image Gallery */}
           <div className="relative">
-            <HotelImageGallery images={hotel.images || []} hotelName={hotel.name} />
+            <HotelImageGallery images={hotelImages || []} hotelName={hotel.name} />
           </div>
 
           {/* Booking Summary */}
-          <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 rounded-xl p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-300">
-                  <Calendar className="h-4 w-4" />
-                  <span>Check-in</span>
+          {searchParams?.check_in_date && (
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 rounded-xl p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-300">
+                    <Calendar className="h-4 w-4" />
+                    <span>Check-in</span>
+                  </div>
+                  <div className="font-semibold text-slate-900 dark:text-white">
+                    {new Date(searchParams.check_in_date).toLocaleDateString("en-US", {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </div>
+                  {hotel.check_in && <div className="text-sm text-slate-500">{hotel.check_in}</div>}
                 </div>
-                <div className="font-semibold text-slate-900 dark:text-white">
-                  {searchParams?.check_in_date ? new Date(searchParams.check_in_date).toLocaleDateString("en-US", {
-                    weekday: "short",
-                    month: "short",
-                    day: "numeric",
-                  }) : "Not specified"}
-                </div>
-                {hotel.check_in && <div className="text-sm text-slate-500">{hotel.check_in}</div>}
-              </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-300">
-                  <Calendar className="h-4 w-4" />
-                  <span>Check-out</span>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-300">
+                    <Calendar className="h-4 w-4" />
+                    <span>Check-out</span>
+                  </div>
+                  <div className="font-semibold text-slate-900 dark:text-white">
+                    {new Date(searchParams.check_out_date).toLocaleDateString("en-US", {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </div>
+                  {hotel.check_out && <div className="text-sm text-slate-500">{hotel.check_out}</div>}
                 </div>
-                <div className="font-semibold text-slate-900 dark:text-white">
-                  {searchParams?.check_out_date ? new Date(searchParams.check_out_date).toLocaleDateString("en-US", {
-                    weekday: "short",
-                    month: "short",
-                    day: "numeric",
-                  }) : "Not specified"}
-                </div>
-                {hotel.check_out && <div className="text-sm text-slate-500">{hotel.check_out}</div>}
-              </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-300">
-                  <Users className="h-4 w-4" />
-                  <span>Guests</span>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-300">
+                    <Users className="h-4 w-4" />
+                    <span>Guests</span>
+                  </div>
+                  <div className="font-semibold text-slate-900 dark:text-white">{searchParams.adults} Adults</div>
+                  <div className="text-sm text-slate-500">{nights} nights</div>
                 </div>
-                <div className="font-semibold text-slate-900 dark:text-white">
-                  {searchParams?.adults || 1} Adult{(searchParams?.adults || 1) !== 1 ? 's' : ''}
-                </div>
-                <div className="text-sm text-slate-500">{nights} night{nights !== 1 ? 's' : ''}</div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Amenities Grid */}
           {hotel.amenities && hotel.amenities.length > 0 && (
@@ -576,10 +548,12 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
         <DialogFooter className="pt-6 border-t border-slate-200 dark:border-slate-700">
           <div className="flex items-center justify-between w-full">
             <div className="text-left">
-              <div className="text-3xl font-bold text-slate-900 dark:text-white">{formatPrice(totalPrice)}</div>
-              <div className="text-sm text-slate-500 dark:text-slate-400">
-                {hotel.rate_per_night ? `${formatPrice(hotel.rate_per_night)} × ${nights} nights` : "Total price"}
-              </div>
+              <div className="text-3xl font-bold text-slate-900 dark:text-white">{formatPrice(hotel.total_rate ?? hotel.price)}</div>
+              {nights > 0 && (
+                <div className="text-sm text-slate-500 dark:text-slate-400">
+                  {formatPrice(hotel.rate_per_night ?? hotel.price)} × {nights} nights
+                </div>
+              )}
             </div>
 
             <Button
@@ -617,13 +591,13 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
   const [sortBy, setSortBy] = useState<"price" | "rating" | "name">("price")
   const { toast } = useToast()
 
-  // Type guard to check if it's the new hotel data structure
-  const isNewHotelData = (data: any): data is NewHotelSearchResponse => {
-    return data.hotels && Array.isArray(data.hotels) && data.destination
-  }
+  const hotels = toolOutput.properties || toolOutput.hotels || []
+  const searchParams = toolOutput.search_parameters || toolOutput.search_params
+  const totalResults = toolOutput.total_results ?? toolOutput.total_found ?? 0
+  const destination = searchParams ? ('query' in searchParams ? searchParams.query : searchParams.destination) : ''
 
   const handleBooking = async (hotel: any, type: string) => {
-    const itemId = hotel.detail_url || hotel.link || `${hotel.name}-${Date.now()}`
+    const itemId = hotel.link || hotel.detail_url || `${hotel.name}-${Date.now()}`
     setBookingStates((prev) => ({ ...prev, [itemId]: true }))
 
     try {
@@ -632,7 +606,7 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
 
       toast({
         title: "Hotel Booked Successfully! 🏨",
-        description: `${hotel.name || hotel.details?.name} has been reserved for your stay.`,
+        description: `${hotel.name} has been reserved for your stay.`,
       })
 
       onBooked?.(hotel, itemId, type)
@@ -648,48 +622,17 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
     }
   }
 
-  // Normalize data for both structures
-  const normalizedData = isNewHotelData(toolOutput) ? {
-    hotels: toolOutput.hotels.map(hotel => ({
-      ...hotel,
-      // Clean up the name by removing "Opens in new window"
-      name: hotel.name.replace('Opens in new window', '').trim(),
-      // Convert rating to number if possible
-      overall_rating: hotel.details?.rating_score && hotel.details.rating_score !== 'N/A' 
-        ? parseFloat(hotel.details.rating_score) 
-        : null,
-      // Set up pricing info
-      rate_per_night: hotel.price !== 'N/A' ? parseFloat(hotel.price) : null,
-      total_rate: hotel.price !== 'N/A' ? parseFloat(hotel.price) * 7 : null, // 7 nights default
-      currency: 'KZT',
-      // Use image if available
-      images: hotel.image_url !== 'N/A' ? [hotel.image_url] : [],
-      // Location info
-      location: hotel.location !== 'N/A' ? hotel.location : null,
-      type: 'Hotel',
-      hotel_class: null
-    })),
-    query: toolOutput.destination,
-    check_in_date: toolOutput.search_params.check_in_date,
-    check_out_date: toolOutput.search_params.check_out_date,
-    adults: toolOutput.search_params.adults,
-    total_results: toolOutput.total_found
-  } : {
-    hotels: toolOutput.properties,
-    query: toolOutput.search_parameters.query,
-    check_in_date: toolOutput.search_parameters.check_in_date,
-    check_out_date: toolOutput.search_parameters.check_out_date,
-    adults: toolOutput.search_parameters.adults,
-    total_results: toolOutput.total_results
-  }
-
   // Sort hotels
-  const sortedHotels = [...normalizedData.hotels].sort((a, b) => {
+  const sortedHotels = [...hotels].sort((a, b) => {
     switch (sortBy) {
       case "price":
-        return (a.rate_per_night || 0) - (b.rate_per_night || 0)
+        const priceA = a.rate_per_night ?? (typeof a.price === 'number' ? a.price : Infinity)
+        const priceB = b.rate_per_night ?? (typeof b.price === 'number' ? b.price : Infinity)
+        return priceA - priceB
       case "rating":
-        return (b.overall_rating || 0) - (a.overall_rating || 0)
+        const ratingA = a.overall_rating ?? (a.details?.rating_score ? parseFloat(a.details.rating_score) : 0)
+        const ratingB = b.overall_rating ?? (b.details?.rating_score ? parseFloat(b.details.rating_score) : 0)
+        return ratingB - ratingA
       case "name":
         return a.name.localeCompare(b.name)
       default:
@@ -706,82 +649,78 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
         className="space-y-6"
       >
         <div className="max-w-6xl mx-auto px-4">
-          {/* Header */}
+        {/* Header */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 pb-2">
             <div className="flex items-center space-x-4">
               <div className="p-3 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 rounded-lg">
                 <Hotel className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-              </div>
+            </div>
               <div className="flex-1">
                 <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white text-horizontal">
-                  Hotels in {normalizedData.query}
-                </h3>
+                  Hotels in {destination}
+              </h3>
                 <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 text-horizontal">
-                  {normalizedData.total_results.toLocaleString()} properties found
-                </p>
-              </div>
+                  {totalResults.toLocaleString()} properties found
+              </p>
             </div>
+          </div>
 
-            {/* Sort Options */}
+          {/* Sort Options */}
             <div className="flex items-center space-x-2 w-full sm:w-auto">
               <span className="text-sm text-slate-600 dark:text-slate-300 flex-shrink-0 text-horizontal">Sort by:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
                 className="text-sm border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1 bg-white dark:bg-slate-800 flex-1 sm:flex-none min-w-0"
-              >
-                <option value="price">Price</option>
-                <option value="rating">Rating</option>
-                <option value="name">Name</option>
-              </select>
+            >
+              <option value="price">Price</option>
+              <option value="rating">Rating</option>
+              <option value="name">Name</option>
+            </select>
             </div>
           </div>
         </div>
 
         <div className="max-w-6xl mx-auto px-4">
-          {/* Hotels Grid */}
+        {/* Hotels Grid */}
           <div className="grid-auto-cards">
-            <AnimatePresence>
-              {sortedHotels.slice(0, 9).map((hotel: any, index: number) => {
-                const itemId = hotel.detail_url || hotel.link || `${hotel.name}-${index}`
-                const isBooked = bookedIds.has(itemId)
-                const isBooking = bookingStates[itemId] || false
+          <AnimatePresence>
+            {sortedHotels.slice(0, 9).map((hotel: Hotel, index: number) => {
+              const itemId = hotel.link || hotel.detail_url || `${hotel.name}-${index}`
+              const isBooked = bookedIds.has(itemId)
+              const isBooking = bookingStates[itemId] || false
 
-                return (
-                  <motion.div
-                    key={itemId}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ duration: 0.3, delay: index * 0.1 }}
-                  >
-                    <HotelCard
-                      hotel={hotel}
-                      searchParams={{
-                        check_in_date: normalizedData.check_in_date,
-                        check_out_date: normalizedData.check_out_date,
-                        adults: normalizedData.adults
-                      }}
-                      onBook={handleBooking}
-                      isBooked={isBooked}
-                      isBooking={isBooking}
-                    />
-                  </motion.div>
-                )
-              })}
-            </AnimatePresence>
-          </div>
+              return (
+                <motion.div
+                  key={itemId}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                >
+                  <HotelCard
+                    hotel={hotel}
+                    searchParams={searchParams || {}}
+                    onBook={handleBooking}
+                    isBooked={isBooked}
+                    isBooking={isBooking}
+                  />
+                </motion.div>
+              )
+            })}
+          </AnimatePresence>
+        </div>
 
-          {normalizedData.hotels.length > 9 && (
+        {totalResults > 9 && (
             <div className="text-center mt-6">
-              <Button
-                variant="ghost"
+            <Button
+              variant="ghost"
                 className="text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950 text-sm"
-              >
-                <span className="text-horizontal">View {normalizedData.hotels.length - 9} more hotels</span>
-              </Button>
-            </div>
-          )}
+            >
+                <span className="text-horizontal">View {totalResults - 9} more hotels</span>
+            </Button>
+          </div>
+        )}
         </div>
       </motion.div>
     </div>
