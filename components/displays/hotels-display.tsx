@@ -65,6 +65,22 @@ interface HotelProperty {
   images?: string[]
 }
 
+// New hotel data structure
+interface NewHotelData {
+  name: string
+  price: string
+  rating: string
+  location: string
+  image_url: string
+  detail_url: string
+  details: {
+    name: string
+    rating_score: string
+    rating_text: string
+    [key: string]: any
+  }
+}
+
 interface HotelsAPIResponse {
   search_parameters: {
     query: string
@@ -77,8 +93,24 @@ interface HotelsAPIResponse {
   properties: HotelProperty[]
 }
 
+// New hotel search response structure
+interface NewHotelSearchResponse {
+  success: boolean
+  destination: string
+  total_found: number
+  hotels: NewHotelData[]
+  search_params: {
+    destination: string
+    check_in_date: string
+    check_out_date: string
+    adults: number
+  }
+  scraped_at: string
+  search_url: string
+}
+
 interface HotelDisplayProps {
-  toolOutput: HotelsAPIResponse
+  toolOutput: HotelsAPIResponse | NewHotelSearchResponse
   bookedIds?: Set<string>
   onBooked?: (item: any, id: string, type: string) => void
 }
@@ -261,15 +293,21 @@ const getAmenityIcon = (amenity: string) => {
 
 // Enhanced Hotel Card Component - Compact version to match ticket cards
 const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) => {
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number | null) => {
+    if (!price || price === 0) return "Price on request"
+    
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: hotel.currency || "USD",
+      currency: hotel.currency || "KZT",
       minimumFractionDigits: 0,
     }).format(price)
   }
 
-  const renderStars = (rating: number) => {
+  const renderStars = (rating: number | null) => {
+    if (!rating || rating === 0) {
+      return <span className="text-xs text-slate-500 dark:text-slate-400 text-horizontal">No rating</span>
+    }
+
     return (
       <div className="flex items-center space-x-1">
         {[...Array(5)].map((_: undefined, i: number) => (
@@ -284,12 +322,16 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
   }
 
   const calculateNights = () => {
+    if (!searchParams?.check_in_date || !searchParams?.check_out_date) return 1
+    
     const checkIn = new Date(searchParams.check_in_date)
     const checkOut = new Date(searchParams.check_out_date)
-    return Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24))
+    const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24))
+    return nights > 0 ? nights : 1
   }
 
   const nights = calculateNights()
+  const totalPrice = hotel.rate_per_night ? hotel.rate_per_night * nights : hotel.total_rate
 
   return (
     <Dialog>
@@ -315,6 +357,17 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                   src={hotel.images[0]} 
                   alt={hotel.name}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Fallback to placeholder if image fails to load
+                    e.currentTarget.style.display = 'none'
+                    e.currentTarget.parentElement!.innerHTML = `
+                      <div class="h-32 w-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center">
+                        <svg class="h-8 w-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                      </div>
+                    `
+                  }}
                 />
               </div>
             ) : (
@@ -334,14 +387,23 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                       {hotel.name}
                     </CardTitle>
                     <p className="text-sm text-slate-500 dark:text-slate-400 text-horizontal text-wrap-normal">
-                      {hotel.hotel_class || hotel.type}
+                      {hotel.hotel_class || hotel.type || "Hotel"}
                     </p>
+                    {hotel.location && hotel.location !== "N/A" && (
+                      <p className="text-xs text-slate-400 dark:text-slate-500 text-horizontal text-wrap-normal mt-1">
+                        📍 {hotel.location}
+                      </p>
+                    )}
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <div className="text-xl font-bold text-slate-900 dark:text-white text-horizontal">{formatPrice(hotel.rate_per_night)}</div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 text-horizontal">per night</div>
+                  <div className="text-xl font-bold text-slate-900 dark:text-white text-horizontal">
+                    {formatPrice(hotel.rate_per_night)}
+                  </div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 text-horizontal">
+                    {hotel.rate_per_night ? "per night" : ""}
+                  </div>
                 </div>
               </div>
             </CardHeader>
@@ -349,13 +411,11 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
             <CardContent className="p-4 pt-0 flex-1 flex flex-col">
               <div className="space-y-4 flex-1">
                 {/* Rating */}
-                {hotel.overall_rating && (
-                  <div className="flex items-center justify-center">
-                    {renderStars(hotel.overall_rating)}
-                  </div>
-                )}
+                <div className="flex items-center justify-center">
+                  {renderStars(hotel.overall_rating)}
+                </div>
 
-                {/* Amenities Preview */}
+                {/* Amenities Preview - Show if available */}
                 {hotel.amenities && hotel.amenities.length > 0 && (
                   <div className="flex items-center justify-center space-x-2 overflow-hidden">
                     {hotel.amenities.slice(0, 3).map((amenity: string, index: number) => (
@@ -374,8 +434,10 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
 
                 {/* Duration info */}
                 <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
-                  <span className="text-horizontal">{nights} nights</span>
-                  <span className="text-horizontal">Total: {formatPrice(hotel.total_rate)}</span>
+                  <span className="text-horizontal">{nights} night{nights !== 1 ? 's' : ''}</span>
+                  {totalPrice && (
+                    <span className="text-horizontal">Total: {formatPrice(totalPrice)}</span>
+                  )}
                 </div>
 
                 {isBooked && (
@@ -427,11 +489,11 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                   <span>Check-in</span>
                 </div>
                 <div className="font-semibold text-slate-900 dark:text-white">
-                  {new Date(searchParams.check_in_date).toLocaleDateString("en-US", {
+                  {searchParams?.check_in_date ? new Date(searchParams.check_in_date).toLocaleDateString("en-US", {
                     weekday: "short",
                     month: "short",
                     day: "numeric",
-                  })}
+                  }) : "Not specified"}
                 </div>
                 {hotel.check_in && <div className="text-sm text-slate-500">{hotel.check_in}</div>}
               </div>
@@ -442,11 +504,11 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                   <span>Check-out</span>
                 </div>
                 <div className="font-semibold text-slate-900 dark:text-white">
-                  {new Date(searchParams.check_out_date).toLocaleDateString("en-US", {
+                  {searchParams?.check_out_date ? new Date(searchParams.check_out_date).toLocaleDateString("en-US", {
                     weekday: "short",
                     month: "short",
                     day: "numeric",
-                  })}
+                  }) : "Not specified"}
                 </div>
                 {hotel.check_out && <div className="text-sm text-slate-500">{hotel.check_out}</div>}
               </div>
@@ -456,8 +518,10 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                   <Users className="h-4 w-4" />
                   <span>Guests</span>
                 </div>
-                <div className="font-semibold text-slate-900 dark:text-white">{searchParams.adults} Adults</div>
-                <div className="text-sm text-slate-500">{nights} nights</div>
+                <div className="font-semibold text-slate-900 dark:text-white">
+                  {searchParams?.adults || 1} Adult{(searchParams?.adults || 1) !== 1 ? 's' : ''}
+                </div>
+                <div className="text-sm text-slate-500">{nights} night{nights !== 1 ? 's' : ''}</div>
               </div>
             </div>
           </div>
@@ -512,9 +576,9 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
         <DialogFooter className="pt-6 border-t border-slate-200 dark:border-slate-700">
           <div className="flex items-center justify-between w-full">
             <div className="text-left">
-              <div className="text-3xl font-bold text-slate-900 dark:text-white">{formatPrice(hotel.total_rate)}</div>
+              <div className="text-3xl font-bold text-slate-900 dark:text-white">{formatPrice(totalPrice)}</div>
               <div className="text-sm text-slate-500 dark:text-slate-400">
-                {formatPrice(hotel.rate_per_night)} × {nights} nights
+                {hotel.rate_per_night ? `${formatPrice(hotel.rate_per_night)} × ${nights} nights` : "Total price"}
               </div>
             </div>
 
@@ -553,8 +617,13 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
   const [sortBy, setSortBy] = useState<"price" | "rating" | "name">("price")
   const { toast } = useToast()
 
+  // Type guard to check if it's the new hotel data structure
+  const isNewHotelData = (data: any): data is NewHotelSearchResponse => {
+    return data.hotels && Array.isArray(data.hotels) && data.destination
+  }
+
   const handleBooking = async (hotel: any, type: string) => {
-    const itemId = hotel.link || `${hotel.name}-${Date.now()}`
+    const itemId = hotel.detail_url || hotel.link || `${hotel.name}-${Date.now()}`
     setBookingStates((prev) => ({ ...prev, [itemId]: true }))
 
     try {
@@ -563,7 +632,7 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
 
       toast({
         title: "Hotel Booked Successfully! 🏨",
-        description: `${hotel.name} has been reserved for your stay.`,
+        description: `${hotel.name || hotel.details?.name} has been reserved for your stay.`,
       })
 
       onBooked?.(hotel, itemId, type)
@@ -579,8 +648,43 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
     }
   }
 
+  // Normalize data for both structures
+  const normalizedData = isNewHotelData(toolOutput) ? {
+    hotels: toolOutput.hotels.map(hotel => ({
+      ...hotel,
+      // Clean up the name by removing "Opens in new window"
+      name: hotel.name.replace('Opens in new window', '').trim(),
+      // Convert rating to number if possible
+      overall_rating: hotel.details?.rating_score && hotel.details.rating_score !== 'N/A' 
+        ? parseFloat(hotel.details.rating_score) 
+        : null,
+      // Set up pricing info
+      rate_per_night: hotel.price !== 'N/A' ? parseFloat(hotel.price) : null,
+      total_rate: hotel.price !== 'N/A' ? parseFloat(hotel.price) * 7 : null, // 7 nights default
+      currency: 'KZT',
+      // Use image if available
+      images: hotel.image_url !== 'N/A' ? [hotel.image_url] : [],
+      // Location info
+      location: hotel.location !== 'N/A' ? hotel.location : null,
+      type: 'Hotel',
+      hotel_class: null
+    })),
+    query: toolOutput.destination,
+    check_in_date: toolOutput.search_params.check_in_date,
+    check_out_date: toolOutput.search_params.check_out_date,
+    adults: toolOutput.search_params.adults,
+    total_results: toolOutput.total_found
+  } : {
+    hotels: toolOutput.properties,
+    query: toolOutput.search_parameters.query,
+    check_in_date: toolOutput.search_parameters.check_in_date,
+    check_out_date: toolOutput.search_parameters.check_out_date,
+    adults: toolOutput.search_parameters.adults,
+    total_results: toolOutput.total_results
+  }
+
   // Sort hotels
-  const sortedHotels = [...toolOutput.properties].sort((a, b) => {
+  const sortedHotels = [...normalizedData.hotels].sort((a, b) => {
     switch (sortBy) {
       case "price":
         return (a.rate_per_night || 0) - (b.rate_per_night || 0)
@@ -610,10 +714,10 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
               </div>
               <div className="flex-1">
                 <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white text-horizontal">
-                  Hotels in {toolOutput.search_parameters.query}
+                  Hotels in {normalizedData.query}
                 </h3>
                 <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 text-horizontal">
-                  {toolOutput.total_results.toLocaleString()} properties found
+                  {normalizedData.total_results.toLocaleString()} properties found
                 </p>
               </div>
             </div>
@@ -638,8 +742,8 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
           {/* Hotels Grid */}
           <div className="grid-auto-cards">
             <AnimatePresence>
-              {sortedHotels.slice(0, 9).map((hotel: HotelProperty, index: number) => {
-                const itemId = hotel.link || `${hotel.name}-${index}`
+              {sortedHotels.slice(0, 9).map((hotel: any, index: number) => {
+                const itemId = hotel.detail_url || hotel.link || `${hotel.name}-${index}`
                 const isBooked = bookedIds.has(itemId)
                 const isBooking = bookingStates[itemId] || false
 
@@ -653,7 +757,11 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
                   >
                     <HotelCard
                       hotel={hotel}
-                      searchParams={toolOutput.search_parameters}
+                      searchParams={{
+                        check_in_date: normalizedData.check_in_date,
+                        check_out_date: normalizedData.check_out_date,
+                        adults: normalizedData.adults
+                      }}
                       onBook={handleBooking}
                       isBooked={isBooked}
                       isBooking={isBooking}
@@ -664,13 +772,13 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
             </AnimatePresence>
           </div>
 
-          {toolOutput.properties.length > 9 && (
+          {normalizedData.hotels.length > 9 && (
             <div className="text-center mt-6">
               <Button
                 variant="ghost"
                 className="text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950 text-sm"
               >
-                <span className="text-horizontal">View {toolOutput.properties.length - 9} more hotels</span>
+                <span className="text-horizontal">View {normalizedData.hotels.length - 9} more hotels</span>
               </Button>
             </div>
           )}
