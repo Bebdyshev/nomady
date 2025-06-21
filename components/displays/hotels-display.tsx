@@ -50,7 +50,10 @@ import {
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 
 interface Hotel {
+  // Core fields
   name: string
+  
+  // Old format fields
   type?: string
   hotel_class?: string | null
   link?: string
@@ -70,7 +73,32 @@ interface Hotel {
     [key: string]: any
   }
   image_url?: string
-  location?: string
+  
+  // New booking.com format fields
+  booking_url?: string
+  search_price?: string
+  description?: string
+  detailed_rating?: {
+    score?: string
+    text?: string
+    review_count?: string
+    [key: string]: any
+  }
+  facilities?: string[]
+  highlights?: string[]
+  property_type?: string
+  star_rating?: string
+  checkin_checkout_policy?: string
+  contact_info?: { [key: string]: any }
+  room_types?: any[]
+  search_image_url?: string
+  search_result_id?: number
+  location?: {
+    address?: string
+    distance_from_center?: string
+    coordinates?: { latitude: number; longitude: number }
+    [key: string]: any
+  } | string
 }
 
 interface HotelsAPIResponse {
@@ -95,6 +123,7 @@ interface HotelsAPIResponse {
     currency: string
   }
   total_found?: number
+  success?: boolean
 }
 
 interface HotelDisplayProps {
@@ -282,6 +311,12 @@ const getAmenityIcon = (amenity: string) => {
 // Enhanced Hotel Card Component - Compact version to match ticket cards
 const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) => {
   const formatPrice = (priceInput: number | string | null | undefined) => {
+    // Handle new format search_price
+    if (hotel.search_price && hotel.search_price !== "N/A") {
+      return hotel.search_price
+    }
+    
+    // Handle old format pricing
     if (typeof priceInput === 'number') {
       return new Intl.NumberFormat("en-US", {
         style: "currency",
@@ -292,10 +327,30 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
     if (typeof priceInput === 'string' && priceInput.toLowerCase() !== 'n/a') {
       return priceInput
     }
-    return "N/A"
+    return "Price on request"
   }
 
-  const ratingValue = hotel.overall_rating ?? (hotel.details?.rating_score ? parseFloat(hotel.details.rating_score) : null)
+  // Handle rating from multiple sources
+  const getRating = () => {
+    // New format: detailed_rating.score
+    if (hotel.detailed_rating?.score && hotel.detailed_rating.score !== "N/A") {
+      const score = parseFloat(hotel.detailed_rating.score)
+      if (!isNaN(score)) return score
+    }
+    
+    // Old format: overall_rating
+    if (hotel.overall_rating) return hotel.overall_rating
+    
+    // Old format: details.rating_score
+    if (hotel.details?.rating_score) {
+      const score = parseFloat(hotel.details.rating_score)
+      if (!isNaN(score)) return score
+    }
+    
+    return null
+  }
+
+  const ratingValue = getRating()
 
   const renderStars = (rating: number) => {
     if (rating === 0) return null
@@ -321,7 +376,78 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
 
   const nights = calculateNights()
 
-  const hotelImages = hotel.images || (hotel.image_url && hotel.image_url.toLowerCase() !== 'n/a' ? [hotel.image_url] : [])
+  // Handle images from multiple sources
+  const getHotelImages = (): string[] => {
+    // New format: images array with objects
+    if (hotel.images && Array.isArray(hotel.images) && hotel.images.length > 0) {
+      return hotel.images.map((img: any) => {
+        if (typeof img === 'string') return img
+        return img.url || img.src || img.image_url || ''
+      }).filter((url: string) => url && url !== 'N/A')
+    }
+    
+    // Old format: image_url or search_image_url
+    const imageUrl = hotel.image_url || hotel.search_image_url
+    if (imageUrl && imageUrl.toLowerCase() !== 'n/a') {
+      return [imageUrl]
+    }
+    
+    return []
+  }
+
+  const hotelImages = getHotelImages()
+
+  // Get amenities from multiple sources
+  const getAmenities = () => {
+    // New format: facilities
+    if (hotel.facilities && Array.isArray(hotel.facilities)) {
+      return hotel.facilities
+    }
+    
+    // Old format: amenities
+    if (hotel.amenities && Array.isArray(hotel.amenities)) {
+      return hotel.amenities
+    }
+    
+    return []
+  }
+
+  const amenities = getAmenities()
+
+  // Get hotel location info
+  const getLocationInfo = (): string => {
+    // Handle new data structure - location is an object
+    if (typeof hotel.location === 'object' && hotel.location !== null) {
+      // Try address first
+      if (hotel.location.address && hotel.location.address !== 'N/A') {
+        return hotel.location.address
+      }
+      // Try distance_from_center as fallback
+      if (hotel.location.distance_from_center && hotel.location.distance_from_center !== 'N/A') {
+        return hotel.location.distance_from_center
+      }
+    }
+    
+    // Handle old data structure - location is a string
+    if (typeof hotel.location === 'string' && hotel.location !== 'N/A') {
+      return hotel.location
+    }
+    
+    // Fallback to other hotel properties
+    if (hotel.hotel_class && hotel.hotel_class !== 'N/A') {
+      return hotel.hotel_class
+    }
+    if (hotel.type && hotel.type !== 'N/A') {
+      return hotel.type
+    }
+    if (hotel.property_type && hotel.property_type !== 'N/A') {
+      return hotel.property_type
+    }
+    
+    return 'Hotel' // Final fallback
+  }
+
+  const locationInfo = getLocationInfo()
 
   return (
     <Dialog>
@@ -366,7 +492,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                       {hotel.name}
                     </CardTitle>
                     <p className="text-sm text-slate-500 dark:text-slate-400 text-horizontal text-wrap-normal">
-                      {hotel.hotel_class || hotel.type || hotel.location}
+                      {locationInfo}
                     </p>
                   </div>
                 </div>
@@ -388,9 +514,9 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                 )}
 
                 {/* Amenities Preview */}
-                {hotel.amenities && hotel.amenities.length > 0 && (
+                {amenities.length > 0 && (
                   <div className="flex items-center justify-center space-x-2 overflow-hidden">
-                    {hotel.amenities.slice(0, 3).map((amenity: string, index: number) => (
+                    {amenities.slice(0, 3).map((amenity: string, index: number) => (
                       <div
                         key={index}
                         className="flex items-center bg-slate-100 dark:bg-slate-700 rounded-full px-2 py-1"
@@ -398,8 +524,8 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                         {getAmenityIcon(amenity)}
                       </div>
                     ))}
-                    {hotel.amenities.length > 3 && (
-                      <span className="text-xs text-slate-500 dark:text-slate-400 text-horizontal">+{hotel.amenities.length - 3}</span>
+                    {amenities.length > 3 && (
+                      <span className="text-xs text-slate-500 dark:text-slate-400 text-horizontal">+{amenities.length - 3}</span>
                     )}
                   </div>
                 )}
@@ -434,7 +560,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
             <div>
               <div className="text-xl font-bold text-horizontal">{hotel.name}</div>
               <div className="text-sm text-slate-500 dark:text-slate-400 font-normal flex items-center space-x-2">
-                {hotel.hotel_class && <span className="text-horizontal">{hotel.hotel_class}</span>}
+                {locationInfo && <span className="text-horizontal">{locationInfo}</span>}
                 {ratingValue && (
                   <>
                     <span>•</span>
@@ -451,6 +577,14 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
           <div className="relative">
             <HotelImageGallery images={hotelImages || []} hotelName={hotel.name} />
           </div>
+
+          {/* Hotel Description */}
+          {hotel.description && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">About This Hotel</h3>
+              <p className="text-slate-600 dark:text-slate-300 leading-relaxed">{hotel.description}</p>
+            </div>
+          )}
 
           {/* Booking Summary */}
           {searchParams?.check_in_date && (
@@ -499,11 +633,11 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
           )}
 
           {/* Amenities Grid */}
-          {hotel.amenities && hotel.amenities.length > 0 && (
+          {amenities.length > 0 && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Hotel Amenities</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {hotel.amenities.map((amenity: string, index: number) => (
+                {amenities.map((amenity: string, index: number) => (
                   <motion.div
                     key={index}
                     initial={{ opacity: 0, scale: 0.9 }}
@@ -520,25 +654,42 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
           )}
 
           {/* Location & Contact */}
-          {hotel.coordinates && (
+          {(hotel.coordinates || (typeof hotel.location === 'object' && hotel.location?.coordinates)) && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Location & Contact</h3>
               <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 space-y-3">
-                <div className="flex items-center space-x-2">
-                  <MapPin className="h-4 w-4 text-slate-500" />
-                  <span className="text-sm text-slate-600 dark:text-slate-300">
-                    {hotel.coordinates.latitude.toFixed(4)}, {hotel.coordinates.longitude.toFixed(4)}
-                  </span>
-                </div>
+                {hotel.coordinates && (
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="h-4 w-4 text-slate-500" />
+                    <span className="text-sm text-slate-600 dark:text-slate-300">
+                      {hotel.coordinates.latitude.toFixed(4)}, {hotel.coordinates.longitude.toFixed(4)}
+                    </span>
+                  </div>
+                )}
+                {typeof hotel.location === 'object' && hotel.location?.coordinates && (
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="h-4 w-4 text-slate-500" />
+                    <span className="text-sm text-slate-600 dark:text-slate-300">
+                      {hotel.location.coordinates.latitude.toFixed(4)}, {hotel.location.coordinates.longitude.toFixed(4)}
+                    </span>
+                  </div>
+                )}
                 <div className="flex space-x-4">
                   <Button variant="outline" size="sm" className="flex items-center space-x-2">
                     <Phone className="h-4 w-4" />
                     <span>Call Hotel</span>
                   </Button>
-                  <Button variant="outline" size="sm" className="flex items-center space-x-2">
-                    <ExternalLink className="h-4 w-4" />
-                    <span>View on Map</span>
-                  </Button>
+                  {(hotel.booking_url || hotel.link || hotel.detail_url) && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex items-center space-x-2"
+                      onClick={() => window.open(hotel.booking_url || hotel.link || hotel.detail_url, '_blank')}
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      <span>View Details</span>
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
