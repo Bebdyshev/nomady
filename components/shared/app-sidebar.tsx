@@ -22,6 +22,8 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { Logo } from "@/components/ui/logo"
 
 interface AppSidebarProps {
   collapsed?: boolean
@@ -113,16 +115,12 @@ export function AppSidebar({
           {!collapsed && (
           <div className="flex items-center space-x-2">
             {/* Update logo colors */}
-            <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Sparkles className="h-5 w-5 text-white" />
-            </div>
+            <Logo width={32} height={32} className="rounded-lg" />
             <span className="text-lg font-bold text-blue-600 dark:text-blue-400">Nomady</span>
           </div>
           )}
           {collapsed && (
-            <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Sparkles className="h-5 w-5 text-white" />
-            </div>
+            <Logo width={32} height={32} className="rounded-lg" />
           )}
           {!collapsed && (
           <div className="flex items-center space-x-2">

@@ -30,6 +30,7 @@ import { motion } from "framer-motion"
 import { Globe as GlobeComponent } from "@/components/magicui/globe"
 import { AnimatedGradientText } from "@/components/magicui/animated-gradient-text"
 import { cn } from "@/lib/utils"
+import { Logo } from "@/components/ui/logo"
 
 export default function LandingPage() {
   const [tripPrompt, setTripPrompt] = useState("")
@@ -217,13 +218,7 @@ export default function LandingPage() {
               transition={{ duration: 0.8, type: "spring", bounce: 0.3 }}
               className="flex items-center space-x-3 group"
             >
-              <motion.div 
-                className="h-10 w-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-blue-500/25 transition-all duration-300 group-hover:scale-110"
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.6 }}
-              >
-                <Sparkles className="h-6 w-6 text-white" />
-              </motion.div>
+                <Logo width={40} height={40} className="rounded-xl" />
               <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent">
                 Nomady
               </span>
@@ -328,7 +323,7 @@ export default function LandingPage() {
                 transition={{ duration: 0.8, delay: 0.2, type: "spring", bounce: 0.4 }}
                 className="inline-flex items-center space-x-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-4 py-2 rounded-full text-sm font-medium mb-6"
               >
-                <Sparkles className="h-4 w-4" />
+                <Logo width={16} height={16} />
                 <AnimatedGradientText className="text-sm" colorFrom="#1d4ed8" colorTo="#3b82f6">
                   AI-Powered Travel Planning
                 </AnimatedGradientText>
@@ -757,9 +752,7 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <Sparkles className="h-5 w-5 text-white" />
-                </div>
+                <Logo width={32} height={32} className="rounded-lg" />
                 <span className="text-xl font-bold text-blue-400">Nomady</span>
               </div>
               <p className="text-slate-400 mb-4">

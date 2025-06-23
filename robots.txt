@@ -15,6 +15,7 @@ Allow: /$
 Allow: /public/
 
 # Sitemap location
+
 Sitemap: /sitemap.xml
 
 # Crawl delay

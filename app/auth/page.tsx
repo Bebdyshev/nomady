@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { Sparkles, Eye, EyeOff } from "lucide-react"
 import { motion } from "framer-motion"
 import { AnimatePresence } from "framer-motion"
+import { Logo } from "@/components/ui/logo"
 
 // Disable static generation for this page
 export const dynamic = 'force-dynamic'
@@ -113,9 +114,7 @@ export default function AuthPage() {
       >
         <div className="text-center mb-8">
           <div className="inline-flex items-center space-x-2 mb-4">
-            <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Sparkles className="h-6 w-6 text-white" />
-            </div>
+            <Logo width={40} height={40} className="rounded-lg" />
             <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">Nomady</span>
           </div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Welcome back</h1>

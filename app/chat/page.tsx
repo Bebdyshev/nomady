@@ -18,6 +18,7 @@ import { HotelDisplay } from "@/components/displays/hotels-display"
 import { InteractiveMap } from "@/components/interactive-map"
 import { MessageCircle } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Logo } from "@/components/ui/logo"
 
 // Disable static generation for this page
 export const dynamic = 'force-dynamic'
@@ -491,9 +492,7 @@ export default function ChatPage() {
           <div className="p-3 md:p-4 border-b border-slate-200 dark:border-slate-700">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
-                <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <Sparkles className="h-5 w-5 text-white" />
-                </div>
+                <Logo width={32} height={32} className="rounded-lg" />
                 <span className="text-lg font-bold text-blue-600 dark:text-blue-400">Nomady</span>
               </div>
               <div className="flex items-center space-x-1">

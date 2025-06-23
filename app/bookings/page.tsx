@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { apiClient } from "@/lib/api"
 import { Plane, Hotel, Car, Calendar, MapPin, Clock, DollarSign, Plus, ArrowLeft, Sparkles, Menu } from "lucide-react"
 import { motion } from "framer-motion"
+import { Logo } from "@/components/ui/logo"
 
 // Disable static generation for this page
 export const dynamic = 'force-dynamic'
@@ -182,8 +183,8 @@ export default function BookingsPage() {
       <div className="container mx-auto px-6 py-8">
         {bookings.length === 0 ? (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16">
-            <div className="h-24 w-24 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Sparkles className="h-12 w-12 text-blue-600 dark:text-blue-400" />
+            <div className="flex justify-center mx-auto mb-6">
+              <Logo width={96} height={96} className="rounded-full" />
             </div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">No bookings yet</h2>
             <p className="text-slate-600 dark:text-slate-300 mb-8 max-w-md mx-auto">
