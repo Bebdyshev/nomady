@@ -674,7 +674,7 @@ export default function ChatPage() {
                       <div className="text-sm md:text-base">{message.content}</div>
                       {message.toolOutput && (
                         <div className="mt-3 md:mt-4">
-                          {message.toolOutput.search_parameters ? (
+                          {(message.toolOutput.search_parameters || message.toolOutput.search_params || message.toolOutput.hotels || message.toolOutput.destination) ? (
                             <HotelDisplay
                               toolOutput={message.toolOutput}
                               bookedIds={bookedIds}
