@@ -308,12 +308,27 @@ const getAmenityIcon = (amenity: string) => {
   return <Shield className="h-4 w-4" />
 }
 
-// Enhanced Hotel Card Component - Compact version to match ticket cards
+// Enhanced Hotel Card Component - Simplified version showing only essential info
 const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) => {
   const formatPrice = (priceInput: number | string | null | undefined) => {
     // Handle new format search_price
     if (hotel.search_price && hotel.search_price !== "N/A") {
       return hotel.search_price
+    }
+    
+    // Handle pricing from rooms array (new booking.com format)
+    if (hotel.rooms && hotel.rooms.length > 0) {
+      const firstRoom = hotel.rooms[0]
+      if (firstRoom.price_text && firstRoom.price_text !== "N/A") {
+        return firstRoom.price_text
+      }
+      if (firstRoom.price_value && firstRoom.price_currency) {
+        return new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: firstRoom.price_currency === "KZT" ? "USD" : firstRoom.price_currency,
+          minimumFractionDigits: 0,
+        }).format(firstRoom.price_value / (firstRoom.price_currency === "KZT" ? 500 : 1)) // Rough KZT to USD conversion
+      }
     }
     
     // Handle old format pricing
@@ -359,22 +374,13 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
         {[...Array(5)].map((_: undefined, i: number) => (
           <Star
             key={i}
-            className={`h-3 w-3 ${i < Math.floor(rating) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
+            className={`h-4 w-4 ${i < Math.floor(rating) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
           />
         ))}
-        <span className="text-xs text-slate-600 dark:text-slate-300 ml-1 text-horizontal">{rating.toFixed(1)}</span>
+        <span className="text-sm text-slate-600 dark:text-slate-300 ml-1 text-horizontal">{rating.toFixed(1)}</span>
       </div>
     )
   }
-
-  const calculateNights = () => {
-    if (!searchParams?.check_in_date || !searchParams?.check_out_date) return 0
-    const checkIn = new Date(searchParams.check_in_date)
-    const checkOut = new Date(searchParams.check_out_date)
-    return Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24))
-  }
-
-  const nights = calculateNights()
 
   // Handle images from multiple sources
   const getHotelImages = (): string[] => {
@@ -449,6 +455,51 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
 
   const locationInfo = getLocationInfo()
 
+  const calculateNights = () => {
+    if (!searchParams?.check_in_date || !searchParams?.check_out_date) return 0
+    const checkIn = new Date(searchParams.check_in_date)
+    const checkOut = new Date(searchParams.check_out_date)
+    return Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24))
+  }
+
+  const nights = calculateNights()
+
+  // Get total price for the stay
+  const getTotalPrice = () => {
+    if (hotel.rooms && hotel.rooms.length > 0) {
+      const firstRoom = hotel.rooms[0]
+      if (firstRoom.price_value && nights > 0) {
+        const totalPrice = firstRoom.price_value * nights
+        if (firstRoom.price_currency) {
+          return {
+            value: totalPrice,
+            currency: firstRoom.price_currency,
+            formatted: firstRoom.price_currency === "KZT" ? 
+              `$${(totalPrice / 500).toFixed(0)}` : // Rough KZT to USD conversion
+              new Intl.NumberFormat("en-US", {
+                style: "currency",
+                currency: firstRoom.price_currency,
+                minimumFractionDigits: 0,
+              }).format(totalPrice)
+          }
+        }
+      }
+    }
+    
+    // Fallback to old format
+    if (hotel.total_rate) {
+      return {
+        value: hotel.total_rate,
+        currency: hotel.currency || "USD",
+        formatted: formatPrice(hotel.total_rate)
+      }
+    }
+    
+    return null
+  }
+
+  const totalPrice = getTotalPrice()
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -458,7 +509,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
         >
           <Card
-            className={`relative overflow-hidden cursor-pointer border-2 transition-all duration-300 flex flex-col min-h-[300px] card-layout ${
+            className={`relative overflow-hidden cursor-pointer border-2 transition-all duration-300 flex flex-col min-h-[320px] card-layout ${
               isBooked
                 ? "border-green-500 bg-green-50 dark:bg-green-950/20"
                 : "border-slate-200 dark:border-slate-700 hover:border-purple-300 hover:shadow-xl"
@@ -466,9 +517,9 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
           >
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600" />
 
-            {/* Hotel Image */}
+            {/* Hotel Image - Larger size for better visual impact */}
             {hotelImages.length > 0 ? (
-              <div className="h-32 w-full overflow-hidden">
+              <div className="h-48 w-full overflow-hidden">
                 <img 
                   src={hotelImages[0]} 
                   alt={hotel.name}
@@ -476,36 +527,18 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                 />
               </div>
             ) : (
-              <div className="h-32 w-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center">
-                <Hotel className="h-8 w-8 text-slate-400" />
+              <div className="h-48 w-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center">
+                <Hotel className="h-12 w-12 text-slate-400" />
               </div>
             )}
 
-            <CardHeader className="p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center space-x-3 flex-1">
-                  <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                    <Hotel className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                  </div>
-                  <div className="flex-1">
-                    <CardTitle className="text-lg font-bold text-slate-900 dark:text-white text-horizontal text-wrap-normal">
-                      {hotel.name}
-                    </CardTitle>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 text-horizontal text-wrap-normal">
-                      {locationInfo}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="text-right">
-                  <div className="text-xl font-bold text-slate-900 dark:text-white text-horizontal">{formatPrice(hotel.rate_per_night ?? hotel.price)}</div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 text-horizontal">per night</div>
-                </div>
-              </div>
-            </CardHeader>
-
-            <CardContent className="p-4 pt-0 flex-1 flex flex-col">
+            <CardContent className="p-4 flex-1 flex flex-col">
               <div className="space-y-4 flex-1">
+                {/* Hotel Name */}
+                <CardTitle className="text-lg font-bold text-slate-900 dark:text-white text-horizontal text-wrap-normal line-clamp-2">
+                  {hotel.name}
+                </CardTitle>
+
                 {/* Rating */}
                 {ratingValue && (
                   <div className="flex items-center justify-center">
@@ -513,35 +546,56 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                   </div>
                 )}
 
-                {/* Amenities Preview */}
-                {amenities.length > 0 && (
-                  <div className="flex items-center justify-center space-x-2 overflow-hidden">
-                    {amenities.slice(0, 3).map((amenity: string, index: number) => (
-                      <div
-                        key={index}
-                        className="flex items-center bg-slate-100 dark:bg-slate-700 rounded-full px-2 py-1"
-                      >
-                        {getAmenityIcon(amenity)}
-                      </div>
-                    ))}
-                    {amenities.length > 3 && (
-                      <span className="text-xs text-slate-500 dark:text-slate-400 text-horizontal">+{amenities.length - 3}</span>
-                    )}
+                {/* Price Section */}
+                <div className="mt-auto pt-4 text-center">
+                  <div className="text-2xl font-bold text-slate-900 dark:text-white text-horizontal">
+                    {formatPrice(hotel.rate_per_night ?? hotel.price)}
                   </div>
-                )}
+                  <div className="text-sm text-slate-500 dark:text-slate-400 text-horizontal">per night</div>
+                  {totalPrice && nights > 0 && (
+                    <div className="text-xs text-slate-400 dark:text-slate-500 text-horizontal mt-1">
+                      {totalPrice.formatted} total for {nights} nights
+                    </div>
+                  )}
+                </div>
 
-                {/* Duration info */}
-                {nights > 0 && (
-                  <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
-                    <span className="text-horizontal">{nights} nights</span>
-                    <span className="text-horizontal">Total: {formatPrice(hotel.total_rate ?? hotel.price)}</span>
-                  </div>
-                )}
+                {/* Booking Button */}
+                <div className="pt-3">
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation() // Prevent dialog from opening when clicking book button
+                      onBook?.(hotel, "hotels")
+                    }}
+                    disabled={isBooking || isBooked}
+                    className={`w-full transition-all duration-200 ${
+                      isBooked
+                        ? "bg-green-500 hover:bg-green-600 text-white"
+                        : "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl"
+                    }`}
+                  >
+                    {isBooking ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Booking...
+                      </>
+                    ) : isBooked ? (
+                      <>
+                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                        Booked
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="h-4 w-4 mr-2" />
+                        Book Now
+                      </>
+                    )}
+                  </Button>
+                </div>
 
                 {isBooked && (
                   <div className="flex items-center justify-center space-x-2 text-green-600 dark:text-green-400 pt-2">
                     <CheckCircle2 className="h-4 w-4" />
-                    <span className="text-sm font-medium text-horizontal">Booked</span>
+                    <span className="text-sm font-medium text-horizontal">Successfully Booked</span>
                   </div>
                 )}
               </div>
@@ -550,7 +604,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
         </motion.div>
       </DialogTrigger>
 
-      {/* Detailed Hotel Dialog */}
+      {/* Detailed Hotel Dialog - All details here */}
       <DialogContent className="sm:max-w-[90vw] md:max-w-4xl max-h-[90vh] overflow-y-auto mx-2 md:mx-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-3">
@@ -588,48 +642,48 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
 
           {/* Booking Summary */}
           {searchParams?.check_in_date && (
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 rounded-xl p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-300">
-                    <Calendar className="h-4 w-4" />
-                    <span>Check-in</span>
-                  </div>
-                  <div className="font-semibold text-slate-900 dark:text-white">
-                    {new Date(searchParams.check_in_date).toLocaleDateString("en-US", {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </div>
-                  {hotel.check_in && <div className="text-sm text-slate-500">{hotel.check_in}</div>}
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 rounded-xl p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-300">
+                  <Calendar className="h-4 w-4" />
+                  <span>Check-in</span>
                 </div>
+                <div className="font-semibold text-slate-900 dark:text-white">
+                  {new Date(searchParams.check_in_date).toLocaleDateString("en-US", {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </div>
+                {hotel.check_in && <div className="text-sm text-slate-500">{hotel.check_in}</div>}
+              </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-300">
-                    <Calendar className="h-4 w-4" />
-                    <span>Check-out</span>
-                  </div>
-                  <div className="font-semibold text-slate-900 dark:text-white">
-                    {new Date(searchParams.check_out_date).toLocaleDateString("en-US", {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </div>
-                  {hotel.check_out && <div className="text-sm text-slate-500">{hotel.check_out}</div>}
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-300">
+                  <Calendar className="h-4 w-4" />
+                  <span>Check-out</span>
                 </div>
+                <div className="font-semibold text-slate-900 dark:text-white">
+                  {new Date(searchParams.check_out_date).toLocaleDateString("en-US", {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </div>
+                {hotel.check_out && <div className="text-sm text-slate-500">{hotel.check_out}</div>}
+              </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-300">
-                    <Users className="h-4 w-4" />
-                    <span>Guests</span>
-                  </div>
-                  <div className="font-semibold text-slate-900 dark:text-white">{searchParams.adults} Adults</div>
-                  <div className="text-sm text-slate-500">{nights} nights</div>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-300">
+                  <Users className="h-4 w-4" />
+                  <span>Guests</span>
                 </div>
+                <div className="font-semibold text-slate-900 dark:text-white">{searchParams.adults} Adults</div>
+                <div className="text-sm text-slate-500">{nights} nights</div>
               </div>
             </div>
+          </div>
           )}
 
           {/* Amenities Grid */}
@@ -659,12 +713,12 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Location & Contact</h3>
               <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 space-y-3">
                 {hotel.coordinates && (
-                  <div className="flex items-center space-x-2">
-                    <MapPin className="h-4 w-4 text-slate-500" />
-                    <span className="text-sm text-slate-600 dark:text-slate-300">
-                      {hotel.coordinates.latitude.toFixed(4)}, {hotel.coordinates.longitude.toFixed(4)}
-                    </span>
-                  </div>
+                <div className="flex items-center space-x-2">
+                  <MapPin className="h-4 w-4 text-slate-500" />
+                  <span className="text-sm text-slate-600 dark:text-slate-300">
+                    {hotel.coordinates.latitude.toFixed(4)}, {hotel.coordinates.longitude.toFixed(4)}
+                  </span>
+                </div>
                 )}
                 {typeof hotel.location === 'object' && hotel.location?.coordinates && (
                   <div className="flex items-center space-x-2">
@@ -686,9 +740,9 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                       className="flex items-center space-x-2"
                       onClick={() => window.open(hotel.booking_url || hotel.link || hotel.detail_url, '_blank')}
                     >
-                      <ExternalLink className="h-4 w-4" />
+                    <ExternalLink className="h-4 w-4" />
                       <span>View Details</span>
-                    </Button>
+                  </Button>
                   )}
                 </div>
               </div>
@@ -699,7 +753,9 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
         <DialogFooter className="pt-6 border-t border-slate-200 dark:border-slate-700">
           <div className="flex items-center justify-between w-full">
             <div className="text-left">
-              <div className="text-3xl font-bold text-slate-900 dark:text-white">{formatPrice(hotel.total_rate ?? hotel.price)}</div>
+              <div className="text-3xl font-bold text-slate-900 dark:text-white">
+                {totalPrice ? totalPrice.formatted : formatPrice(hotel.total_rate ?? hotel.price)}
+              </div>
               {nights > 0 && (
                 <div className="text-sm text-slate-500 dark:text-slate-400">
                   {formatPrice(hotel.rate_per_night ?? hotel.price)} × {nights} nights
