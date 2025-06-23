@@ -33,7 +33,7 @@ export function Logo({ className, width = 32, height = 32 }: LogoProps) {
   
   return (
     <Image
-      src={isDark ? "/logo-dark.svg" : "/logo-light.svg"}
+      src={isDark ? "/logo-light.svg" : "/logo-light.svg"}
       alt="Nomady Logo"
       width={width}
       height={height}
