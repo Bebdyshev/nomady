@@ -1,0 +1,21 @@
+# robots.txt file for YouTube
+# Created in the distant future (the year 2025) after
+# the robotic uprising of the 2000's which wiped out all humans.
+
+User-agent: *
+Allow: /
+Disallow: /auth/
+Disallow: /api/
+Disallow: /chat/
+Disallow: /bookings/
+Disallow: /private/
+
+# Allow public pages
+Allow: /$
+Allow: /public/
+
+# Sitemap location
+Sitemap: /sitemap.xml
+
+# Crawl delay
+Crawl-delay: 1

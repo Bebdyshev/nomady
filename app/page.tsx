@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import type { Metadata } from "next"
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
@@ -31,6 +32,26 @@ import { Globe as GlobeComponent } from "@/components/magicui/globe"
 import { AnimatedGradientText } from "@/components/magicui/animated-gradient-text"
 import { VideoText } from "@/components/magicui/video-text"
 import { cn } from "@/lib/utils"
+
+export const metadata: Metadata = {
+  title: "TravelAI - Plan Your Perfect Trip with AI",
+  description: "Discover the future of travel planning with TravelAI. Our AI assistant helps you find the best flights, hotels, restaurants, and activities. Start your journey today!",
+  keywords: ["AI travel planner", "trip planning", "travel AI", "vacation planner", "smart travel", "flight booking", "hotel booking", "travel assistant"],
+  openGraph: {
+    title: "TravelAI - Plan Your Perfect Trip with AI",
+    description: "Discover the future of travel planning with TravelAI. Our AI assistant helps you find the best flights, hotels, restaurants, and activities.",
+    type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    title: "TravelAI - Plan Your Perfect Trip with AI",
+    description: "Discover the future of travel planning with TravelAI. Our AI assistant helps you find the best flights, hotels, restaurants, and activities.",
+    card: "summary_large_image",
+  },
+  alternates: {
+    canonical: "/",
+  },
+}
 
 export default function LandingPage() {
   const [tripPrompt, setTripPrompt] = useState("")

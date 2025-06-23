@@ -1,0 +1,80 @@
+{
+  "name": "TravelAI - AI-Powered Trip Planner",
+  "short_name": "TravelAI",
+  "description": "Plan your perfect trip with AI assistance. Find flights, hotels, restaurants, and activities all in one place.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "categories": ["travel", "productivity", "lifestyle"],
+  "lang": "en",
+  "dir": "ltr",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "TravelAI Desktop Experience"
+    },
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "375x667",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "TravelAI Mobile Experience"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Trip",
+      "short_name": "New Trip",
+      "description": "Start planning a new trip",
+      "url": "/chat",
+      "icons": [
+        {
+          "src": "/shortcut-trip.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "My Bookings",
+      "short_name": "Bookings",
+      "description": "View your bookings",
+      "url": "/bookings",
+      "icons": [
+        {
+          "src": "/shortcut-bookings.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+} 
