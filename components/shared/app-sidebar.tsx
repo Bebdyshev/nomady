@@ -116,7 +116,7 @@ export function AppSidebar({
             <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <Sparkles className="h-5 w-5 text-white" />
             </div>
-            <span className="text-lg font-bold text-blue-600 dark:text-blue-400">TravelAI</span>
+            <span className="text-lg font-bold text-blue-600 dark:text-blue-400">Nomady</span>
           </div>
           )}
           {collapsed && (

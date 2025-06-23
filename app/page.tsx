@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-import type { Metadata } from "next"
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
@@ -32,26 +31,6 @@ import { Globe as GlobeComponent } from "@/components/magicui/globe"
 import { AnimatedGradientText } from "@/components/magicui/animated-gradient-text"
 import { VideoText } from "@/components/magicui/video-text"
 import { cn } from "@/lib/utils"
-
-export const metadata: Metadata = {
-  title: "TravelAI - Plan Your Perfect Trip with AI",
-  description: "Discover the future of travel planning with TravelAI. Our AI assistant helps you find the best flights, hotels, restaurants, and activities. Start your journey today!",
-  keywords: ["AI travel planner", "trip planning", "travel AI", "vacation planner", "smart travel", "flight booking", "hotel booking", "travel assistant"],
-  openGraph: {
-    title: "TravelAI - Plan Your Perfect Trip with AI",
-    description: "Discover the future of travel planning with TravelAI. Our AI assistant helps you find the best flights, hotels, restaurants, and activities.",
-    type: "website",
-    locale: "en_US",
-  },
-  twitter: {
-    title: "TravelAI - Plan Your Perfect Trip with AI",
-    description: "Discover the future of travel planning with TravelAI. Our AI assistant helps you find the best flights, hotels, restaurants, and activities.",
-    card: "summary_large_image",
-  },
-  alternates: {
-    canonical: "/",
-  },
-}
 
 export default function LandingPage() {
   const [tripPrompt, setTripPrompt] = useState("")
@@ -153,7 +132,7 @@ export default function LandingPage() {
       name: "Sarah Johnson",
       role: "Travel Blogger",
       content:
-        "TravelAI planned my entire 2-week Europe trip in minutes. The recommendations were spot-on and I discovered places I never would have found on my own.",
+        "Nomady planned my entire 2-week Europe trip in minutes. The recommendations were spot-on and I discovered places I never would have found on my own.",
       rating: 5,
       avatar: "SJ",
     },
@@ -161,7 +140,7 @@ export default function LandingPage() {
       name: "Mike Chen",
       role: "Business Executive",
       content:
-        "As someone who travels frequently for work, TravelAI has become indispensable. It saves me hours of planning and always finds the best deals.",
+        "As someone who travels frequently for work, Nomady has become indispensable. It saves me hours of planning and always finds the best deals.",
       rating: 5,
       avatar: "MC",
     },
@@ -169,7 +148,7 @@ export default function LandingPage() {
       name: "Emma Rodriguez",
       role: "Family Traveler",
       content:
-        "Planning family trips used to be stressful. TravelAI considers everyone's preferences and creates itineraries that keep both kids and adults happy.",
+        "Planning family trips used to be stressful. Nomady considers everyone's preferences and creates itineraries that keep both kids and adults happy.",
       rating: 5,
       avatar: "ER",
     },
@@ -247,7 +226,7 @@ export default function LandingPage() {
                 <Sparkles className="h-6 w-6 text-white" />
               </motion.div>
               <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent">
-                TravelAI
+                Nomady
               </span>
             </motion.div>
 
@@ -630,7 +609,7 @@ export default function LandingPage() {
                 </AnimatedGradientText>
               </h2>
               <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
-                See what our users say about their TravelAI experience
+                See what our users say about their Nomady experience
               </p>
             </motion.div>
           </div>
@@ -756,7 +735,7 @@ export default function LandingPage() {
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-3xl p-12 text-white">
               <h2 className="text-4xl md:text-5xl font-bold mb-6">Ready to Plan Your Next Adventure?</h2>
               <p className="text-xl mb-8 opacity-90">
-                Join thousands of travelers who trust TravelAI to create their perfect trips.
+                Join thousands of travelers who trust Nomady to create their perfect trips.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
@@ -782,7 +761,7 @@ export default function LandingPage() {
                 <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
                   <Sparkles className="h-5 w-5 text-white" />
                 </div>
-                <span className="text-xl font-bold text-blue-400">TravelAI</span>
+                <span className="text-xl font-bold text-blue-400">Nomady</span>
               </div>
               <p className="text-slate-400 mb-4">
                 AI-powered travel planning that saves you time and money while creating unforgettable experiences.
@@ -870,7 +849,7 @@ export default function LandingPage() {
           </div>
 
           <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-slate-400 text-sm">© 2025 TravelAI. All rights reserved.</p>
+            <p className="text-slate-400 text-sm">© 2025 Nomady. All rights reserved.</p>
             <div className="flex items-center space-x-6 mt-4 md:mt-0">
               <span className="text-slate-400 text-sm">Made with ❤️ by Bebdtshev</span>
             </div>

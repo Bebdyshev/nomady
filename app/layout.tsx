@@ -10,8 +10,8 @@ const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: {
-    default: "TravelAI - AI-Powered Trip Planner & Travel Assistant",
-    template: "%s | TravelAI"
+    default: "Nomady - AI-Powered Trip Planner & Travel Assistant",
+    template: "%s | Nomady"
   },
   description: "Plan your perfect trip with AI assistance. Find flights, hotels, restaurants, and activities all in one place. Smart travel planning made easy with artificial intelligence.",
   keywords: [
@@ -26,9 +26,9 @@ export const metadata: Metadata = {
     "smart travel",
     "trip advisor"
   ],
-  authors: [{ name: "TravelAI Team" }],
-  creator: "TravelAI",
-  publisher: "TravelAI",
+  authors: [{ name: "Nomady Team" }],
+  creator: "Nomady",
+  publisher: "Nomady",
   formatDetection: {
     email: false,
     address: false,
@@ -42,24 +42,24 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://nomady.live',
-    title: 'TravelAI - AI-Powered Trip Planner & Travel Assistant',
+    title: 'Nomady - AI-Powered Trip Planner & Travel Assistant',
     description: 'Plan your perfect trip with AI assistance. Find flights, hotels, restaurants, and activities all in one place.',
-    siteName: 'TravelAI',
+    siteName: 'Nomady',
     images: [
       {
         url: '/og-image.jpg', // You'll need to create this
         width: 1200,
         height: 630,
-        alt: 'TravelAI - AI-Powered Trip Planner',
+        alt: 'Nomady - AI-Powered Trip Planner',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'TravelAI - AI-Powered Trip Planner',
+    title: 'Nomady - AI-Powered Trip Planner',
     description: 'Plan your perfect trip with AI assistance. Find flights, hotels, restaurants, and activities.',
-    site: '@travelai', // Replace with your Twitter handle
-    creator: '@travelai',
+    site: '@nomady', // Replace with your Twitter handle
+    creator: '@nomady',
     images: ['/twitter-image.jpg'], // You'll need to create this
   },
   robots: {
@@ -107,7 +107,7 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebApplication",
-              "name": "TravelAI",
+              "name": "Nomady",
               "description": "AI-powered trip planner and travel assistant",
               "url": "https://nomady.live",
               "applicationCategory": "TravelApplication",
@@ -124,7 +124,7 @@ export default function RootLayout({
               },
               "publisher": {
                 "@type": "Organization",
-                "name": "TravelAI",
+                "name": "Nomady",
                 "url": "https://nomady.live"
               }
             })

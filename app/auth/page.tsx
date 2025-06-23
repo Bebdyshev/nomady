@@ -113,7 +113,7 @@ export default function AuthPage() {
             <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
               <Sparkles className="h-6 w-6 text-white" />
             </div>
-            <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">TravelAI</span>
+            <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">Nomady</span>
           </div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Welcome back</h1>
           <p className="text-slate-600 dark:text-slate-300">Sign in to continue planning your perfect trip</p>
