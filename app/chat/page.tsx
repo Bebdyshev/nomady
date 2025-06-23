@@ -671,7 +671,9 @@ export default function ChatPage() {
                           : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
                       }`}
                     >
-                      <div className="text-sm md:text-base">{message.content}</div>
+                      <div className="text-sm md:text-base">
+                        {parseMessageContent(message.content).text}
+                      </div>
                       {message.toolOutput && (
                         <div className="mt-3 md:mt-4">
                           {message.content.includes('<hotels>') || message.content.includes('Hotels in') ? (
