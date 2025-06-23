@@ -32,37 +32,59 @@ body {
     overflow-wrap: normal;
   }
   
-  /* Auto-responsive grid that adapts to screen width */
+  /* Container for responsive grids */
+  .container-responsive {
+    container-type: inline-size;
+  }
+
+  /* Auto-responsive grid that adapts to container width */
   .grid-auto-cards {
     display: grid;
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
   
-  /* For smaller cards */
+  /* For smaller cards - responsive to container */
   .grid-auto-cards-small {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.75rem;
   }
   
   /* For larger cards */
   .grid-auto-cards-large {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
   }
-  
-  /* Responsive grid with 2 columns max on large screens */
+
+  /* Container-based responsive queries */
+  @container (min-width: 400px) {
+    .grid-auto-cards-small {
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 0.75rem;
+    }
+  }
+
+  @container (min-width: 600px) {
+    .grid-auto-cards-small {
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.5rem;
+    }
+  }
+
+  @container (min-width: 800px) {
+    .grid-auto-cards-small {
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 0.75rem;
+    }
+  }
+
+  /* Responsive grid with 2 columns max on large screens - fallback for older browsers */
   @media (min-width: 768px) {
     .grid-auto-cards {
       grid-template-columns: repeat(2, 1fr);
       gap: 1.5rem;
-    }
-    
-    .grid-auto-cards-small {
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1rem;
     }
     
     .grid-auto-cards-large {
@@ -72,9 +94,9 @@ body {
   }
 
   @media (min-width: 1024px) {
-    .grid-auto-cards-small {
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1rem;
+    .grid-auto-cards {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
     }
   }
 }

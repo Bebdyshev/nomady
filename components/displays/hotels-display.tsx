@@ -506,100 +506,106 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
         >
           <Card
-            className={`relative overflow-hidden cursor-pointer border-2 transition-all duration-300 flex flex-col min-h-[280px] card-layout ${
+            className={`relative overflow-hidden cursor-pointer border-2 transition-all duration-300 flex flex-col min-h-[200px] card-layout ${
               isBooked
                 ? "border-green-500 bg-green-50 dark:bg-green-950/20"
                 : "border-slate-200 dark:border-slate-700 hover:border-purple-300 hover:shadow-xl"
             }`}
+            style={{
+              backgroundImage: hotelImages.length > 0 ? `url(${hotelImages[0]})` : undefined,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat'
+            }}
           >
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600" />
 
-            {/* Hotel Image - Full width */}
-            {hotelImages.length > 0 ? (
-              <div className="h-32 w-full overflow-hidden">
-                <img 
-                  src={hotelImages[0]} 
-                  alt={hotel.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ) : (
-              <div className="h-32 w-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center">
+            {/* Dark overlay for better text readability */}
+            <div className="absolute inset-0 bg-black/40" />
+
+            {/* If no image, show placeholder */}
+            {hotelImages.length === 0 && (
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center">
                 <Hotel className="h-8 w-8 text-slate-400" />
               </div>
             )}
 
-            <CardContent className="p-3 flex-1 flex flex-col">
-              <div className="space-y-2 flex-1">
-                {/* Price */}
-                <div className="text-center">
-                  <div className="text-lg font-bold text-slate-900 dark:text-white text-horizontal">
+            {/* Content overlay */}
+            <div className="relative z-10 p-3 flex flex-col h-full">
+              {/* Price at top */}
+              <div className="text-center mb-2">
+                <div className="inline-block bg-black/60 backdrop-blur-sm rounded-lg px-3 py-1">
+                  <div className="text-lg font-bold text-white text-horizontal">
                     {totalPrice ? totalPrice.formatted : formatPrice(hotel.rate_per_night ?? hotel.price)}
                   </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 text-horizontal">
+                  <div className="text-xs text-white/80 text-horizontal">
                     {nights > 0 ? `for ${nights} nights` : 'total price'}
                   </div>
                 </div>
+              </div>
 
-                {/* Rating */}
-                {ratingValue && (
-                  <div className="flex items-center justify-center">
+              {/* Rating */}
+              {ratingValue && (
+                <div className="flex justify-center mb-2">
+                  <div className="inline-block bg-black/60 backdrop-blur-sm rounded-lg px-2 py-1">
                     <div className="flex items-center space-x-1">
                       <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                      <span className="text-sm text-slate-600 dark:text-slate-300 text-horizontal">
+                      <span className="text-sm text-white text-horizontal">
                         {ratingValue.toFixed(1)}/10
                       </span>
                     </div>
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Hotel Name */}
-                <CardTitle className="text-sm font-semibold text-slate-900 dark:text-white text-horizontal text-wrap-normal line-clamp-2 text-center">
-                  {hotel.name}
-                </CardTitle>
-
-                {/* Booking Button */}
-                <div className="pt-2 mt-auto">
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation() // Prevent dialog from opening when clicking book button
-                      onBook?.(hotel, "hotels")
-                    }}
-                    disabled={isBooking || isBooked}
-                    size="sm"
-                    className={`w-full transition-all duration-200 text-xs ${
-                      isBooked
-                        ? "bg-green-500 hover:bg-green-600 text-white"
-                        : "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl"
-                    }`}
-                  >
-                    {isBooking ? (
-                      <>
-                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                        Booking...
-                      </>
-                    ) : isBooked ? (
-                      <>
-                        <CheckCircle2 className="h-3 w-3 mr-1" />
-                        Booked
-                      </>
-                    ) : (
-                      <>
-                        <CreditCard className="h-3 w-3 mr-1" />
-                        Book Now
-                      </>
-                    )}
-                  </Button>
+              {/* Hotel Name - pushed to bottom area */}
+              <div className="flex-1 flex flex-col justify-end">
+                <div className="bg-black/60 backdrop-blur-sm rounded-lg p-2 mb-2">
+                  <CardTitle className="text-sm font-semibold text-white text-horizontal text-wrap-normal line-clamp-2 text-center">
+                    {hotel.name}
+                  </CardTitle>
                 </div>
 
+                {/* Booking Button */}
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation() // Prevent dialog from opening when clicking book button
+                    onBook?.(hotel, "hotels")
+                  }}
+                  disabled={isBooking || isBooked}
+                  size="sm"
+                  className={`w-full transition-all duration-200 text-xs backdrop-blur-sm ${
+                    isBooked
+                      ? "bg-green-500/90 hover:bg-green-600/90 text-white border-green-400"
+                      : "bg-purple-600/90 hover:bg-purple-700/90 text-white border-purple-500"
+                  }`}
+                >
+                  {isBooking ? (
+                    <>
+                      <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                      Booking...
+                    </>
+                  ) : isBooked ? (
+                    <>
+                      <CheckCircle2 className="h-3 w-3 mr-1" />
+                      Booked
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="h-3 w-3 mr-1" />
+                      Book Now
+                    </>
+                  )}
+                </Button>
+
                 {isBooked && (
-                  <div className="flex items-center justify-center space-x-1 text-green-600 dark:text-green-400 pt-1">
+                  <div className="flex items-center justify-center space-x-1 text-green-400 pt-1">
                     <CheckCircle2 className="h-3 w-3" />
                     <span className="text-xs font-medium text-horizontal">Successfully Booked</span>
                   </div>
                 )}
               </div>
-            </CardContent>
+            </div>
           </Card>
         </motion.div>
       </DialogTrigger>
@@ -890,7 +896,7 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
 
         <div className="max-w-6xl mx-auto px-4">
         {/* Hotels Grid */}
-          <div className="grid-auto-cards-small">
+          <div className="grid-auto-cards-small container-responsive">
           <AnimatePresence>
             {sortedHotels.slice(0, 16).map((hotel: Hotel, index: number) => {
               const itemId = hotel.link || hotel.detail_url || `${hotel.name}-${index}`
