@@ -506,7 +506,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
         >
           <Card
-            className={`relative overflow-hidden cursor-pointer border-2 transition-all duration-300 flex flex-col min-h-[320px] card-layout ${
+            className={`relative overflow-hidden cursor-pointer border-2 transition-all duration-300 flex flex-col min-h-[280px] card-layout ${
               isBooked
                 ? "border-green-500 bg-green-50 dark:bg-green-950/20"
                 : "border-slate-200 dark:border-slate-700 hover:border-purple-300 hover:shadow-xl"
@@ -514,9 +514,9 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
           >
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600" />
 
-            {/* Hotel Image - Larger size for better visual impact */}
+            {/* Hotel Image - Full width */}
             {hotelImages.length > 0 ? (
-              <div className="h-48 w-full overflow-hidden">
+              <div className="h-32 w-full overflow-hidden">
                 <img 
                   src={hotelImages[0]} 
                   alt={hotel.name}
@@ -524,44 +524,50 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                 />
               </div>
             ) : (
-              <div className="h-48 w-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center">
-                <Hotel className="h-12 w-12 text-slate-400" />
+              <div className="h-32 w-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center">
+                <Hotel className="h-8 w-8 text-slate-400" />
               </div>
             )}
 
-            <CardContent className="p-4 flex-1 flex flex-col">
-              <div className="space-y-4 flex-1">
-                {/* Hotel Name */}
-                <CardTitle className="text-lg font-bold text-slate-900 dark:text-white text-horizontal text-wrap-normal line-clamp-2">
-                  {hotel.name}
-                </CardTitle>
-
-                {/* Rating */}
-                {ratingValue && (
-                  <div className="flex items-center justify-center">
-                    {renderStars(ratingValue)}
-                  </div>
-                )}
-
-                {/* Price Section */}
-                <div className="mt-auto pt-4 text-center">
-                  <div className="text-2xl font-bold text-slate-900 dark:text-white text-horizontal">
+            <CardContent className="p-3 flex-1 flex flex-col">
+              <div className="space-y-2 flex-1">
+                {/* Price */}
+                <div className="text-center">
+                  <div className="text-lg font-bold text-slate-900 dark:text-white text-horizontal">
                     {totalPrice ? totalPrice.formatted : formatPrice(hotel.rate_per_night ?? hotel.price)}
                   </div>
-                  <div className="text-sm text-slate-500 dark:text-slate-400 text-horizontal">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 text-horizontal">
                     {nights > 0 ? `for ${nights} nights` : 'total price'}
                   </div>
                 </div>
 
+                {/* Rating */}
+                {ratingValue && (
+                  <div className="flex items-center justify-center">
+                    <div className="flex items-center space-x-1">
+                      <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                      <span className="text-sm text-slate-600 dark:text-slate-300 text-horizontal">
+                        {ratingValue.toFixed(1)}/10
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Hotel Name */}
+                <CardTitle className="text-sm font-semibold text-slate-900 dark:text-white text-horizontal text-wrap-normal line-clamp-2 text-center">
+                  {hotel.name}
+                </CardTitle>
+
                 {/* Booking Button */}
-                <div className="pt-3">
+                <div className="pt-2 mt-auto">
                   <Button
                     onClick={(e) => {
                       e.stopPropagation() // Prevent dialog from opening when clicking book button
                       onBook?.(hotel, "hotels")
                     }}
                     disabled={isBooking || isBooked}
-                    className={`w-full transition-all duration-200 ${
+                    size="sm"
+                    className={`w-full transition-all duration-200 text-xs ${
                       isBooked
                         ? "bg-green-500 hover:bg-green-600 text-white"
                         : "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl"
@@ -569,17 +575,17 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                   >
                     {isBooking ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
                         Booking...
                       </>
                     ) : isBooked ? (
                       <>
-                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
                         Booked
                       </>
                     ) : (
                       <>
-                        <CreditCard className="h-4 w-4 mr-2" />
+                        <CreditCard className="h-3 w-3 mr-1" />
                         Book Now
                       </>
                     )}
@@ -587,9 +593,9 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                 </div>
 
                 {isBooked && (
-                  <div className="flex items-center justify-center space-x-2 text-green-600 dark:text-green-400 pt-2">
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span className="text-sm font-medium text-horizontal">Successfully Booked</span>
+                  <div className="flex items-center justify-center space-x-1 text-green-600 dark:text-green-400 pt-1">
+                    <CheckCircle2 className="h-3 w-3" />
+                    <span className="text-xs font-medium text-horizontal">Successfully Booked</span>
                   </div>
                 )}
               </div>
@@ -884,9 +890,9 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
 
         <div className="max-w-6xl mx-auto px-4">
         {/* Hotels Grid */}
-          <div className="grid-auto-cards">
+          <div className="grid-auto-cards-small">
           <AnimatePresence>
-            {sortedHotels.slice(0, 9).map((hotel: Hotel, index: number) => {
+            {sortedHotels.slice(0, 16).map((hotel: Hotel, index: number) => {
               const itemId = hotel.link || hotel.detail_url || `${hotel.name}-${index}`
               const isBooked = bookedIds.has(itemId)
               const isBooking = bookingStates[itemId] || false
@@ -912,13 +918,13 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
           </AnimatePresence>
         </div>
 
-        {totalResults > 9 && (
+        {totalResults > 16 && (
             <div className="text-center mt-6">
             <Button
               variant="ghost"
                 className="text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950 text-sm"
             >
-                <span className="text-horizontal">View {totalResults - 9} more hotels</span>
+                <span className="text-horizontal">View {totalResults - 16} more hotels</span>
             </Button>
           </div>
         )}
