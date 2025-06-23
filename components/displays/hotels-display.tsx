@@ -468,20 +468,17 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
   const getTotalPrice = () => {
     if (hotel.rooms && hotel.rooms.length > 0) {
       const firstRoom = hotel.rooms[0]
-      if (firstRoom.price_value && nights > 0) {
-        const totalPrice = firstRoom.price_value * nights
-        if (firstRoom.price_currency) {
-          return {
-            value: totalPrice,
-            currency: firstRoom.price_currency,
-            formatted: firstRoom.price_currency === "KZT" ? 
-              `$${(totalPrice / 500).toFixed(0)}` : // Rough KZT to USD conversion
-              new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: firstRoom.price_currency,
-                minimumFractionDigits: 0,
-              }).format(totalPrice)
-          }
+      if (firstRoom.price_value && firstRoom.price_currency) {
+        return {
+          value: firstRoom.price_value,
+          currency: firstRoom.price_currency,
+          formatted: firstRoom.price_currency === "KZT" ? 
+            `$${(firstRoom.price_value / 500).toFixed(0)}` : // Rough KZT to USD conversion
+            new Intl.NumberFormat("en-US", {
+              style: "currency",
+              currency: firstRoom.price_currency,
+              minimumFractionDigits: 0,
+            }).format(firstRoom.price_value)
         }
       }
     }
@@ -549,14 +546,11 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                 {/* Price Section */}
                 <div className="mt-auto pt-4 text-center">
                   <div className="text-2xl font-bold text-slate-900 dark:text-white text-horizontal">
-                    {formatPrice(hotel.rate_per_night ?? hotel.price)}
+                    {totalPrice ? totalPrice.formatted : formatPrice(hotel.rate_per_night ?? hotel.price)}
                   </div>
-                  <div className="text-sm text-slate-500 dark:text-slate-400 text-horizontal">per night</div>
-                  {totalPrice && nights > 0 && (
-                    <div className="text-xs text-slate-400 dark:text-slate-500 text-horizontal mt-1">
-                      {totalPrice.formatted} total for {nights} nights
-                    </div>
-                  )}
+                  <div className="text-sm text-slate-500 dark:text-slate-400 text-horizontal">
+                    {nights > 0 ? `for ${nights} nights` : 'total price'}
+                  </div>
                 </div>
 
                 {/* Booking Button */}
@@ -758,7 +752,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
               </div>
               {nights > 0 && (
                 <div className="text-sm text-slate-500 dark:text-slate-400">
-                  {formatPrice(hotel.rate_per_night ?? hotel.price)} × {nights} nights
+                  for {nights} nights
                 </div>
               )}
             </div>
