@@ -19,6 +19,9 @@ import { InteractiveMap } from "@/components/interactive-map"
 import { MessageCircle } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 
+// Disable static generation for this page
+export const dynamic = 'force-dynamic'
+
 interface Message {
   id: string
   role: "user" | "assistant"

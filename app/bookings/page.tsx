@@ -10,6 +10,9 @@ import { apiClient } from "@/lib/api"
 import { Plane, Hotel, Car, Calendar, MapPin, Clock, DollarSign, Plus, ArrowLeft, Sparkles, Menu } from "lucide-react"
 import { motion } from "framer-motion"
 
+// Disable static generation for this page
+export const dynamic = 'force-dynamic'
+
 interface Booking {
   id: number
   user_id: number

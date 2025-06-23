@@ -29,7 +29,6 @@ import { useTheme } from "@/components/shared/theme-provider"
 import { motion } from "framer-motion"
 import { Globe as GlobeComponent } from "@/components/magicui/globe"
 import { AnimatedGradientText } from "@/components/magicui/animated-gradient-text"
-import { VideoText } from "@/components/magicui/video-text"
 import { cn } from "@/lib/utils"
 
 export default function LandingPage() {

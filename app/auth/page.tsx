@@ -15,6 +15,9 @@ import { Sparkles, Eye, EyeOff } from "lucide-react"
 import { motion } from "framer-motion"
 import { AnimatePresence } from "framer-motion"
 
+// Disable static generation for this page
+export const dynamic = 'force-dynamic'
+
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
