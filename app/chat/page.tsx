@@ -83,8 +83,30 @@ export default function ChatPage() {
     if (conversationId) {
       setCurrentConversationId(conversationId)
       loadConversation(conversationId)
+    } else {
+      // If no URL param, try to load last conversation from localStorage
+      const lastConversationId = localStorage.getItem("lastConversationId")
+      if (lastConversationId && conversations.length > 0) {
+        // Check if the conversation still exists
+        const conversationExists = conversations.find(c => c.id === lastConversationId)
+        if (conversationExists) {
+          setCurrentConversationId(lastConversationId)
+          loadConversation(lastConversationId)
+        }
+      }
     }
-  }, [searchParams])
+  }, [searchParams, conversations])
+
+  // Save current conversation ID to localStorage whenever it changes
+  useEffect(() => {
+    if (currentConversationId) {
+      localStorage.setItem("lastConversationId", currentConversationId)
+      // Update URL to include conversation ID
+      const url = new URL(window.location.href)
+      url.searchParams.set("c", currentConversationId)
+      window.history.replaceState({}, "", url.toString())
+    }
+  }, [currentConversationId])
 
   // Auto-close sidebar on mobile when conversation loads
   useEffect(() => {
@@ -243,6 +265,11 @@ export default function ChatPage() {
     setCurrentConversationId(null)
     localStorage.removeItem("lastConversationId")
     setInput("")
+    
+    // Clear conversation ID from URL
+    const url = new URL(window.location.href)
+    url.searchParams.delete("c")
+    window.history.replaceState({}, "", url.toString())
   }
 
   const loadConversation = async (conversationId: string) => {
