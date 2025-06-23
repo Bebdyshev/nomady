@@ -15,12 +15,8 @@
 
 ### 🔧 Required Actions:
 
-#### 1. Replace Placeholder URLs
-```bash
-# Find and replace in all files:
-"https://your-domain.com" → "https://youractualsite.com"
-"@travelai" → "@yourtwitterhandle"
-```
+#### 1. Domain Configuration ✅
+Domain has been updated to: **https://nomady.live/**
 
 #### 2. Create Required Images
 Create these images in the `public/` folder:
@@ -37,7 +33,7 @@ Create these images in the `public/` folder:
 
 #### 3. Google Search Console Setup
 1. Visit [Google Search Console](https://search.google.com/search-console)
-2. Add your property
+2. Add property: **https://nomady.live**
 3. Get verification code
 4. Update `verification.google` in `app/layout.tsx`
 
@@ -49,9 +45,9 @@ Use tools like:
 #### 5. Test SEO Implementation
 
 **Tools to use:**
-- [Google PageSpeed Insights](https://pagespeed.web.dev/)
-- [Rich Results Test](https://search.google.com/test/rich-results)
-- [Meta Tags](https://metatags.io/)
+- [Google PageSpeed Insights](https://pagespeed.web.dev/) - Test nomady.live
+- [Rich Results Test](https://search.google.com/test/rich-results) - Test structured data
+- [Meta Tags](https://metatags.io/) - Preview social media cards
 - [Twitter Card Validator](https://cards-dev.twitter.com/validator)
 
 ### 📊 SEO Features Implemented:

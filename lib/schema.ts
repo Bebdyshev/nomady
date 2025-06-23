@@ -5,12 +5,12 @@ export const organizationSchema = {
   "@type": "Organization",
   "name": "TravelAI",
   "description": "AI-powered trip planner and travel assistant",
-  "url": "https://your-domain.com",
-  "logo": "https://your-domain.com/logo.png",
+  "url": "https://nomady.live",
+  "logo": "https://nomady.live/logo.png",
   "contactPoint": {
     "@type": "ContactPoint",
     "contactType": "customer service",
-    "email": "support@your-domain.com"
+    "email": "support@nomady.live"
   },
   "sameAs": [
     "https://twitter.com/travelai",
@@ -24,7 +24,7 @@ export const webApplicationSchema = {
   "@type": "WebApplication",
   "name": "TravelAI",
   "description": "AI-powered trip planner and travel assistant",
-  "url": "https://your-domain.com",
+  "url": "https://nomady.live",
   "applicationCategory": "TravelApplication",
   "operatingSystem": "Web",
   "offers": {
@@ -40,7 +40,7 @@ export const webApplicationSchema = {
   "publisher": {
     "@type": "Organization",
     "name": "TravelAI",
-    "url": "https://your-domain.com"
+    "url": "https://nomady.live"
   }
 }
 

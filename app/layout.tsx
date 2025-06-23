@@ -34,14 +34,14 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://your-domain.com'), // Replace with your actual domain
+  metadataBase: new URL('https://nomady.live'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://your-domain.com',
+    url: 'https://nomady.live',
     title: 'TravelAI - AI-Powered Trip Planner & Travel Assistant',
     description: 'Plan your perfect trip with AI assistance. Find flights, hotels, restaurants, and activities all in one place.',
     siteName: 'TravelAI',
@@ -109,7 +109,7 @@ export default function RootLayout({
               "@type": "WebApplication",
               "name": "TravelAI",
               "description": "AI-powered trip planner and travel assistant",
-              "url": "https://your-domain.com",
+              "url": "https://nomady.live",
               "applicationCategory": "TravelApplication",
               "operatingSystem": "Web",
               "offers": {
@@ -125,7 +125,7 @@ export default function RootLayout({
               "publisher": {
                 "@type": "Organization",
                 "name": "TravelAI",
-                "url": "https://your-domain.com"
+                "url": "https://nomady.live"
               }
             })
           }}
