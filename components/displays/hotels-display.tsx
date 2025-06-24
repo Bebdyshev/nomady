@@ -530,8 +530,8 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
       </DialogTrigger>
 
       {/* Detailed Hotel Dialog */}
-      <DialogContent className="sm:max-w-7xl max-h-[95vh] p-0">
-        <div className="grid grid-cols-1 lg:grid-cols-2 h-full max-h-[95vh]">
+      <DialogContent className="sm:max-w-6xl max-h-[90vh] p-0">
+        <div className="grid grid-cols-1 lg:grid-cols-2 h-full max-h-[90vh]">
           {/* Left Column - Images and Visual Info */}
           <div className="relative bg-slate-50 dark:bg-slate-900">
             <DialogHeader className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 to-transparent p-6">
@@ -609,7 +609,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
           </div>
 
           {/* Right Column - Hotel Information */}
-          <div className="flex flex-col h-full max-h-[95vh] overflow-y-auto">
+          <div className="flex flex-col h-full max-h-[90vh] overflow-y-auto">
             {/* Booking Summary - Compact */}
             {searchParams?.check_in_date && (
               <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 p-4 border-b border-slate-200 dark:border-slate-700">
@@ -652,7 +652,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
               </div>
             )}
 
-            <div className="flex-1 p-6 space-y-6">
+            <div className="flex-1 p-5 space-y-5">
               {/* Hotel Description - Compact */}
               {hotel.description && (
                 <div className="space-y-2">
@@ -665,7 +665,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
 
               {/* Room Information */}
               {hotel.rooms && hotel.rooms.length > 0 && (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Rooms Available</h3>
                   <div className="space-y-2 max-h-32 overflow-y-auto">
                     {hotel.rooms.slice(0, 3).map((room: any, idx: number) => (
@@ -691,7 +691,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
 
               {/* Amenities Grid - More Compact */}
               {amenities.length > 0 && (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Amenities</h3>
                   <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
                     {amenities.map((amenity: string, index: number) => (
@@ -711,7 +711,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
 
               {/* Reviews */}
               {hotel.featured_reviews && hotel.featured_reviews.length > 0 && (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Reviews</h3>
                   <div className="space-y-2 max-h-32 overflow-y-auto">
                     {hotel.featured_reviews.slice(0, 2).map((review: string, idx: number) => (
@@ -726,7 +726,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
               )}
 
               {/* Location & Contact - Compact */}
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Location</h3>
                 <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 space-y-3">
                   {hotel.location?.address && (
@@ -761,7 +761,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
 
               {/* Rating Breakdown */}
               {hotel.rating_subscores && Object.keys(hotel.rating_subscores).length > 0 && (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Ratings</h3>
                   <div className="grid grid-cols-2 gap-2">
                     {Object.entries(hotel.rating_subscores).slice(0, 6).map(([category, score]: [string, any]) => (
