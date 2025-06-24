@@ -119,7 +119,7 @@ class ApiClient {
   async sendMessage(
     messages: Array<{ role: string; content: string }>, 
     conversationId?: string,
-    location?: { latitude: number; longitude: number; accuracy: number }
+    geolocation?: { latitude: number; longitude: number }
   ) {
     const params = new URLSearchParams()
     if (conversationId) {
@@ -127,8 +127,8 @@ class ApiClient {
     }
 
     const requestBody: any = { messages }
-    if (location) {
-      requestBody.location = location
+    if (geolocation) {
+      requestBody.geolocation = geolocation
     }
 
     return this.request<{
@@ -146,7 +146,7 @@ class ApiClient {
     conversationId?: string,
     onToolStart?: () => void,
     onToolOutput?: (output: any) => void,
-    location?: { latitude: number; longitude: number; accuracy: number }
+    geolocation?: { latitude: number; longitude: number }
   ): AsyncGenerator<{
     type: 'text_chunk' | 'tool_output' | 'complete' | 'error'
     data?: any
@@ -171,8 +171,8 @@ class ApiClient {
       }
 
       const requestBody: any = { messages }
-      if (location) {
-        requestBody.location = location
+      if (geolocation) {
+        requestBody.geolocation = geolocation
       }
 
       const response = await fetch(url, {

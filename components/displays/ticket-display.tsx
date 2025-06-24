@@ -151,17 +151,9 @@ const FlightPath = ({ segments, isReturn = false }: { segments: FlightSegment[];
 }
 
 // Enhanced Flight Card Component
-const FlightCard = ({ item, onBook, isBooked, isBooking }: any) => {
+const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice }: any) => {
   const [currentPage, setCurrentPage] = useState(0)
   const itemId = item.combination_id || item.id || `flight-${Date.now()}`
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "KZT",
-      minimumFractionDigits: 0,
-    }).format(price)
-  }
 
   const totalDuration =
     item.flights_to?.reduce((acc: number, flight: FlightSegment) => {
@@ -214,7 +206,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking }: any) => {
                 </div>
 
                 <div className="text-right flex-shrink-0">
-                  <div className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white text-horizontal">{formatPrice(item.price)}</div>
+                  <div className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white text-horizontal">{formatPrice(item.price, item.currency)}</div>
                     {item.refundable && (
                     <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200 mt-1 hidden sm:inline-flex">
                       <Shield className="h-3 w-3 mr-1" />
@@ -295,7 +287,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking }: any) => {
           <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 rounded-xl p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">{formatPrice(item.price)}</div>
+                <div className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">{formatPrice(item.price, item.currency)}</div>
                 <div className="text-xs md:text-sm text-slate-600 dark:text-slate-300">Total for {item.passengers} passenger{item.passengers > 1 ? "s" : ""}</div>
               </div>
               <div className="flex flex-wrap gap-1 md:gap-2">
@@ -378,7 +370,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking }: any) => {
         <DialogFooter className="pt-4 md:pt-6 border-t border-slate-200 dark:border-slate-700">
           <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-4">
             <div className="text-center sm:text-left">
-              <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">{formatPrice(item.price)}</div>
+              <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">{formatPrice(item.price, item.currency)}</div>
               <div className="text-xs md:text-sm text-slate-500 dark:text-slate-400">Total price for {item.passengers} passenger{item.passengers > 1 ? "s" : ""}</div>
             </div>
 
@@ -415,6 +407,31 @@ const FlightCard = ({ item, onBook, isBooked, isBooking }: any) => {
 export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: TicketDisplayProps) {
   const [bookingStates, setBookingStates] = useState<Record<string, boolean>>({})
   const { toast } = useToast()
+
+  // Global price formatting function
+  const formatPrice = (price: number, currency: string = "USD") => {
+    // Handle different currencies
+    if (currency === "USD") {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 0,
+      }).format(price)
+    } else if (currency === "KZT") {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "KZT",
+        minimumFractionDigits: 0,
+      }).format(price)
+    } else {
+      // Fallback for other currencies
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: currency,
+        minimumFractionDigits: 0,
+      }).format(price)
+    }
+  }
 
   const outputArray: SearchResult[] = Array.isArray(toolOutput) ? toolOutput : [toolOutput]
   
@@ -623,7 +640,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                               exit={{ opacity: 0, scale: 0.9 }}
                               transition={{ duration: 0.3, delay: index * 0.1 }}
                             >
-                              <FlightCard item={item} onBook={handleBooking} isBooked={isBooked} isBooking={isBooking} />
+                              <FlightCard item={item} onBook={handleBooking} isBooked={isBooked} isBooking={isBooking} formatPrice={formatPrice} />
                             </motion.div>
                           )
                         }
@@ -672,7 +689,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                                 </div>
                                 <div className="flex items-center justify-between mt-auto pt-4">
                                   <span className="font-semibold text-xl text-slate-900 dark:text-white text-horizontal">
-                                    {item.price ? `₸${item.price}` : 'Price on request'}
+                                    {item.price ? formatPrice(item.price, item.currency) : 'Price on request'}
                                   </span>
                                   <Button
                                     size="sm"
@@ -731,7 +748,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                               exit={{ opacity: 0, scale: 0.9 }}
                               transition={{ duration: 0.3, delay: index * 0.1 }}
                             >
-                              <FlightCard item={item} onBook={handleBooking} isBooked={isBooked} isBooking={isBooking} />
+                              <FlightCard item={item} onBook={handleBooking} isBooked={isBooked} isBooking={isBooking} formatPrice={formatPrice} />
                             </motion.div>
                           )
                         }
@@ -780,7 +797,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                                 </div>
                                 <div className="flex items-center justify-between mt-auto pt-4">
                                   <span className="font-semibold text-xl text-slate-900 dark:text-white text-horizontal">
-                                    {item.price ? `₸${item.price}` : 'Price on request'}
+                                    {item.price ? formatPrice(item.price, item.currency) : 'Price on request'}
                                   </span>
                                   <Button
                                     size="sm"

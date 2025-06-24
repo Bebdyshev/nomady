@@ -62,9 +62,9 @@ export default function ChatPage() {
   const [streamingToolOutput, setStreamingToolOutput] = useState<any>(null)
   const [activeSearches, setActiveSearches] = useState<Set<string>>(new Set())
   const [showTypingIndicator, setShowTypingIndicator] = useState(false)
-  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number; accuracy: number } | null>(null)
-  const [locationEnabled, setLocationEnabled] = useState(false)
-  const [locationError, setLocationError] = useState<string | null>(null)
+  const [geolocation, setGeolocation] = useState<{ latitude: number; longitude: number } | null>(null)
+  const [isRequestingLocation, setIsRequestingLocation] = useState(false)
+  const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt' | null>(null)
 
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -167,63 +167,6 @@ export default function ChatPage() {
     }
   }
 
-  const requestGeolocation = async () => {
-    if (!navigator.geolocation) {
-      setLocationError("Geolocation is not supported by this browser")
-      return
-    }
-
-    try {
-      setLocationError(null)
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(
-          resolve,
-          reject,
-          {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 300000, // 5 minutes
-          }
-        )
-      })
-
-      const location = {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        accuracy: position.coords.accuracy,
-      }
-
-      setUserLocation(location)
-      setLocationEnabled(true)
-      setLocationError(null)
-    } catch (error: any) {
-      console.error("Error getting location:", error)
-      let errorMessage = "Unable to get your location"
-      
-      if (error.code === 1) {
-        errorMessage = "Location access denied. Please enable location permissions."
-      } else if (error.code === 2) {
-        errorMessage = "Location information is unavailable."
-      } else if (error.code === 3) {
-        errorMessage = "Location request timed out."
-      }
-      
-      setLocationError(errorMessage)
-      setLocationEnabled(false)
-      setUserLocation(null)
-    }
-  }
-
-  const toggleLocation = () => {
-    if (locationEnabled) {
-      setLocationEnabled(false)
-      setUserLocation(null)
-      setLocationError(null)
-    } else {
-      requestGeolocation()
-    }
-  }
-
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim() || isLoading || isStreaming) return
@@ -278,11 +221,6 @@ export default function ChatPage() {
           // onToolOutput - handle tool output
           setStreamingToolOutput(output)
         },
-        userLocation && locationEnabled ? {
-          latitude: userLocation.latitude,
-          longitude: userLocation.longitude,
-          accuracy: userLocation.accuracy
-        } : undefined
       )) {
         if (chunk.type === "text_chunk") {
           fullResponse += chunk.data
@@ -1066,7 +1004,7 @@ export default function ChatPage() {
                                     <SearchAnimation key={searchType} searchType={searchType} />
                                   ))}
                                 </AnimatePresence>
-                              </div>
+                      </div>
                             ) : (
                               <>
                                 {message.role === "assistant" ? (
@@ -1144,21 +1082,6 @@ export default function ChatPage() {
         {/* Input Area */}
         <div className="border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
           <div className="max-w-4xl mx-auto p-3 md:p-6">
-            {/* Location Status */}
-            {locationError && (
-              <div className="mb-3 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                <p className="text-sm text-red-600 dark:text-red-400">{locationError}</p>
-              </div>
-            )}
-            {locationEnabled && userLocation && (
-              <div className="mb-3 p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                <p className="text-sm text-green-600 dark:text-green-400 flex items-center">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  Location sharing enabled (±{Math.round(userLocation.accuracy)}m accuracy)
-                </p>
-              </div>
-            )}
-            
             <form onSubmit={handleSendMessage} className="flex space-x-2 md:space-x-4">
               <div className="flex-1 relative">
                 <textarea
@@ -1172,64 +1095,48 @@ export default function ChatPage() {
                     }
                   }}
                   placeholder="Ask about flights, hotels, restaurants, or activities..."
-                  className="w-full p-3 md:p-4 pr-24 md:pr-28 border border-slate-300 dark:border-slate-600 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 text-sm md:text-base"
+                  className="w-full p-3 md:p-4 pr-12 md:pr-16 border border-slate-300 dark:border-slate-600 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 text-sm md:text-base"
                   rows={1}
                   style={{ minHeight: "48px", maxHeight: "120px" }}
                 />
-                
-                {/* Location Toggle Button */}
-                <motion.button
-                  type="button"
-                  onClick={toggleLocation}
-                  className={`absolute right-12 md:right-14 top-1/2 transform -translate-y-1/2 p-2 rounded-lg transition-colors ${
-                    locationEnabled
-                      ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50"
-                      : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600"
-                  }`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  title={locationEnabled ? "Disable location sharing" : "Enable location sharing"}
-                >
-                  <MapPin className={`h-4 w-4 ${locationEnabled ? "fill-current" : ""}`} />
-                </motion.button>
-
-                <motion.button
+                  <motion.button
                   type="submit"
-                  disabled={isLoading || !input.trim() || isStreaming}
+                    disabled={isLoading || !input.trim() || isStreaming}
                   className="absolute right-2 md:right-3 top-1/2 transform -translate-y-1/2 p-2 md:p-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-600 text-white rounded-lg transition-colors"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                 >
-                  {isLoading || isStreaming ? (
+                    {isLoading || isStreaming ? (
                     <Loader2 className="h-4 w-4 md:h-5 md:w-5 animate-spin" />
                   ) : (
                     <Send className="h-4 w-4 md:h-5 md:w-5" />
                   )}
-                </motion.button>
+                  </motion.button>
               </div>
             </form>
           </div>
+          </div>
         </div>
-      </div>
 
-      {/* Resize Handle */}
-      <div
-        className="w-1 bg-slate-200 dark:bg-slate-700 hover:bg-blue-500 cursor-col-resize transition-colors relative group"
-        onMouseDown={handleMouseDown}
-      >
-        <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-500/20" />
-      </div>
+        {/* Resize Handle */}
+        <div
+          className="w-1 bg-slate-200 dark:bg-slate-700 hover:bg-blue-500 cursor-col-resize transition-colors relative group"
+          onMouseDown={handleMouseDown}
+        >
+          <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-500/20" />
+        </div>
 
-      {/* Map Area */}
-      <div
-        className="bg-slate-50 dark:bg-slate-900 border-l border-slate-200 dark:border-slate-700"
-        style={{ width: `${mapWidth}%` }}
-      >
-        <InteractiveMap
-          selectedItems={Object.values(bookedItems)}
-          onRemoveItem={handleRemoveItem}
-          onClearAll={handleClearAll}
-        />
+        {/* Map Area */}
+        <div
+          className="bg-slate-50 dark:bg-slate-900 border-l border-slate-200 dark:border-slate-700"
+          style={{ width: `${mapWidth}%` }}
+        >
+          <InteractiveMap
+            selectedItems={Object.values(bookedItems)}
+            onRemoveItem={handleRemoveItem}
+            onClearAll={handleClearAll}
+          />
+        </div>
       </div>
     </div>
   )
