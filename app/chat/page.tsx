@@ -59,6 +59,7 @@ export default function ChatPage() {
   const [streamingMessage, setStreamingMessage] = useState<string>("")
   const [isStreaming, setIsStreaming] = useState(false)
   const [streamingToolOutput, setStreamingToolOutput] = useState<any>(null)
+  const [activeSearches, setActiveSearches] = useState<Set<string>>(new Set())
 
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -212,6 +213,30 @@ export default function ChatPage() {
           setStreamingMessage(fullResponse)
           finalConversationId = chunk.conversation_id || finalConversationId
           
+          // Check for search tags in the new chunk
+          const searchStartTags = chunk.data.match(/<(searching_tickets|searching_hotels|searching_restaurants|searching_activities)>/g)
+          const searchEndTags = chunk.data.match(/<\/(searching_tickets|searching_hotels|searching_restaurants|searching_activities)>/g)
+          
+          if (searchStartTags || searchEndTags) {
+            setActiveSearches(prev => {
+              const newSearches = new Set(prev)
+              
+              // Add new searches
+              searchStartTags?.forEach((tag: string) => {
+                const searchType = tag.replace(/<searching_|>/g, '')
+                newSearches.add(searchType)
+              })
+              
+              // Remove completed searches
+              searchEndTags?.forEach((tag: string) => {
+                const searchType = tag.replace(/<\/searching_|>/g, '')
+                newSearches.delete(searchType)
+              })
+              
+              return newSearches
+            })
+          }
+          
           // Update the streaming message in real-time
           setMessages((prev) => 
             prev.map((msg) => 
@@ -307,6 +332,7 @@ export default function ChatPage() {
       setIsStreaming(false)
       setStreamingMessage("")
       setStreamingToolOutput(null)
+      setActiveSearches(new Set())
     }
   }
 
@@ -503,8 +529,12 @@ export default function ChatPage() {
   }
 
   const parseMessageContent = (content: string, toolOutput?: any) => {
-    // Always remove ticket and hotel tags from content for clean display
-    const textContent = content.replace(/<(?:tickets|hotels)>[\s\S]*?<\/(?:tickets|hotels)>/g, '').trim()
+    // Remove all search tags and ticket/hotel tags from content for clean display
+    const textContent = content
+      .replace(/<(?:searching_tickets|searching_hotels|searching_restaurants|searching_activities)>/g, '')
+      .replace(/<\/(?:searching_tickets|searching_hotels|searching_restaurants|searching_activities)>/g, '')
+      .replace(/<(?:tickets|hotels)>[\s\S]*?<\/(?:tickets|hotels)>/g, '')
+      .trim()
     
     // Show tickets if we have tool_output data (regardless of tags)
     if (toolOutput) {
@@ -595,6 +625,37 @@ export default function ChatPage() {
   }, [isResizing])
 
   console.log(messages)
+
+  // Search Animation Component
+  const SearchAnimation = ({ searchType }: { searchType: string }) => {
+    const searchLabels: Record<string, { icon: string; label: string }> = {
+      tickets: { icon: "✈️", label: "Searching flights..." },
+      hotels: { icon: "🏨", label: "Finding hotels..." },
+      restaurants: { icon: "🍽️", label: "Looking for restaurants..." },
+      activities: { icon: "🎯", label: "Finding activities..." }
+    }
+
+    const search = searchLabels[searchType] || { icon: "🔍", label: "Searching..." }
+
+    return (
+      <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400 text-sm py-2">
+        <span className="text-base">{search.icon}</span>
+        <span className="font-medium">{search.label}</span>
+        <div className="flex space-x-1">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="w-1.5 h-1.5 bg-blue-600 dark:bg-blue-400 rounded-full animate-pulse"
+              style={{
+                animationDelay: `${i * 0.2}s`,
+                animationDuration: '1s'
+              }}
+            />
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
@@ -740,7 +801,7 @@ export default function ChatPage() {
             <div className="flex items-center space-x-3">
               <Avatar>
                 {user?.picture ? (
-                  <AvatarImage src={user.picture} alt={user.name || "User"} />
+                  <AvatarImage src={user.picture} alt={user?.name || "User"} />
                 ) : (
                   <AvatarFallback className="bg-blue-600 text-white">
                     {user?.name ? user.name.charAt(0).toUpperCase() : <User className="h-4 w-4" />}
@@ -833,6 +894,14 @@ export default function ChatPage() {
                           <span className="inline-block w-1 h-4 bg-slate-600 dark:bg-slate-300 ml-1 animate-pulse" />
                         )}
                       </div>
+                      {/* Show active search animations */}
+                      {message.role === "assistant" && isStreaming && message.content === streamingMessage && activeSearches.size > 0 && (
+                        <div className="mt-2 space-y-1">
+                          {Array.from(activeSearches).map((searchType) => (
+                            <SearchAnimation key={searchType} searchType={searchType} />
+                          ))}
+                        </div>
+                      )}
                       {message.toolOutput && (
                         <div className="mt-3 md:mt-4">
                           {message.content.includes('<hotels>') || message.content.includes('Hotels in') ? (
