@@ -142,7 +142,63 @@ export default function ChatPage() {
       setInput(pendingPrompt)
       sessionStorage.removeItem("pendingTripPrompt")
     }
+
+    // Check geolocation permission on load
+    checkGeolocationPermission()
   }, [isAuthenticated, router])
+
+  // Geolocation functions
+  const checkGeolocationPermission = async () => {
+    if ('geolocation' in navigator) {
+      try {
+        const permission = await navigator.permissions.query({ name: 'geolocation' })
+        setLocationPermission(permission.state)
+        
+        permission.onchange = () => {
+          setLocationPermission(permission.state)
+        }
+      } catch (error) {
+        console.error('Error checking geolocation permission:', error)
+      }
+    }
+  }
+
+  const requestGeolocation = async () => {
+    if (!('geolocation' in navigator)) {
+      console.error('Geolocation is not supported by this browser.')
+      return
+    }
+
+    setIsRequestingLocation(true)
+
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          reject,
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 300000 // 5 minutes
+          }
+        )
+      })
+
+      const coords = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude
+      }
+
+      setGeolocation(coords)
+      setLocationPermission('granted')
+      console.log('Location obtained:', coords)
+    } catch (error) {
+      console.error('Error getting location:', error)
+      setLocationPermission('denied')
+    } finally {
+      setIsRequestingLocation(false)
+    }
+  }
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -221,6 +277,7 @@ export default function ChatPage() {
           // onToolOutput - handle tool output
           setStreamingToolOutput(output)
         },
+        geolocation || undefined // Pass geolocation data or undefined
       )) {
         if (chunk.type === "text_chunk") {
           fullResponse += chunk.data
@@ -944,8 +1001,8 @@ export default function ChatPage() {
                   Welcome to Your Travel Assistant
                 </h2>
                 <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 mb-6 md:mb-8 max-w-md">
-                    Ask me anything about flights, hotels, restaurants, or activities. I'll help you find and book the
-                    perfect options for your trip.
+                  Ask me anything about flights, hotels, restaurants, or activities. I'll help you find and book the
+                  perfect options for your trip. Share your location for personalized recommendations!
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 w-full max-w-2xl">
                   {[
@@ -1081,6 +1138,23 @@ export default function ChatPage() {
 
         {/* Input Area */}
         <div className="border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+          {/* Location Status */}
+          {geolocation && (
+            <div className="max-w-4xl mx-auto px-3 md:px-6 pt-2">
+              <div className="flex items-center space-x-2 text-xs text-green-600 dark:text-green-400">
+                <MapPin className="h-3 w-3 fill-current" />
+                <span>Location shared: {geolocation.latitude.toFixed(4)}, {geolocation.longitude.toFixed(4)}</span>
+                <button
+                  onClick={() => setGeolocation(null)}
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  title="Remove location"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            </div>
+          )}
+          
           <div className="max-w-4xl mx-auto p-3 md:p-6">
             <form onSubmit={handleSendMessage} className="flex space-x-2 md:space-x-4">
               <div className="flex-1 relative">
@@ -1094,24 +1168,50 @@ export default function ChatPage() {
                       handleSendMessage(e)
                     }
                   }}
-                  placeholder="Ask about flights, hotels, restaurants, or activities..."
-                  className="w-full p-3 md:p-4 pr-12 md:pr-16 border border-slate-300 dark:border-slate-600 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 text-sm md:text-base"
+                  placeholder={
+                    geolocation 
+                      ? "Ask about flights, hotels, restaurants, or activities... (location shared)"
+                      : "Ask about flights, hotels, restaurants, or activities... (📍 click to share location)"
+                  }
+                  className="w-full p-3 md:p-4 pr-20 md:pr-24 border border-slate-300 dark:border-slate-600 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 text-sm md:text-base"
                   rows={1}
                   style={{ minHeight: "48px", maxHeight: "120px" }}
                 />
-                  <motion.button
-                  type="submit"
-                    disabled={isLoading || !input.trim() || isStreaming}
-                  className="absolute right-2 md:right-3 top-1/2 transform -translate-y-1/2 p-2 md:p-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-600 text-white rounded-lg transition-colors"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                
+                {/* Geolocation Button */}
+                <motion.button
+                  type="button"
+                  onClick={requestGeolocation}
+                  disabled={isRequestingLocation}
+                  className={`absolute right-12 md:right-16 top-1/2 transform -translate-y-1/2 p-2 rounded-lg transition-colors ${
+                    geolocation 
+                      ? 'bg-green-100 text-green-600 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400' 
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-400'
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title={geolocation ? "Location shared" : "Share location"}
                 >
-                    {isLoading || isStreaming ? (
+                  {isRequestingLocation ? (
+                    <Loader2 className="h-4 animate-spin" />
+                  ) : (
+                    <MapPin className={`h-4 w-4 ${geolocation ? 'fill-current' : ''}`} />
+                  )}
+                </motion.button>
+
+                <motion.button
+                  type="submit"
+                  disabled={isLoading || !input.trim() || isStreaming}
+                  className="absolute right-2 md:right-3 top-1/2 transform -translate-y-1/2 p-2 md:p-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-600 text-white rounded-lg transition-colors"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {isLoading || isStreaming ? (
                     <Loader2 className="h-4 w-4 md:h-5 md:w-5 animate-spin" />
                   ) : (
                     <Send className="h-4 w-4 md:h-5 md:w-5" />
                   )}
-                  </motion.button>
+                </motion.button>
               </div>
             </form>
           </div>
