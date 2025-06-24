@@ -116,10 +116,19 @@ class ApiClient {
   }
 
   // Chat methods
-  async sendMessage(messages: Array<{ role: string; content: string }>, conversationId?: string) {
+  async sendMessage(
+    messages: Array<{ role: string; content: string }>, 
+    conversationId?: string,
+    location?: { latitude: number; longitude: number; accuracy: number }
+  ) {
     const params = new URLSearchParams()
     if (conversationId) {
       params.append("conversation_id", conversationId)
+    }
+
+    const requestBody: any = { messages }
+    if (location) {
+      requestBody.location = location
     }
 
     return this.request<{
@@ -128,7 +137,7 @@ class ApiClient {
       tool_output?: any
     }>(`/chat/?${params.toString()}`, {
       method: "POST",
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify(requestBody),
     })
   }
 
@@ -136,7 +145,8 @@ class ApiClient {
     messages: Array<{ role: string; content: string }>, 
     conversationId?: string,
     onToolStart?: () => void,
-    onToolOutput?: (output: any) => void
+    onToolOutput?: (output: any) => void,
+    location?: { latitude: number; longitude: number; accuracy: number }
   ): AsyncGenerator<{
     type: 'text_chunk' | 'tool_output' | 'complete' | 'error'
     data?: any
@@ -160,10 +170,15 @@ class ApiClient {
         headers.Authorization = `Bearer ${this.token}`
       }
 
+      const requestBody: any = { messages }
+      if (location) {
+        requestBody.location = location
+      }
+
       const response = await fetch(url, {
         method: "POST",
         headers,
-        body: JSON.stringify({ messages }),
+        body: JSON.stringify(requestBody),
       })
 
       if (!response.ok) {

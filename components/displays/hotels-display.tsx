@@ -496,7 +496,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                       {formatPrice(hotel.price)}
                     </div>
                     <div className="text-white/80 text-sm">
-                      {nights > 0 ? `за ${nights} ночей` : 'total'}
+                      {nights > 0 ? `for ${nights} nights` : 'total'}
                     </div>
                   </div>
 
@@ -577,7 +577,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                     {formatPrice(hotel.price)}
                   </div>
                   <div className="text-white/80 text-sm">
-                    {nights > 0 ? `за ${nights} ночей` : 'total price'}
+                    {nights > 0 ? `for ${nights} nights` : 'total price'}
                   </div>
                 </div>
 
