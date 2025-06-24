@@ -49,6 +49,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [streamingMessage, setStreamingMessage] = useState<Message | null>(null)
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
   const [bookedItems, setBookedItems] = useState<Record<string, any>>({})
@@ -74,7 +75,7 @@ export default function ChatPage() {
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
+  }, [messages, streamingMessage])
 
   // Load conversations on mount
   useEffect(() => {
@@ -173,85 +174,122 @@ export default function ChatPage() {
     setInput("")
     setIsLoading(true)
 
+    // Create initial streaming message
+    const assistantMessageId = (Date.now() + 1).toString()
+    const initialStreamingMessage: Message = {
+      id: assistantMessageId,
+      role: "assistant",
+      content: "",
+      timestamp: new Date(),
+    }
+    
+    setStreamingMessage(initialStreamingMessage)
+
     try {
       const messagesToSend = [{ role: "user", content: input }]
 
-      const { data, error } = await apiClient.sendMessage(messagesToSend, currentConversationId || undefined)
-
-      // Log the backend response structure
-      console.log("Backend Response:", {
-        response: data?.response,
-        conversation_id: data?.conversation_id,
-        tool_output: data?.tool_output,
-        full_data: data
-      })
-
-      if (data && !error) {
-        // Prepare tool output combined with search_result_id
-        let combinedOutput: any = data.tool_output
-        const srArr = (data as any).search_results
-        if (srArr && Array.isArray(srArr) && srArr.length > 0) {
-          const mapped = srArr.map((sr: any) => {
-            // Create a copy of the search result data
-            const resultData = { ...sr.data }
-            
-            // Add search_result_id to the main object
-            resultData.search_result_id = sr.id
-            resultData.type = sr.search_type
-            
-            // Propagate search_result_id to all nested items
-            if (resultData.flights && Array.isArray(resultData.flights)) {
-              resultData.flights = resultData.flights.map((flight: any) => ({
-                ...flight,
-                search_result_id: sr.id
-              }))
+      await apiClient.sendMessageStreamCharacter(
+        messagesToSend,
+        currentConversationId || undefined,
+        30, // 30ms delay between characters for smooth typewriter effect
+        // onCharacter callback
+        (character: string) => {
+          setStreamingMessage((prev) => {
+            if (!prev) return null
+            return {
+              ...prev,
+              content: prev.content + character
             }
-            
-            if (resultData.hotels && Array.isArray(resultData.hotels)) {
-              resultData.hotels = resultData.hotels.map((hotel: any) => ({
-                ...hotel,
-                search_result_id: sr.id
-              }))
-            }
-            
-            if (resultData.restaurants && Array.isArray(resultData.restaurants)) {
-              resultData.restaurants = resultData.restaurants.map((restaurant: any) => ({
-                ...restaurant,
-                search_result_id: sr.id
-              }))
-            }
-            
-            if (resultData.items && Array.isArray(resultData.items)) {
-              resultData.items = resultData.items.map((item: any) => ({
-                ...item,
-                search_result_id: sr.id
-              }))
-            }
-            
-            return resultData
           })
-          combinedOutput = mapped.length === 1 ? mapped[0] : mapped
-        }
+        },
+        // onComplete callback
+        (metadata: { conversation_id: string; tool_output?: any }) => {
+          console.log("Streaming completed:", metadata)
+          
+          // Process tool output if available
+          let combinedOutput: any = metadata.tool_output
+          
+          // Handle search results if they exist
+          const srArr = (metadata as any).search_results
+          if (srArr && Array.isArray(srArr) && srArr.length > 0) {
+            const mapped = srArr.map((sr: any) => {
+              const resultData = { ...sr.data }
+              resultData.search_result_id = sr.id
+              resultData.type = sr.search_type
+              
+              // Propagate search_result_id to all nested items
+              if (resultData.flights && Array.isArray(resultData.flights)) {
+                resultData.flights = resultData.flights.map((flight: any) => ({
+                  ...flight,
+                  search_result_id: sr.id
+                }))
+              }
+              
+              if (resultData.hotels && Array.isArray(resultData.hotels)) {
+                resultData.hotels = resultData.hotels.map((hotel: any) => ({
+                  ...hotel,
+                  search_result_id: sr.id
+                }))
+              }
+              
+              if (resultData.restaurants && Array.isArray(resultData.restaurants)) {
+                resultData.restaurants = resultData.restaurants.map((restaurant: any) => ({
+                  ...restaurant,
+                  search_result_id: sr.id
+                }))
+              }
+              
+              if (resultData.items && Array.isArray(resultData.items)) {
+                resultData.items = resultData.items.map((item: any) => ({
+                  ...item,
+                  search_result_id: sr.id
+                }))
+              }
+              
+              return resultData
+            })
+            combinedOutput = mapped.length === 1 ? mapped[0] : mapped
+          }
 
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: data.response,
-          timestamp: new Date(),
-          toolOutput: combinedOutput,
-        }
+          // Finalize the streaming message
+          setStreamingMessage((prev) => {
+            if (!prev) return null
+            const finalMessage: Message = {
+              ...prev,
+              toolOutput: combinedOutput,
+            }
+            
+            // Add to messages and clear streaming
+            setMessages((prevMessages) => [...prevMessages, finalMessage])
+            return null
+          })
 
-        setMessages((prev) => [...prev, assistantMessage])
-
-        if (!currentConversationId) {
-          setCurrentConversationId(data.conversation_id)
-          loadConversations()
+          // Update conversation ID if needed
+          if (!currentConversationId) {
+            setCurrentConversationId(metadata.conversation_id)
+            loadConversations()
+          }
+        },
+        // onError callback
+        (error: string) => {
+          console.error("Streaming error:", error)
+          
+          setStreamingMessage(null)
+          
+          const errorMessage: Message = {
+            id: (Date.now() + 2).toString(),
+            role: "assistant",
+            content: "Sorry, I encountered an error. Please try again.",
+            timestamp: new Date(),
+          }
+          setMessages((prev) => [...prev, errorMessage])
         }
-      } else {
-        throw new Error(error || "Failed to send message")
-      }
+      )
     } catch (error) {
       console.error("Error sending message:", error)
+      
+      setStreamingMessage(null)
+      
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
@@ -766,9 +804,9 @@ export default function ChatPage() {
               </div>
             )}
 
-            {messages.length > 0 && (
+            {(messages.length > 0 || streamingMessage) && (
               <div className="space-y-4 md:space-y-6">
-                {messages.map((message, index) => (
+                {[...messages, ...(streamingMessage ? [streamingMessage] : [])].map((message, index) => (
                   <div
                     key={index}
                     className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
@@ -782,6 +820,9 @@ export default function ChatPage() {
                     >
                       <div className="text-sm md:text-base">
                         {parseMessageContent(message.content).text}
+                        {message === streamingMessage && (
+                          <span className="inline-block w-2 h-5 bg-blue-600 dark:bg-blue-400 ml-1 animate-pulse" />
+                        )}
                       </div>
                       {message.toolOutput && (
                         <div className="mt-3 md:mt-4">
