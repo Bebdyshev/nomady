@@ -128,7 +128,10 @@ class ApiClient {
 
     const requestBody: any = { messages }
     if (geolocation) {
-      requestBody.geolocation = geolocation
+      requestBody.geolocation = {
+        latitude: geolocation.latitude,
+        longitude: geolocation.longitude
+      }
     }
 
     return this.request<{
@@ -172,7 +175,10 @@ class ApiClient {
 
       const requestBody: any = { messages }
       if (geolocation) {
-        requestBody.geolocation = geolocation
+        requestBody.geolocation = {
+          latitude: geolocation.latitude,
+          longitude: geolocation.longitude
+        }
       }
 
       const response = await fetch(url, {

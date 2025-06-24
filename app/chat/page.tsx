@@ -1228,26 +1228,27 @@ export default function ChatPage() {
             </form>
           </div>
         </div>
-      </div>
+        </div>
 
-      {/* Resize Handle */}
-      <div
-        className="w-1 bg-slate-200 dark:bg-slate-700 hover:bg-blue-500 cursor-col-resize transition-colors relative group"
-        onMouseDown={handleMouseDown}
-      >
-        <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-500/20" />
-      </div>
+        {/* Resize Handle */}
+        <div
+          className="w-1 bg-slate-200 dark:bg-slate-700 hover:bg-blue-500 cursor-col-resize transition-colors relative group"
+          onMouseDown={handleMouseDown}
+        >
+          <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-500/20" />
+        </div>
 
-      {/* Map Area */}
-      <div
-        className="bg-slate-50 dark:bg-slate-900 border-l border-slate-200 dark:border-slate-700"
-        style={{ width: `${mapWidth}%` }}
-      >
-        <InteractiveMap
-          selectedItems={Object.values(bookedItems)}
-          onRemoveItem={handleRemoveItem}
-          onClearAll={handleClearAll}
-        />
+        {/* Map Area */}
+        <div
+          className="bg-slate-50 dark:bg-slate-900 border-l border-slate-200 dark:border-slate-700"
+          style={{ width: `${mapWidth}%` }}
+        >
+          <InteractiveMap
+            selectedItems={Object.values(bookedItems)}
+            onRemoveItem={handleRemoveItem}
+            onClearAll={handleClearAll}
+          />
+        </div>
       </div>
     </div>
   )
