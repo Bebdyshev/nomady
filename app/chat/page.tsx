@@ -18,6 +18,8 @@ import { MessageCircle } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Logo } from "@/components/ui/logo"
 import { SearchAnimation, TypingIndicator } from "@/components/search-animations"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 
 // Disable static generation for this page
 export const dynamic = "force-dynamic"
@@ -266,43 +268,43 @@ export default function ChatPage() {
           const searchResults = chunk.search_results
           if (searchResults && Array.isArray(searchResults) && searchResults.length > 0) {
             const mapped = searchResults.map((sr: any) => {
-              const resultData = { ...sr.data }
-              resultData.search_result_id = sr.id
-              resultData.type = sr.search_type
-
+            const resultData = { ...sr.data }
+            resultData.search_result_id = sr.id
+            resultData.type = sr.search_type
+            
               // Propagate search_result_id to nested items
-              if (resultData.flights && Array.isArray(resultData.flights)) {
-                resultData.flights = resultData.flights.map((flight: any) => ({
-                  ...flight,
+            if (resultData.flights && Array.isArray(resultData.flights)) {
+              resultData.flights = resultData.flights.map((flight: any) => ({
+                ...flight,
                   search_result_id: sr.id,
-                }))
-              }
-
-              if (resultData.hotels && Array.isArray(resultData.hotels)) {
-                resultData.hotels = resultData.hotels.map((hotel: any) => ({
-                  ...hotel,
+              }))
+            }
+            
+            if (resultData.hotels && Array.isArray(resultData.hotels)) {
+              resultData.hotels = resultData.hotels.map((hotel: any) => ({
+                ...hotel,
                   search_result_id: sr.id,
-                }))
-              }
-
-              if (resultData.restaurants && Array.isArray(resultData.restaurants)) {
-                resultData.restaurants = resultData.restaurants.map((restaurant: any) => ({
-                  ...restaurant,
+              }))
+            }
+            
+            if (resultData.restaurants && Array.isArray(resultData.restaurants)) {
+              resultData.restaurants = resultData.restaurants.map((restaurant: any) => ({
+                ...restaurant,
                   search_result_id: sr.id,
-                }))
-              }
-
-              if (resultData.items && Array.isArray(resultData.items)) {
-                resultData.items = resultData.items.map((item: any) => ({
-                  ...item,
+              }))
+            }
+            
+            if (resultData.items && Array.isArray(resultData.items)) {
+              resultData.items = resultData.items.map((item: any) => ({
+                ...item,
                   search_result_id: sr.id,
-                }))
-              }
-
-              return resultData
-            })
-            combinedOutput = mapped.length === 1 ? mapped[0] : mapped
-          }
+              }))
+            }
+            
+            return resultData
+          })
+          combinedOutput = mapped.length === 1 ? mapped[0] : mapped
+        }
 
           // Update final message with tool output
           setMessages((prev) =>
@@ -311,10 +313,10 @@ export default function ChatPage() {
             ),
           )
 
-          if (!currentConversationId) {
+        if (!currentConversationId) {
             setCurrentConversationId(finalConversationId)
-            loadConversations()
-          }
+          loadConversations()
+        }
         } else if (chunk.type === "error") {
           throw new Error(chunk.data || "Streaming error")
         }
@@ -328,9 +330,9 @@ export default function ChatPage() {
           msg.id === streamingMessageId
             ? {
                 ...msg,
-                content: "Sorry, I encountered an error. Please try again.",
+        content: "Sorry, I encountered an error. Please try again.",
                 toolOutput: null,
-              }
+      }
             : msg,
         ),
       )
@@ -349,7 +351,7 @@ export default function ChatPage() {
     setCurrentConversationId(null)
     localStorage.removeItem("lastConversationId")
     setInput("")
-
+    
     // Clear conversation ID from URL
     const url = new URL(window.location.href)
     url.searchParams.delete("c")
@@ -361,7 +363,7 @@ export default function ChatPage() {
     if (data && (data as any).messages) {
       // Load search results for the conversation
       const { data: searchResults } = await apiClient.getConversationSearchResults(conversationId)
-
+      
       console.log("Search results:", searchResults)
       console.log("Search results detailed:", {
         searchResults,
@@ -374,14 +376,14 @@ export default function ChatPage() {
 
       const loadedMessages: Message[] = (data as any).messages.map((msg: any) => {
         let toolOutput = msg.tool_output
-
+        
         console.log("Processing message:", {
           msgId: msg.id,
           role: msg.role,
           hasToolOutput: !!toolOutput,
           toolOutputKeys: toolOutput ? Object.keys(toolOutput) : [],
         })
-
+        
         // If this message has tool_output and we have search results, process it
         if (toolOutput && searchResults && Array.isArray(searchResults)) {
           const srArr = searchResults
@@ -392,7 +394,7 @@ export default function ChatPage() {
             const hasValidHotels = toolOutput.hotels && Array.isArray(toolOutput.hotels) && toolOutput.hotels.length > 0
             const hasValidRestaurants =
               toolOutput.restaurants && Array.isArray(toolOutput.restaurants) && toolOutput.restaurants.length > 0
-
+            
             // Check what type of data the search results contain
             const searchHasTickets = srArr.some(
               (sr) => sr.data.flights && Array.isArray(sr.data.flights) && sr.data.flights.length > 0,
@@ -403,18 +405,18 @@ export default function ChatPage() {
             const searchHasRestaurants = srArr.some(
               (sr) => sr.data.restaurants && Array.isArray(sr.data.restaurants) && sr.data.restaurants.length > 0,
             )
-
+            
             // Only replace if:
             // 1. No valid data exists, OR
-            // 2. Search results match the same data type, OR
+            // 2. Search results match the same data type, OR  
             // 3. Original data is empty but search has results
             const shouldReplace =
               (!hasValidTickets && !hasValidHotels && !hasValidRestaurants) ||
-              (hasValidTickets && searchHasTickets) ||
-              (hasValidHotels && searchHasHotels) ||
-              (hasValidRestaurants && searchHasRestaurants) ||
+                                   (hasValidTickets && searchHasTickets) ||
+                                   (hasValidHotels && searchHasHotels) ||
+                                   (hasValidRestaurants && searchHasRestaurants) ||
               (toolOutput.total_found === 0 && srArr.some((sr) => sr.data.total_found > 0))
-
+            
             if (shouldReplace) {
               console.log("Replacing toolOutput with search results for message", msg.id, {
                 reason:
@@ -428,15 +430,15 @@ export default function ChatPage() {
                           ? "matching restaurants"
                           : "empty data with new results",
               })
-
+              
               const mapped = srArr.map((sr: any) => {
                 // Create a copy of the search result data
                 const resultData = { ...sr.data }
-
+                
                 // Add search_result_id to the main object
                 resultData.search_result_id = sr.id
                 resultData.type = sr.search_type
-
+                
                 // Propagate search_result_id to all nested items
                 if (resultData.flights && Array.isArray(resultData.flights)) {
                   resultData.flights = resultData.flights.map((flight: any) => ({
@@ -444,38 +446,38 @@ export default function ChatPage() {
                     search_result_id: sr.id,
                   }))
                 }
-
+                
                 if (resultData.hotels && Array.isArray(resultData.hotels)) {
                   resultData.hotels = resultData.hotels.map((hotel: any) => ({
                     ...hotel,
                     search_result_id: sr.id,
                   }))
                 }
-
+                
                 if (resultData.restaurants && Array.isArray(resultData.restaurants)) {
                   resultData.restaurants = resultData.restaurants.map((restaurant: any) => ({
                     ...restaurant,
                     search_result_id: sr.id,
                   }))
                 }
-
+                
                 if (resultData.items && Array.isArray(resultData.items)) {
                   resultData.items = resultData.items.map((item: any) => ({
                     ...item,
                     search_result_id: sr.id,
                   }))
                 }
-
+                
                 return resultData
               })
-
+              
               const newToolOutput = mapped.length === 1 ? mapped[0] : mapped
               console.log("New toolOutput:", {
                 original: toolOutput,
                 new: newToolOutput,
                 mapped: mapped,
               })
-
+              
               toolOutput = newToolOutput
             } else {
               console.log("Keeping existing toolOutput for message", msg.id, "because:", {
@@ -490,7 +492,7 @@ export default function ChatPage() {
             }
           }
         }
-
+        
         return {
           id: msg.id.toString(),
           role: msg.role,
@@ -557,7 +559,7 @@ export default function ChatPage() {
       .replace(/<\/(?:searching_tickets|searching_hotels|searching_restaurants|searching_activities)>/g, "")
       .replace(/<(?:tickets|hotels)>[\s\S]*?<\/(?:tickets|hotels)>/g, "")
       .trim()
-
+    
     // Show tickets if we have tool_output data (regardless of tags)
     if (toolOutput) {
       return {
@@ -566,7 +568,7 @@ export default function ChatPage() {
         toolOutput,
       }
     }
-
+    
     return {
       text: textContent,
       showTickets: false,
@@ -577,43 +579,43 @@ export default function ChatPage() {
   // Helper function to find hotel data in toolOutput
   const findHotelData = (toolOutput: any) => {
     if (!toolOutput) return null
-
+    
     // If it's an array, find the hotel data object
     if (Array.isArray(toolOutput)) {
       const hotelData = toolOutput.find(
         (item) =>
-          item.hotels ||
-          item.properties ||
-          item.destination ||
+        item.hotels || 
+        item.properties || 
+        item.destination || 
           (item.type !== "tickets" && (item.total_found > 0 || item.success)),
       )
       return hotelData || null
     }
-
+    
     // If it's a single object, return it if it contains hotel data
     if (toolOutput.hotels || toolOutput.properties || toolOutput.destination) {
       return toolOutput
     }
-
+    
     return null
   }
 
-  // Helper function to find ticket data in toolOutput
+  // Helper function to find ticket data in toolOutput  
   const findTicketData = (toolOutput: any) => {
     if (!toolOutput) return null
-
+    
     // If it's an array, find the ticket data object
     if (Array.isArray(toolOutput)) {
       const ticketData = toolOutput.find(
         (item) =>
-          item.flights ||
-          item.type === "tickets" ||
-          item.type === "flights" ||
+        item.flights || 
+        item.type === "tickets" ||
+        item.type === "flights" ||
           (item.items && Array.isArray(item.items)),
       )
       return ticketData || toolOutput[0] // fallback to first item if no specific ticket data found
     }
-
+    
     // If it's a single object, return it
     return toolOutput
   }
@@ -626,7 +628,7 @@ export default function ChatPage() {
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isResizing) return
-
+      
       const containerWidth = window.innerWidth - 320 // Subtract sidebar width
       const rightOffset = window.innerWidth - e.clientX
       const newMapWidth = Math.max(20, Math.min(60, (rightOffset / containerWidth) * 100))
@@ -649,6 +651,100 @@ export default function ChatPage() {
   }, [isResizing])
 
   console.log(messages)
+
+  // Markdown Message Component for bot responses
+  const MarkdownMessage = ({ content }: { content: string }) => {
+    return (
+      <div className="prose prose-sm max-w-none dark:prose-invert">
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            // Headings
+            h1: ({ children }) => <h1 className="text-lg font-bold mb-2 text-slate-900 dark:text-white">{children}</h1>,
+            h2: ({ children }) => <h2 className="text-base font-semibold mb-2 text-slate-900 dark:text-white">{children}</h2>,
+            h3: ({ children }) => <h3 className="text-sm font-medium mb-1 text-slate-900 dark:text-white">{children}</h3>,
+            
+            // Paragraphs
+            p: ({ children }) => <p className="mb-2 last:mb-0 text-slate-700 dark:text-slate-300">{children}</p>,
+            
+            // Lists
+            ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1 text-slate-700 dark:text-slate-300">{children}</ul>,
+            ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1 text-slate-700 dark:text-slate-300">{children}</ol>,
+            li: ({ children }) => <li className="text-sm">{children}</li>,
+            
+            // Links
+            a: ({ href, children }) => (
+              <a 
+                href={href} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
+              >
+                {children}
+              </a>
+            ),
+            
+            // Code
+            code: ({ children, className }) => {
+              const isInline = !className
+              if (isInline) {
+                return (
+                  <code className="bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded text-sm font-mono text-slate-800 dark:text-slate-200">
+                    {children}
+                  </code>
+                )
+              }
+              return (
+                <code className="block bg-slate-100 dark:bg-slate-800 p-3 rounded-lg text-sm font-mono text-slate-800 dark:text-slate-200 overflow-x-auto">
+                  {children}
+                </code>
+              )
+            },
+            pre: ({ children }) => (
+              <pre className="bg-slate-100 dark:bg-slate-800 p-3 rounded-lg text-sm font-mono text-slate-800 dark:text-slate-200 overflow-x-auto mb-2">
+                {children}
+              </pre>
+            ),
+            
+            // Tables
+            table: ({ children }) => (
+              <div className="overflow-x-auto mb-2">
+                <table className="min-w-full border border-slate-200 dark:border-slate-700 rounded-lg">
+                  {children}
+                </table>
+              </div>
+            ),
+            th: ({ children }) => (
+              <th className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-left font-medium text-slate-900 dark:text-white text-sm">
+                {children}
+              </th>
+            ),
+            td: ({ children }) => (
+              <td className="px-3 py-2 border-b border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm">
+                {children}
+              </td>
+            ),
+            
+            // Blockquotes
+            blockquote: ({ children }) => (
+              <blockquote className="border-l-4 border-blue-500 pl-4 py-2 mb-2 italic text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-r">
+                {children}
+              </blockquote>
+            ),
+            
+            // Strong and emphasis
+            strong: ({ children }) => <strong className="font-semibold text-slate-900 dark:text-white">{children}</strong>,
+            em: ({ children }) => <em className="italic text-slate-700 dark:text-slate-300">{children}</em>,
+            
+            // Horizontal rule
+            hr: () => <hr className="border-slate-200 dark:border-slate-700 my-3" />,
+          }}
+        >
+          {content}
+        </ReactMarkdown>
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
@@ -718,8 +814,8 @@ export default function ChatPage() {
                   key={index}
                   variant="ghost"
                   className={`w-full justify-start h-9 text-sm transition-all duration-200 ${
-                    item.active
-                      ? `${item.activeColor} text-blue-700 dark:text-blue-300`
+                    item.active 
+                      ? `${item.activeColor} text-blue-700 dark:text-blue-300` 
                       : `hover:bg-slate-100 dark:hover:bg-slate-700 ${item.color}`
                   }`}
                   onClick={() => {
@@ -774,10 +870,10 @@ export default function ChatPage() {
                   }}
                 >
                   <div className="text-sm font-medium text-slate-900 dark:text-white mb-1 line-clamp-2">
-                    {conversation.title ||
-                      (conversation.messages.length > 0
-                        ? conversation.messages[0].content.slice(0, 40) + "..."
-                        : "New conversation")}
+                    {conversation.title || 
+                     (conversation.messages.length > 0
+                       ? conversation.messages[0].content.slice(0, 40) + "..."
+                       : "New conversation")}
                   </div>
                   <div className="text-xs text-slate-500 dark:text-slate-400">
                     {new Date(conversation.created_at).toLocaleDateString()}
@@ -821,79 +917,79 @@ export default function ChatPage() {
       <div className="flex-1 flex min-w-0">
         {/* Chat Area */}
         <div className="flex flex-col min-w-0" style={{ width: `${100 - mapWidth}%` }}>
-          {/* Mobile Header */}
-          <div className="md:hidden flex items-center justify-between p-3 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-            <h1 className="text-lg font-semibold text-slate-900 dark:text-white">Travel Assistant</h1>
-            <div className="w-9" /> {/* Spacer for centering */}
-          </div>
+        {/* Mobile Header */}
+        <div className="md:hidden flex items-center justify-between p-3 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <h1 className="text-lg font-semibold text-slate-900 dark:text-white">Travel Assistant</h1>
+          <div className="w-9" /> {/* Spacer for centering */}
+        </div>
 
-          {/* Messages Container */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="max-w-4xl mx-auto p-3 md:p-6">
-              {messages.length === 0 && (
-                <div className="flex flex-col items-center justify-center h-full min-h-[60vh] text-center">
-                  <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4 md:mb-6">
-                    <MessageCircle className="w-8 h-8 md:w-10 md:h-10 text-white" />
-                  </div>
-                  <h2 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mb-2 md:mb-3">
-                    Welcome to Your Travel Assistant
-                  </h2>
-                  <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 mb-6 md:mb-8 max-w-md">
+        {/* Messages Container */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-4xl mx-auto p-3 md:p-6">
+            {messages.length === 0 && (
+              <div className="flex flex-col items-center justify-center h-full min-h-[60vh] text-center">
+                <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4 md:mb-6">
+                  <MessageCircle className="w-8 h-8 md:w-10 md:h-10 text-white" />
+                </div>
+                <h2 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mb-2 md:mb-3">
+                  Welcome to Your Travel Assistant
+                </h2>
+                <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 mb-6 md:mb-8 max-w-md">
                     Ask me anything about flights, hotels, restaurants, or activities. I'll help you find and book the
                     perfect options for your trip.
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 w-full max-w-2xl">
-                    {[
-                      { icon: "✈️", text: "Find flights to Paris" },
-                      { icon: "🏨", text: "Hotels in Tokyo" },
-                      { icon: "🍽️", text: "Best restaurants in Rome" },
-                      { icon: "🎯", text: "Things to do in New York" },
-                    ].map((suggestion, index) => (
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 w-full max-w-2xl">
+                  {[
+                    { icon: "✈️", text: "Find flights to Paris" },
+                    { icon: "🏨", text: "Hotels in Tokyo" },
+                    { icon: "🍽️", text: "Best restaurants in Rome" },
+                    { icon: "🎯", text: "Things to do in New York" },
+                  ].map((suggestion, index) => (
                       <motion.button
-                        key={index}
-                        onClick={() => setInput(suggestion.text)}
-                        className="p-3 md:p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600 transition-colors text-left"
+                      key={index}
+                      onClick={() => setInput(suggestion.text)}
+                      className="p-3 md:p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600 transition-colors text-left"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <span className="text-lg md:text-xl">{suggestion.icon}</span>
+                    >
+                      <div className="flex items-center space-x-3">
+                        <span className="text-lg md:text-xl">{suggestion.icon}</span>
                           <span className="text-sm md:text-base text-slate-700 dark:text-slate-300">
                             {suggestion.text}
                           </span>
-                        </div>
+                      </div>
                       </motion.button>
-                    ))}
-                  </div>
+                  ))}
                 </div>
-              )}
+              </div>
+            )}
 
-              {messages.length > 0 && (
-                <div className="space-y-4 md:space-y-6">
+            {messages.length > 0 && (
+              <div className="space-y-4 md:space-y-6">
                   <AnimatePresence>
-                    {messages.map((message, index) => (
+                {messages.map((message, index) => (
                       <motion.div
                         key={message.id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.3 }}
-                        className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-                      >
-                        <div
-                          className={`max-w-[85%] md:max-w-[80%] rounded-lg px-3 md:px-4 py-2 md:py-3 ${
-                            message.role === "user"
-                              ? "bg-blue-600 text-white"
-                              : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
-                          }`}
-                        >
-                          <div className="text-sm md:text-base">
+                    className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-[85%] md:max-w-[80%] rounded-lg px-3 md:px-4 py-2 md:py-3 ${
+                        message.role === "user"
+                          ? "bg-blue-600 text-white"
+                          : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+                      }`}
+                    >
+                      <div className="text-sm md:text-base">
                             {/* Show search animations instead of text when searches are active */}
                             {message.role === "assistant" && 
                              isStreaming && 
@@ -908,9 +1004,16 @@ export default function ChatPage() {
                               </div>
                             ) : (
                               <>
-                                {parseMessageContent(message.content).text}
+                                {message.role === "assistant" ? (
+                                  <MarkdownMessage content={parseMessageContent(message.content).text} />
+                                ) : (
+                                  parseMessageContent(message.content).text
+                                )}
                                 {/* Show streaming cursor for assistant messages during streaming */}
-                                {message.role === "assistant" && isStreaming && message.content === streamingMessage && (
+                                {message.role === "assistant" && 
+                                 isStreaming && 
+                                 message.content === streamingMessage && 
+                                 activeSearches.size === 0 && (
                                   <motion.span
                                     className="inline-block w-1 h-4 bg-slate-600 dark:bg-slate-300 ml-1"
                                     animate={{ opacity: [1, 0] }}
@@ -919,9 +1022,9 @@ export default function ChatPage() {
                                 )}
                               </>
                             )}
-                          </div>
+                      </div>
 
-                          {message.toolOutput && (
+                      {message.toolOutput && (
                             <motion.div
                               className="mt-3 md:mt-4"
                               initial={{ opacity: 0, scale: 0.95 }}
@@ -930,85 +1033,85 @@ export default function ChatPage() {
                             >
                               {message.content.includes("<hotels>") || message.content.includes("Hotels in")
                                 ? (() => {
-                                    const hotelData = findHotelData(message.toolOutput)
-                                    return hotelData ? (
-                                      <HotelDisplay
-                                        toolOutput={hotelData}
-                                        bookedIds={bookedIds}
-                                        onBooked={handleBooked}
-                                      />
-                                    ) : (
-                                      <div className="text-sm text-slate-500 dark:text-slate-400 italic">
-                                        No hotel data found
-                                      </div>
-                                    )
-                                  })()
+                              const hotelData = findHotelData(message.toolOutput)
+                              return hotelData ? (
+                                <HotelDisplay
+                                  toolOutput={hotelData}
+                                  bookedIds={bookedIds}
+                                  onBooked={handleBooked}
+                                />
+                              ) : (
+                                <div className="text-sm text-slate-500 dark:text-slate-400 italic">
+                                  No hotel data found
+                                </div>
+                              )
+                            })()
                                 : (() => {
-                                    const ticketData = findTicketData(message.toolOutput)
-                                    return ticketData ? (
-                                      <TicketDisplay
-                                        toolOutput={ticketData}
-                                        bookedIds={bookedIds}
-                                        onBooked={handleBooked}
-                                      />
-                                    ) : (
-                                      <div className="text-sm text-slate-500 dark:text-slate-400 italic">
-                                        No ticket data found
-                                      </div>
-                                    )
+                              const ticketData = findTicketData(message.toolOutput)
+                              return ticketData ? (
+                                <TicketDisplay
+                                  toolOutput={ticketData}
+                                  bookedIds={bookedIds}
+                                  onBooked={handleBooked}
+                                />
+                              ) : (
+                                <div className="text-sm text-slate-500 dark:text-slate-400 italic">
+                                  No ticket data found
+                                </div>
+                              )
                                   })()}
                             </motion.div>
                           )}
                         </div>
                       </motion.div>
-                    ))}
+                ))}
                   </AnimatePresence>
 
                   {/* Typing Indicator */}
                   <AnimatePresence>{showTypingIndicator && <TypingIndicator />}</AnimatePresence>
 
-                  <div ref={messagesEndRef} />
-                </div>
-              )}
-            </div>
+                <div ref={messagesEndRef} />
+              </div>
+            )}
           </div>
+        </div>
 
-          {/* Input Area */}
-          <div className="border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-            <div className="max-w-4xl mx-auto p-3 md:p-6">
-              <form onSubmit={handleSendMessage} className="flex space-x-2 md:space-x-4">
-                <div className="flex-1 relative">
-                  <textarea
-                    ref={inputRef}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault()
-                        handleSendMessage(e)
-                      }
-                    }}
-                    placeholder="Ask about flights, hotels, restaurants, or activities..."
-                    className="w-full p-3 md:p-4 pr-12 md:pr-16 border border-slate-300 dark:border-slate-600 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 text-sm md:text-base"
-                    rows={1}
-                    style={{ minHeight: "48px", maxHeight: "120px" }}
-                  />
+        {/* Input Area */}
+        <div className="border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+          <div className="max-w-4xl mx-auto p-3 md:p-6">
+            <form onSubmit={handleSendMessage} className="flex space-x-2 md:space-x-4">
+              <div className="flex-1 relative">
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault()
+                      handleSendMessage(e)
+                    }
+                  }}
+                  placeholder="Ask about flights, hotels, restaurants, or activities..."
+                  className="w-full p-3 md:p-4 pr-12 md:pr-16 border border-slate-300 dark:border-slate-600 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 text-sm md:text-base"
+                  rows={1}
+                  style={{ minHeight: "48px", maxHeight: "120px" }}
+                />
                   <motion.button
-                    type="submit"
+                  type="submit"
                     disabled={isLoading || !input.trim() || isStreaming}
-                    className="absolute right-2 md:right-3 top-1/2 transform -translate-y-1/2 p-2 md:p-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-600 text-white rounded-lg transition-colors"
+                  className="absolute right-2 md:right-3 top-1/2 transform -translate-y-1/2 p-2 md:p-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-600 text-white rounded-lg transition-colors"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                  >
+                >
                     {isLoading || isStreaming ? (
-                      <Loader2 className="h-4 w-4 md:h-5 md:w-5 animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4 md:h-5 md:w-5" />
-                    )}
+                    <Loader2 className="h-4 w-4 md:h-5 md:w-5 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4 md:h-5 md:w-5" />
+                  )}
                   </motion.button>
-                </div>
-              </form>
-            </div>
+              </div>
+            </form>
+          </div>
           </div>
         </div>
 
