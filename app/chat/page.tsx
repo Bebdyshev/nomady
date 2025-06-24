@@ -49,7 +49,6 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [streamingMessage, setStreamingMessage] = useState<Message | null>(null)
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
   const [bookedItems, setBookedItems] = useState<Record<string, any>>({})
@@ -57,6 +56,9 @@ export default function ChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mapWidth, setMapWidth] = useState(35) // Map width as percentage
   const [isResizing, setIsResizing] = useState(false)
+  const [streamingMessage, setStreamingMessage] = useState<string>("")
+  const [isStreaming, setIsStreaming] = useState(false)
+  const [streamingToolOutput, setStreamingToolOutput] = useState<any>(null)
 
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -75,7 +77,7 @@ export default function ChatPage() {
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages, streamingMessage])
+  }, [messages])
 
   // Load conversations on mount
   useEffect(() => {
@@ -161,7 +163,7 @@ export default function ChatPage() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!input.trim() || isLoading) return
+    if (!input.trim() || isLoading || isStreaming) return
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -173,51 +175,68 @@ export default function ChatPage() {
     setMessages((prev) => [...prev, userMessage])
     setInput("")
     setIsLoading(true)
+    setIsStreaming(true)
+    setStreamingMessage("")
+    setStreamingToolOutput(null)
 
-    // Create initial streaming message
-    const assistantMessageId = (Date.now() + 1).toString()
-    const initialStreamingMessage: Message = {
-      id: assistantMessageId,
+    // Add temporary streaming message
+    const streamingMessageId = (Date.now() + 1).toString()
+    const tempMessage: Message = {
+      id: streamingMessageId,
       role: "assistant",
       content: "",
       timestamp: new Date(),
     }
-    
-    setStreamingMessage(initialStreamingMessage)
+    setMessages((prev) => [...prev, tempMessage])
 
     try {
       const messagesToSend = [{ role: "user", content: input }]
+      let fullResponse = ""
+      let finalToolOutput: any = null
+      let finalConversationId: string | null = null
 
-      await apiClient.sendMessageStreamCharacter(
-        messagesToSend,
+      for await (const chunk of apiClient.sendMessageStream(
+        messagesToSend, 
         currentConversationId || undefined,
-        30, // 30ms delay between characters for smooth typewriter effect
-        // onCharacter callback
-        (character: string) => {
-          setStreamingMessage((prev) => {
-            if (!prev) return null
-            return {
-              ...prev,
-              content: prev.content + character
-            }
-          })
+        () => {
+          // onToolStart - show tool is starting
+          console.log("Tool started")
         },
-        // onComplete callback
-        (metadata: { conversation_id: string; tool_output?: any }) => {
-          console.log("Streaming completed:", metadata)
+        (output) => {
+          // onToolOutput - handle tool output
+          setStreamingToolOutput(output)
+        }
+      )) {
+        if (chunk.type === 'text_chunk') {
+          fullResponse += chunk.data
+          setStreamingMessage(fullResponse)
+          finalConversationId = chunk.conversation_id || finalConversationId
           
-          // Process tool output if available
-          let combinedOutput: any = metadata.tool_output
-          
-          // Handle search results if they exist
-          const srArr = (metadata as any).search_results
-          if (srArr && Array.isArray(srArr) && srArr.length > 0) {
-            const mapped = srArr.map((sr: any) => {
+          // Update the streaming message in real-time
+          setMessages((prev) => 
+            prev.map((msg) => 
+              msg.id === streamingMessageId 
+                ? { ...msg, content: fullResponse }
+                : msg
+            )
+          )
+        } else if (chunk.type === 'tool_output') {
+          finalToolOutput = chunk.data
+          setStreamingToolOutput(chunk.data)
+        } else if (chunk.type === 'complete') {
+          finalConversationId = chunk.conversation_id || finalConversationId
+          finalToolOutput = chunk.tool_output || finalToolOutput
+
+          // Process search results like in the original code
+          let combinedOutput: any = finalToolOutput
+          const searchResults = chunk.search_results
+          if (searchResults && Array.isArray(searchResults) && searchResults.length > 0) {
+            const mapped = searchResults.map((sr: any) => {
               const resultData = { ...sr.data }
               resultData.search_result_id = sr.id
               resultData.type = sr.search_type
               
-              // Propagate search_result_id to all nested items
+              // Propagate search_result_id to nested items
               if (resultData.flights && Array.isArray(resultData.flights)) {
                 resultData.flights = resultData.flights.map((flight: any) => ({
                   ...flight,
@@ -251,54 +270,43 @@ export default function ChatPage() {
             combinedOutput = mapped.length === 1 ? mapped[0] : mapped
           }
 
-          // Finalize the streaming message
-          setStreamingMessage((prev) => {
-            if (!prev) return null
-            const finalMessage: Message = {
-              ...prev,
-              toolOutput: combinedOutput,
-            }
-            
-            // Add to messages and clear streaming
-            setMessages((prevMessages) => [...prevMessages, finalMessage])
-            return null
-          })
+          // Update final message with tool output
+          setMessages((prev) => 
+            prev.map((msg) => 
+              msg.id === streamingMessageId 
+                ? { ...msg, content: fullResponse, toolOutput: combinedOutput }
+                : msg
+            )
+          )
 
-          // Update conversation ID if needed
           if (!currentConversationId) {
-            setCurrentConversationId(metadata.conversation_id)
+            setCurrentConversationId(finalConversationId)
             loadConversations()
           }
-        },
-        // onError callback
-        (error: string) => {
-          console.error("Streaming error:", error)
-          
-          setStreamingMessage(null)
-          
-          const errorMessage: Message = {
-            id: (Date.now() + 2).toString(),
-            role: "assistant",
-            content: "Sorry, I encountered an error. Please try again.",
-            timestamp: new Date(),
-          }
-          setMessages((prev) => [...prev, errorMessage])
+        } else if (chunk.type === 'error') {
+          throw new Error(chunk.data || "Streaming error")
         }
-      )
+      }
     } catch (error) {
       console.error("Error sending message:", error)
       
-      setStreamingMessage(null)
-      
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: "Sorry, I encountered an error. Please try again.",
-        timestamp: new Date(),
-      }
-      setMessages((prev) => [...prev, errorMessage])
+      // Replace streaming message with error message
+      setMessages((prev) => 
+        prev.map((msg) => 
+          msg.id === streamingMessageId 
+            ? { 
+                ...msg, 
+                content: "Sorry, I encountered an error. Please try again.",
+                toolOutput: null
+              }
+            : msg
+        )
+      )
     } finally {
       setIsLoading(false)
+      setIsStreaming(false)
+      setStreamingMessage("")
+      setStreamingToolOutput(null)
     }
   }
 
@@ -804,9 +812,9 @@ export default function ChatPage() {
               </div>
             )}
 
-            {(messages.length > 0 || streamingMessage) && (
+            {messages.length > 0 && (
               <div className="space-y-4 md:space-y-6">
-                {[...messages, ...(streamingMessage ? [streamingMessage] : [])].map((message, index) => (
+                {messages.map((message, index) => (
                   <div
                     key={index}
                     className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
@@ -820,8 +828,9 @@ export default function ChatPage() {
                     >
                       <div className="text-sm md:text-base">
                         {parseMessageContent(message.content).text}
-                        {message === streamingMessage && (
-                          <span className="inline-block w-2 h-5 bg-blue-600 dark:bg-blue-400 ml-1 animate-pulse" />
+                        {/* Show streaming cursor for assistant messages during streaming */}
+                        {message.role === "assistant" && isStreaming && message.content === streamingMessage && (
+                          <span className="inline-block w-1 h-4 bg-slate-600 dark:bg-slate-300 ml-1 animate-pulse" />
                         )}
                       </div>
                       {message.toolOutput && (
@@ -890,10 +899,10 @@ export default function ChatPage() {
                 />
                 <button
                   type="submit"
-                  disabled={isLoading || !input.trim()}
+                  disabled={isLoading || !input.trim() || isStreaming}
                   className="absolute right-2 md:right-3 top-1/2 transform -translate-y-1/2 p-2 md:p-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-600 text-white rounded-lg transition-colors"
                 >
-                  {isLoading ? (
+                  {(isLoading || isStreaming) ? (
                     <Loader2 className="h-4 w-4 md:h-5 md:w-5 animate-spin" />
                   ) : (
                     <Send className="h-4 w-4 md:h-5 md:w-5" />

@@ -132,14 +132,19 @@ class ApiClient {
     })
   }
 
-  // Streaming chat methods
-  async sendMessageStream(
+  async *sendMessageStream(
     messages: Array<{ role: string; content: string }>, 
     conversationId?: string,
-    onChunk?: (chunk: string) => void,
-    onComplete?: (response: { conversation_id: string; tool_output?: any }) => void,
-    onError?: (error: string) => void
-  ) {
+    onToolStart?: () => void,
+    onToolOutput?: (output: any) => void
+  ): AsyncGenerator<{
+    type: 'text_chunk' | 'tool_output' | 'complete' | 'error'
+    data?: any
+    conversation_id?: string
+    tool_output?: any
+    search_results?: any[]
+    is_complete?: boolean
+  }> {
     try {
       const params = new URLSearchParams()
       if (conversationId) {
@@ -162,194 +167,70 @@ class ApiClient {
       })
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`)
       }
 
       const reader = response.body?.getReader()
       if (!reader) {
-        throw new Error("No reader available")
+        throw new Error("No response body")
       }
 
       const decoder = new TextDecoder()
       let buffer = ""
 
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
 
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
-        buffer = lines.pop() || ""
+          buffer += decoder.decode(value, { stream: true })
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6)
-            if (data === '[DONE]') {
-              return
-            }
-            try {
-              const parsed = JSON.parse(data)
-              if (parsed.type === 'content') {
-                onChunk?.(parsed.data)
-              } else if (parsed.type === 'metadata') {
-                onComplete?.(parsed.data)
+          // Process complete lines
+          const lines = buffer.split('\n')
+          buffer = lines.pop() || "" // Keep incomplete line in buffer
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6))
+                
+                if (data.type === 'tool_start') {
+                  onToolStart?.()
+                } else if (data.type === 'tool_output') {
+                  onToolOutput?.(data.data)
+                  yield { type: 'tool_output', data: data.data }
+                } else if (data.type === 'text_chunk') {
+                  yield {
+                    type: 'text_chunk',
+                    data: data.data,
+                    conversation_id: data.conversation_id,
+                    is_complete: data.is_complete
+                  }
+                } else if (data.type === 'complete') {
+                  yield {
+                    type: 'complete',
+                    conversation_id: data.conversation_id,
+                    tool_output: data.tool_output,
+                    search_results: data.search_results
+                  }
+                } else if (data.type === 'error') {
+                  yield { type: 'error', data: data.data || data.error }
+                }
+              } catch (e) {
+                console.error('Error parsing SSE data:', e)
               }
-            } catch (e) {
-              // Skip invalid JSON
             }
           }
         }
+      } finally {
+        reader.releaseLock()
       }
     } catch (error) {
-      onError?.(error instanceof Error ? error.message : "Streaming error")
-    }
-  }
-
-  async sendMessageStreamCharacter(
-    messages: Array<{ role: string; content: string }>, 
-    conversationId?: string,
-    delayMs: number = 50,
-    onCharacter?: (char: string) => void,
-    onComplete?: (response: { conversation_id: string; tool_output?: any }) => void,
-    onError?: (error: string) => void
-  ) {
-    try {
-      const params = new URLSearchParams()
-      if (conversationId) {
-        params.append("conversation_id", conversationId)
+      yield { 
+        type: 'error', 
+        data: error instanceof Error ? error.message : "Unknown error" 
       }
-      params.append("delay_ms", delayMs.toString())
-
-      const url = `${this.baseURL}/chat/stream/character?${params.toString()}`
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      }
-
-      if (this.token) {
-        headers.Authorization = `Bearer ${this.token}`
-      }
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ messages }),
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const reader = response.body?.getReader()
-      if (!reader) {
-        throw new Error("No reader available")
-      }
-
-      const decoder = new TextDecoder()
-      let buffer = ""
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
-        buffer = lines.pop() || ""
-
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6)
-            if (data === '[DONE]') {
-              return
-            }
-            try {
-              const parsed = JSON.parse(data)
-              if (parsed.type === 'character') {
-                onCharacter?.(parsed.data)
-              } else if (parsed.type === 'metadata') {
-                onComplete?.(parsed.data)
-              }
-            } catch (e) {
-              // Skip invalid JSON
-            }
-          }
-        }
-      }
-    } catch (error) {
-      onError?.(error instanceof Error ? error.message : "Streaming error")
-    }
-  }
-
-  async sendMessageStreamWord(
-    messages: Array<{ role: string; content: string }>, 
-    conversationId?: string,
-    delayMs: number = 100,
-    onWord?: (word: string) => void,
-    onComplete?: (response: { conversation_id: string; tool_output?: any }) => void,
-    onError?: (error: string) => void
-  ) {
-    try {
-      const params = new URLSearchParams()
-      if (conversationId) {
-        params.append("conversation_id", conversationId)
-      }
-      params.append("delay_ms", delayMs.toString())
-
-      const url = `${this.baseURL}/chat/stream/word?${params.toString()}`
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      }
-
-      if (this.token) {
-        headers.Authorization = `Bearer ${this.token}`
-      }
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ messages }),
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const reader = response.body?.getReader()
-      if (!reader) {
-        throw new Error("No reader available")
-      }
-
-      const decoder = new TextDecoder()
-      let buffer = ""
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
-        buffer = lines.pop() || ""
-
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6)
-            if (data === '[DONE]') {
-              return
-            }
-            try {
-              const parsed = JSON.parse(data)
-              if (parsed.type === 'word') {
-                onWord?.(parsed.data)
-              } else if (parsed.type === 'metadata') {
-                onComplete?.(parsed.data)
-              }
-            } catch (e) {
-              // Skip invalid JSON
-            }
-          }
-        }
-      }
-    } catch (error) {
-      onError?.(error instanceof Error ? error.message : "Streaming error")
     }
   }
 
