@@ -306,56 +306,94 @@ export default function ChatPage() {
         if (toolOutput && searchResults && Array.isArray(searchResults)) {
           const srArr = searchResults
           if (srArr.length > 0) {
-            console.log("Replacing toolOutput with search results for message", msg.id)
+            // Check if toolOutput already has valid data
+            const hasValidTickets = toolOutput.flights && Array.isArray(toolOutput.flights) && toolOutput.flights.length > 0
+            const hasValidHotels = toolOutput.hotels && Array.isArray(toolOutput.hotels) && toolOutput.hotels.length > 0
+            const hasValidRestaurants = toolOutput.restaurants && Array.isArray(toolOutput.restaurants) && toolOutput.restaurants.length > 0
             
-            const mapped = srArr.map((sr: any) => {
-              // Create a copy of the search result data
-              const resultData = { ...sr.data }
-              
-              // Add search_result_id to the main object
-              resultData.search_result_id = sr.id
-              resultData.type = sr.search_type
-              
-              // Propagate search_result_id to all nested items
-              if (resultData.flights && Array.isArray(resultData.flights)) {
-                resultData.flights = resultData.flights.map((flight: any) => ({
-                  ...flight,
-                  search_result_id: sr.id
-                }))
-              }
-              
-              if (resultData.hotels && Array.isArray(resultData.hotels)) {
-                resultData.hotels = resultData.hotels.map((hotel: any) => ({
-                  ...hotel,
-                  search_result_id: sr.id
-                }))
-              }
-              
-              if (resultData.restaurants && Array.isArray(resultData.restaurants)) {
-                resultData.restaurants = resultData.restaurants.map((restaurant: any) => ({
-                  ...restaurant,
-                  search_result_id: sr.id
-                }))
-              }
-              
-              if (resultData.items && Array.isArray(resultData.items)) {
-                resultData.items = resultData.items.map((item: any) => ({
-                  ...item,
-                  search_result_id: sr.id
-                }))
-              }
-              
-              return resultData
-            })
+            // Check what type of data the search results contain
+            const searchHasTickets = srArr.some(sr => sr.data.flights && Array.isArray(sr.data.flights) && sr.data.flights.length > 0)
+            const searchHasHotels = srArr.some(sr => sr.data.hotels && Array.isArray(sr.data.hotels) && sr.data.hotels.length > 0)
+            const searchHasRestaurants = srArr.some(sr => sr.data.restaurants && Array.isArray(sr.data.restaurants) && sr.data.restaurants.length > 0)
             
-            const newToolOutput = mapped.length === 1 ? mapped[0] : mapped
-            console.log("New toolOutput:", {
-              original: toolOutput,
-              new: newToolOutput,
-              mapped: mapped
-            })
+            // Only replace if:
+            // 1. No valid data exists, OR
+            // 2. Search results match the same data type, OR  
+            // 3. Original data is empty but search has results
+            const shouldReplace = (!hasValidTickets && !hasValidHotels && !hasValidRestaurants) ||
+                                   (hasValidTickets && searchHasTickets) ||
+                                   (hasValidHotels && searchHasHotels) ||
+                                   (hasValidRestaurants && searchHasRestaurants) ||
+                                   (toolOutput.total_found === 0 && srArr.some(sr => sr.data.total_found > 0))
             
-            toolOutput = newToolOutput
+            if (shouldReplace) {
+              console.log("Replacing toolOutput with search results for message", msg.id, {
+                reason: !hasValidTickets && !hasValidHotels && !hasValidRestaurants ? "no valid data" :
+                        hasValidTickets && searchHasTickets ? "matching tickets" :
+                        hasValidHotels && searchHasHotels ? "matching hotels" :
+                        hasValidRestaurants && searchHasRestaurants ? "matching restaurants" :
+                        "empty data with new results"
+              })
+              
+              const mapped = srArr.map((sr: any) => {
+                // Create a copy of the search result data
+                const resultData = { ...sr.data }
+                
+                // Add search_result_id to the main object
+                resultData.search_result_id = sr.id
+                resultData.type = sr.search_type
+                
+                // Propagate search_result_id to all nested items
+                if (resultData.flights && Array.isArray(resultData.flights)) {
+                  resultData.flights = resultData.flights.map((flight: any) => ({
+                    ...flight,
+                    search_result_id: sr.id
+                  }))
+                }
+                
+                if (resultData.hotels && Array.isArray(resultData.hotels)) {
+                  resultData.hotels = resultData.hotels.map((hotel: any) => ({
+                    ...hotel,
+                    search_result_id: sr.id
+                  }))
+                }
+                
+                if (resultData.restaurants && Array.isArray(resultData.restaurants)) {
+                  resultData.restaurants = resultData.restaurants.map((restaurant: any) => ({
+                    ...restaurant,
+                    search_result_id: sr.id
+                  }))
+                }
+                
+                if (resultData.items && Array.isArray(resultData.items)) {
+                  resultData.items = resultData.items.map((item: any) => ({
+                    ...item,
+                    search_result_id: sr.id
+                  }))
+                }
+                
+                return resultData
+              })
+              
+              const newToolOutput = mapped.length === 1 ? mapped[0] : mapped
+              console.log("New toolOutput:", {
+                original: toolOutput,
+                new: newToolOutput,
+                mapped: mapped
+              })
+              
+              toolOutput = newToolOutput
+            } else {
+              console.log("Keeping existing toolOutput for message", msg.id, "because:", {
+                hasValidTickets,
+                hasValidHotels,
+                hasValidRestaurants,
+                searchHasTickets,
+                searchHasHotels,
+                searchHasRestaurants,
+                reason: "data type mismatch or already has valid data"
+              })
+            }
           }
         }
         
@@ -436,6 +474,48 @@ export default function ChatPage() {
       showTickets: false,
       toolOutput: null
     }
+  }
+
+  // Helper function to find hotel data in toolOutput
+  const findHotelData = (toolOutput: any) => {
+    if (!toolOutput) return null
+    
+    // If it's an array, find the hotel data object
+    if (Array.isArray(toolOutput)) {
+      const hotelData = toolOutput.find(item => 
+        item.hotels || 
+        item.properties || 
+        item.destination || 
+        (item.type !== "tickets" && (item.total_found > 0 || item.success))
+      )
+      return hotelData || null
+    }
+    
+    // If it's a single object, return it if it contains hotel data
+    if (toolOutput.hotels || toolOutput.properties || toolOutput.destination) {
+      return toolOutput
+    }
+    
+    return null
+  }
+
+  // Helper function to find ticket data in toolOutput  
+  const findTicketData = (toolOutput: any) => {
+    if (!toolOutput) return null
+    
+    // If it's an array, find the ticket data object
+    if (Array.isArray(toolOutput)) {
+      const ticketData = toolOutput.find(item => 
+        item.flights || 
+        item.type === "tickets" ||
+        item.type === "flights" ||
+        (item.items && Array.isArray(item.items))
+      )
+      return ticketData || toolOutput[0] // fallback to first item if no specific ticket data found
+    }
+    
+    // If it's a single object, return it
+    return toolOutput
   }
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -706,17 +786,35 @@ export default function ChatPage() {
                       {message.toolOutput && (
                         <div className="mt-3 md:mt-4">
                           {message.content.includes('<hotels>') || message.content.includes('Hotels in') ? (
-                            <HotelDisplay
-                              toolOutput={message.toolOutput}
-                              bookedIds={bookedIds}
-                              onBooked={handleBooked}
-                            />
+                            (() => {
+                              const hotelData = findHotelData(message.toolOutput)
+                              return hotelData ? (
+                                <HotelDisplay
+                                  toolOutput={hotelData}
+                                  bookedIds={bookedIds}
+                                  onBooked={handleBooked}
+                                />
+                              ) : (
+                                <div className="text-sm text-slate-500 dark:text-slate-400 italic">
+                                  No hotel data found
+                                </div>
+                              )
+                            })()
                           ) : (
-                            <TicketDisplay
-                              toolOutput={message.toolOutput}
-                              bookedIds={bookedIds}
-                              onBooked={handleBooked}
-                            />
+                            (() => {
+                              const ticketData = findTicketData(message.toolOutput)
+                              return ticketData ? (
+                                <TicketDisplay
+                                  toolOutput={ticketData}
+                                  bookedIds={bookedIds}
+                                  onBooked={handleBooked}
+                                />
+                              ) : (
+                                <div className="text-sm text-slate-500 dark:text-slate-400 italic">
+                                  No ticket data found
+                                </div>
+                              )
+                            })()
                           )}
                         </div>
                       )}

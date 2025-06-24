@@ -189,7 +189,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking }: any) => {
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
         >
           <Card
-            className={`relative overflow-hidden cursor-pointer border-2 transition-all duration-300 flex flex-col min-h-[320px] card-layout ${
+            className={`relative overflow-hidden cursor-pointer border-2 transition-all duration-300 flex flex-col min-h-[200px] card-layout ${
               isBooked
                 ? "border-green-500 bg-green-50 dark:bg-green-950/20"
                 : "border-slate-200 dark:border-slate-700 hover:border-blue-300 hover:shadow-xl"
@@ -197,26 +197,26 @@ const FlightCard = ({ item, onBook, isBooked, isBooking }: any) => {
           >
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600" />
 
-            <CardHeader className="p-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-center space-x-3 flex-1">
-                  <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                    <Plane className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <CardHeader className="p-3 sm:p-4">
+              <div className="flex items-start justify-between gap-2 sm:gap-4">
+                <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
+                  <div className="p-1.5 sm:p-2 bg-blue-100 dark:bg-blue-900 rounded-lg flex-shrink-0">
+                    <Plane className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <div className="flex-1">
-                    <CardTitle className="text-lg font-bold text-slate-900 dark:text-white text-horizontal text-wrap-normal">
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white text-horizontal text-wrap-normal leading-tight">
                       {item.validating_airline}
                     </CardTitle>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 text-horizontal text-wrap-normal">
+                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 text-horizontal text-wrap-normal truncate">
                       {item.flights_to?.[0]?.from} → {item.flights_to?.[item.flights_to.length - 1]?.to}
                     </p>
                   </div>
                 </div>
 
-                <div className="text-right">
-                  <div className="text-xl font-bold text-slate-900 dark:text-white text-horizontal">{formatPrice(item.price)}</div>
+                <div className="text-right flex-shrink-0">
+                  <div className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white text-horizontal">{formatPrice(item.price)}</div>
                     {item.refundable && (
-                    <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200 mt-1">
+                    <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200 mt-1 hidden sm:inline-flex">
                       <Shield className="h-3 w-3 mr-1" />
                       <span className="text-horizontal">Refundable</span>
                       </Badge>
@@ -225,44 +225,44 @@ const FlightCard = ({ item, onBook, isBooked, isBooking }: any) => {
               </div>
             </CardHeader>
 
-            <CardContent className="p-4 pt-0 flex-1">
-              <div className="space-y-4">
+            <CardContent className="p-3 sm:p-4 pt-0 flex-1">
+              <div className="space-y-3 sm:space-y-4">
                 {/* Flight times and route */}
                 <div className="flex items-center justify-between">
                   <div className="text-center">
-                    <div className="font-semibold text-slate-900 dark:text-white text-sm text-horizontal">
+                    <div className="font-semibold text-slate-900 dark:text-white text-xs sm:text-sm text-horizontal">
                         {item.flights_to?.[0]?.departure_time}
                       </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400 text-horizontal">
+                    <div className="text-xs text-slate-500 dark:text-slate-400 text-horizontal hidden sm:block">
                         {item.flights_to?.[0]?.departure_date}
                       </div>
                     </div>
 
-                  <div className="flex items-center space-x-2 px-4">
-                    <div className="h-0.5 w-8 bg-slate-300 dark:bg-slate-600" />
-                    <Plane className="h-4 w-4 text-slate-400 rotate-90" />
-                    <div className="h-0.5 w-8 bg-slate-300 dark:bg-slate-600" />
+                  <div className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4">
+                    <div className="h-0.5 w-4 sm:w-8 bg-slate-300 dark:bg-slate-600" />
+                    <Plane className="h-3 w-3 sm:h-4 sm:w-4 text-slate-400 rotate-90" />
+                    <div className="h-0.5 w-4 sm:w-8 bg-slate-300 dark:bg-slate-600" />
                       </div>
 
                   <div className="text-center">
-                    <div className="font-semibold text-slate-900 dark:text-white text-sm text-horizontal">
+                    <div className="font-semibold text-slate-900 dark:text-white text-xs sm:text-sm text-horizontal">
                       {item.flights_to?.[item.flights_to.length - 1]?.arrival_time}
                     </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400 text-horizontal">
+                    <div className="text-xs text-slate-500 dark:text-slate-400 text-horizontal hidden sm:block">
                         {item.flights_to?.[item.flights_to.length - 1]?.arrival_date}
                     </div>
                   </div>
                 </div>
 
                 {/* Flight details */}
-                <div className="grid grid-cols-3 gap-2 text-xs text-slate-500 dark:text-slate-400 text-center">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2 text-xs text-slate-500 dark:text-slate-400 text-center">
                   <div className="text-horizontal">Duration: {formatDuration(totalDuration)}</div>
-                  <div className="text-horizontal">
+                  <div className="text-horizontal hidden sm:block">
                     {item.flights_to && item.flights_to.length > 1
                       ? `${item.flights_to.length - 1} stop${item.flights_to.length > 2 ? "s" : ""}`
                       : "Direct"}
                   </div>
-                  <div className="text-horizontal">Seats: {item.flights_to?.[0]?.seats || "Available"}</div>
+                  <div className="text-horizontal hidden sm:block">Seats: {item.flights_to?.[0]?.seats || "Available"}</div>
                 </div>
 
                 {isBooked && (
@@ -296,7 +296,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking }: any) => {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">{formatPrice(item.price)}</div>
-                <div className="text-xs md:text-sm text-slate-600 dark:text-slate-300">Total for 1 passenger</div>
+                <div className="text-xs md:text-sm text-slate-600 dark:text-slate-300">Total for {item.passengers} passenger{item.passengers > 1 ? "s" : ""}</div>
               </div>
               <div className="flex flex-wrap gap-1 md:gap-2">
                 {item.refundable && (
@@ -379,7 +379,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking }: any) => {
           <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-4">
             <div className="text-center sm:text-left">
               <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">{formatPrice(item.price)}</div>
-              <div className="text-xs md:text-sm text-slate-500 dark:text-slate-400">Total price for 1 passenger</div>
+              <div className="text-xs md:text-sm text-slate-500 dark:text-slate-400">Total price for {item.passengers} passenger{item.passengers > 1 ? "s" : ""}</div>
             </div>
 
             <Button
@@ -606,8 +606,8 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
               
               return (
                 <div className="max-w-6xl mx-auto px-4">
-                  {/* Auto-responsive grid that adapts to screen width */}
-                  <div className="grid-auto-cards">
+                  {/* Auto-responsive grid that adapts to parent container width */}
+                  <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))' }}>
                     <AnimatePresence>
                       {displayItems.map((item, index) => {
                         const itemId = item.id || item.combination_id || `${type}-${index}`
@@ -714,8 +714,8 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
 
               return (
                 <div className="max-w-6xl mx-auto px-4">
-                  {/* Auto-responsive grid that adapts to screen width */}
-                  <div className="grid-auto-cards">
+                  {/* Auto-responsive grid that adapts to parent container width */}
+                  <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))' }}>
                     <AnimatePresence>
                       {displayItems.map((item, index) => {
                         const itemId = item.id || item.combination_id || `${type}-${index}`
