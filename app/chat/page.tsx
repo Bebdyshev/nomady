@@ -894,30 +894,32 @@ export default function ChatPage() {
                           }`}
                         >
                           <div className="text-sm md:text-base">
-                            {parseMessageContent(message.content).text}
-                            {/* Show streaming cursor for assistant messages during streaming */}
-                            {message.role === "assistant" && isStreaming && message.content === streamingMessage && (
-                              <motion.span
-                                className="inline-block w-1 h-4 bg-slate-600 dark:bg-slate-300 ml-1"
-                                animate={{ opacity: [1, 0] }}
-                                transition={{ duration: 0.8, repeat: Number.POSITIVE_INFINITY }}
-                              />
-                            )}
-                          </div>
-
-                          {/* Show active search animations */}
-                          {message.role === "assistant" &&
-                            isStreaming &&
-                            message.content === streamingMessage &&
-                            activeSearches.size > 0 && (
-                              <div className="mt-3 space-y-2">
+                            {/* Show search animations instead of text when searches are active */}
+                            {message.role === "assistant" && 
+                             isStreaming && 
+                             message.content === streamingMessage && 
+                             activeSearches.size > 0 ? (
+                              <div className="space-y-2">
                                 <AnimatePresence>
                                   {Array.from(activeSearches).map((searchType) => (
                                     <SearchAnimation key={searchType} searchType={searchType} />
                                   ))}
                                 </AnimatePresence>
                               </div>
+                            ) : (
+                              <>
+                                {parseMessageContent(message.content).text}
+                                {/* Show streaming cursor for assistant messages during streaming */}
+                                {message.role === "assistant" && isStreaming && message.content === streamingMessage && (
+                                  <motion.span
+                                    className="inline-block w-1 h-4 bg-slate-600 dark:bg-slate-300 ml-1"
+                                    animate={{ opacity: [1, 0] }}
+                                    transition={{ duration: 0.8, repeat: Number.POSITIVE_INFINITY }}
+                                  />
+                                )}
+                              </>
                             )}
+                          </div>
 
                           {message.toolOutput && (
                             <motion.div
