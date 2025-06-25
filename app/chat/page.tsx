@@ -263,12 +263,13 @@ export default function ChatPage() {
       setMessages((prev) => [...prev, tempMessage])
     }, 1000)
 
-    try {
-      const messagesToSend = [{ role: "user", content: input }]
-      let fullResponse = ""
-      let finalToolOutput: any = null
-      let finalConversationId: string | null = null
+    const messagesToSend = [{ role: "user", content: input }]
+    let fullResponse = ""
+    let finalToolOutput: any = null
+    let finalConversationId: string | null = null
+    let wasNewConversation = !currentConversationId // Track if this was a new conversation
 
+    try {
       for await (const chunk of apiClient.sendMessageStream(
         messagesToSend,
         currentConversationId || undefined,
@@ -405,6 +406,11 @@ export default function ChatPage() {
       setStreamingMessage("")
       setStreamingToolOutput(null)
       setActiveSearches(new Set())
+      
+      // Reload conversations if this was a new conversation
+      if (wasNewConversation && finalConversationId) {
+        loadConversations()
+      }
     }
   }
 
