@@ -92,9 +92,23 @@ class ApiClient {
   }
 
   async register(name: string, email: string, password: string) {
-    return this.request<{ access_token: string; type: string }>("/auth/register", {
+    return this.request<{ message: string; email: string }>("/auth/register", {
       method: "POST",
       body: JSON.stringify({ name, email, password }),
+    })
+  }
+
+  async verifyCode(email: string, code: string) {
+    return this.request<{ message: string; access_token?: string; type?: string }>("/auth/verify-code", {
+      method: "POST",
+      body: JSON.stringify({ email, code }),
+    })
+  }
+
+  async resendCode(email: string) {
+    return this.request<{ message: string }>("/auth/resend-code", {
+      method: "POST",
+      body: JSON.stringify({ email }),
     })
   }
 

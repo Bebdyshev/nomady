@@ -16,7 +16,9 @@ interface AuthContextType {
   user: User | null
   loading: boolean
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
-  register: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>
+  register: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string; message?: string; email?: string }>
+  verifyCode: (email: string, code: string) => Promise<{ success: boolean; error?: string; message?: string }>
+  resendCode: (email: string) => Promise<{ success: boolean; error?: string; message?: string }>
   googleLogin: (credential: string) => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
   isAuthenticated: boolean
@@ -83,13 +85,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { data, error } = await apiClient.register(name, email, password)
       if (data && !error) {
-        apiClient.setToken(data.access_token)
-        await checkAuth()
-        return { success: true }
+        // Registration successful but user is not logged in yet - needs email verification
+        return { success: true, message: data.message, email: data.email }
       }
       return { success: false, error: error || "Registration failed" }
     } catch (error) {
       return { success: false, error: "Registration failed" }
+    }
+  }
+
+  const verifyCode = async (email: string, code: string) => {
+    try {
+      const { data, error } = await apiClient.verifyCode(email, code)
+      if (data && !error) {
+        // If verification includes access token, log the user in
+        if (data.access_token) {
+          apiClient.setToken(data.access_token)
+          await checkAuth()
+        }
+        return { success: true, message: data.message }
+      }
+      return { success: false, error: error || "Code verification failed" }
+    } catch (error) {
+      return { success: false, error: "Code verification failed" }
+    }
+  }
+
+  const resendCode = async (email: string) => {
+    try {
+      const { data, error } = await apiClient.resendCode(email)
+      if (data && !error) {
+        return { success: true, message: data.message }
+      }
+      return { success: false, error: error || "Failed to resend verification code" }
+    } catch (error) {
+      return { success: false, error: "Failed to resend verification code" }
     }
   }
 
@@ -125,6 +155,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         login,
         register,
+        verifyCode,
+        resendCode,
         googleLogin,
         logout,
         isAuthenticated: !!user,
