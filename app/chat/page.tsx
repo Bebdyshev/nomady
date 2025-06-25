@@ -93,13 +93,13 @@ export default function ChatPage() {
   // Load conversations from URL params on mount
   useEffect(() => {
     const conversationId = searchParams.get("c")
-    if (conversationId && conversationId !== currentConversationId && !conversationId.startsWith('temp-')) {
+    if (conversationId && conversationId !== currentConversationId) {
       setCurrentConversationId(conversationId)
       loadConversation(conversationId)
-    } else if (!conversationId && currentConversationId && !currentConversationId.startsWith('temp-')) {
+    } else if (!conversationId && currentConversationId) {
       // If no URL param but we have a current conversation, try to load last conversation from localStorage
       const lastConversationId = localStorage.getItem("lastConversationId")
-      if (lastConversationId && lastConversationId !== currentConversationId && conversations.length > 0) {
+      if (lastConversationId && conversations.length > 0) {
         // Check if the conversation still exists
         const conversationExists = conversations.find((c) => c.id === lastConversationId)
         if (conversationExists) {
@@ -112,7 +112,7 @@ export default function ChatPage() {
 
   // Save current conversation ID to localStorage whenever it changes
   useEffect(() => {
-    if (currentConversationId && !currentConversationId.startsWith('temp-')) {
+    if (currentConversationId) {
       localStorage.setItem("lastConversationId", currentConversationId)
       // Update URL to include conversation ID
       const url = new URL(window.location.href)
@@ -267,12 +267,12 @@ export default function ChatPage() {
     let fullResponse = ""
     let finalToolOutput: any = null
     let finalConversationId: string | null = null
-    let wasNewConversation = !currentConversationId || currentConversationId?.startsWith('temp-') // Track if this was a new conversation
+    let wasNewConversation = !currentConversationId // Track if this was a new conversation
 
     try {
       for await (const chunk of apiClient.sendMessageStream(
         messagesToSend,
-        currentConversationId || undefined,
+        currentConversationId?.startsWith('temp-') ? undefined : currentConversationId || undefined,
         () => {
           // onToolStart - show tool is starting
           console.log("Tool started")
@@ -377,10 +377,13 @@ export default function ChatPage() {
             ),
           )
 
-        if (!currentConversationId || currentConversationId?.startsWith('temp-')) {
-            // Remove any temporary conversations from the list
-            setConversations(prev => prev.filter(c => !c.id.startsWith('temp-')))
+        if (!currentConversationId) {
             setCurrentConversationId(finalConversationId)
+        } else if (currentConversationId?.startsWith('temp-')) {
+            // Replace temporary conversation with real one
+            setCurrentConversationId(finalConversationId)
+            // Remove the temporary conversation from the list
+            setConversations(prev => prev.filter(c => !c.id.startsWith('temp-')))
         }
         } else if (chunk.type === "error") {
           throw new Error(chunk.data || "Streaming error")
@@ -418,17 +421,12 @@ export default function ChatPage() {
 
   const startNewConversation = () => {
     setMessages([])
-    setCurrentConversationId(null)
-    localStorage.removeItem("lastConversationId")
     setInput("")
     
-    // Clear conversation ID from URL
-    const url = new URL(window.location.href)
-    url.searchParams.delete("c")
-    window.history.replaceState({}, "", url.toString())
-
-    // Create a temporary new conversation entry in the sidebar
+    // Create a temporary conversation ID for the new chat
     const tempConversationId = `temp-${Date.now()}`
+    
+    // Create a temporary conversation entry
     const tempConversation: Conversation = {
       id: tempConversationId,
       user_id: user?.id || 0,
@@ -438,9 +436,17 @@ export default function ChatPage() {
       messages: []
     }
     
-    // Add temporary conversation to the top of the list
+    // Add the temporary conversation to the list
     setConversations(prev => [tempConversation, ...prev])
+    
+    // Set as current conversation
     setCurrentConversationId(tempConversationId)
+    localStorage.removeItem("lastConversationId")
+    
+    // Clear conversation ID from URL (we'll update it when we get real ID)
+    const url = new URL(window.location.href)
+    url.searchParams.delete("c")
+    window.history.replaceState({}, "", url.toString())
   }
 
   const loadConversation = async (conversationId: string) => {
@@ -611,7 +617,7 @@ export default function ChatPage() {
 
   // Reload roadmap when conversation id changes
   useEffect(() => {
-    if (currentConversationId && !currentConversationId.startsWith('temp-')) {
+    if (currentConversationId) {
       loadRoadmap(currentConversationId)
     }
   }, [currentConversationId])
@@ -950,10 +956,7 @@ export default function ChatPage() {
                   }`}
                   onClick={() => {
                     setCurrentConversationId(conversation.id)
-                    // Only load conversation from server if it's not a temporary one
-                    if (!conversation.id.startsWith('temp-')) {
-                      loadConversation(conversation.id)
-                    }
+                    loadConversation(conversation.id)
                     if (window.innerWidth < 768) setSidebarOpen(false)
                   }}
                 >
