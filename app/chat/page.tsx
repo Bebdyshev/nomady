@@ -1191,32 +1191,6 @@ export default function ChatPage() {
         {/* Input Area */}
         <div className="border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
           <div className="max-w-4xl mx-auto p-3 md:p-6">
-            {/* Geolocation Status */}
-            {(ipGeolocation || isLoadingLocation) && (
-              <div className="mb-3 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                <div className="flex items-center space-x-2">
-                  <Globe className="h-3 w-3" />
-                  <span>
-                    {ipGeolocation 
-                      ? `Location: ${ipGeolocation.city}, ${ipGeolocation.country}`
-                      : "Location loading..."
-                    }
-                  </span>
-                </div>
-                {isLoadingLocation && (
-                  <Button
-                    variant="ghost"
-                    size="sm" 
-                    disabled={true}
-                    className="text-xs h-6 px-2"
-                  >
-                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                    Loading...
-                  </Button>
-                )}
-              </div>
-            )}
-            
             <form onSubmit={handleSendMessage} className="flex space-x-2 md:space-x-4">
               <div className="flex-1 relative">
                 <textarea
