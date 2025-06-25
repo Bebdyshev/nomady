@@ -93,11 +93,11 @@ export default function ChatPage() {
   // Load conversations from URL params on mount
   useEffect(() => {
     const conversationId = searchParams.get("c")
-    if (conversationId) {
+    if (conversationId && conversationId !== currentConversationId) {
       setCurrentConversationId(conversationId)
       loadConversation(conversationId)
-    } else {
-      // If no URL param, try to load last conversation from localStorage
+    } else if (!conversationId && currentConversationId) {
+      // If no URL param but we have a current conversation, try to load last conversation from localStorage
       const lastConversationId = localStorage.getItem("lastConversationId")
       if (lastConversationId && conversations.length > 0) {
         // Check if the conversation still exists
@@ -108,7 +108,7 @@ export default function ChatPage() {
         }
       }
     }
-  }, [searchParams, conversations])
+  }, [searchParams])
 
   // Save current conversation ID to localStorage whenever it changes
   useEffect(() => {
@@ -378,7 +378,6 @@ export default function ChatPage() {
 
         if (!currentConversationId) {
             setCurrentConversationId(finalConversationId)
-          loadConversations()
         }
         } else if (chunk.type === "error") {
           throw new Error(chunk.data || "Streaming error")
