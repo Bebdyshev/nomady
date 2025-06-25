@@ -93,13 +93,13 @@ export default function ChatPage() {
   // Load conversations from URL params on mount
   useEffect(() => {
     const conversationId = searchParams.get("c")
-    if (conversationId && conversationId !== currentConversationId) {
+    if (conversationId && conversationId !== currentConversationId && !conversationId.startsWith('temp-')) {
       setCurrentConversationId(conversationId)
       loadConversation(conversationId)
-    } else if (!conversationId && currentConversationId) {
+    } else if (!conversationId && currentConversationId && !currentConversationId.startsWith('temp-')) {
       // If no URL param but we have a current conversation, try to load last conversation from localStorage
       const lastConversationId = localStorage.getItem("lastConversationId")
-      if (lastConversationId && conversations.length > 0) {
+      if (lastConversationId && lastConversationId !== currentConversationId && conversations.length > 0) {
         // Check if the conversation still exists
         const conversationExists = conversations.find((c) => c.id === lastConversationId)
         if (conversationExists) {
@@ -112,7 +112,7 @@ export default function ChatPage() {
 
   // Save current conversation ID to localStorage whenever it changes
   useEffect(() => {
-    if (currentConversationId) {
+    if (currentConversationId && !currentConversationId.startsWith('temp-')) {
       localStorage.setItem("lastConversationId", currentConversationId)
       // Update URL to include conversation ID
       const url = new URL(window.location.href)
@@ -267,7 +267,7 @@ export default function ChatPage() {
     let fullResponse = ""
     let finalToolOutput: any = null
     let finalConversationId: string | null = null
-    let wasNewConversation = !currentConversationId // Track if this was a new conversation
+    let wasNewConversation = !currentConversationId || currentConversationId?.startsWith('temp-') // Track if this was a new conversation
 
     try {
       for await (const chunk of apiClient.sendMessageStream(
@@ -377,7 +377,9 @@ export default function ChatPage() {
             ),
           )
 
-        if (!currentConversationId) {
+        if (!currentConversationId || currentConversationId?.startsWith('temp-')) {
+            // Remove any temporary conversations from the list
+            setConversations(prev => prev.filter(c => !c.id.startsWith('temp-')))
             setCurrentConversationId(finalConversationId)
         }
         } else if (chunk.type === "error") {
@@ -424,6 +426,21 @@ export default function ChatPage() {
     const url = new URL(window.location.href)
     url.searchParams.delete("c")
     window.history.replaceState({}, "", url.toString())
+
+    // Create a temporary new conversation entry in the sidebar
+    const tempConversationId = `temp-${Date.now()}`
+    const tempConversation: Conversation = {
+      id: tempConversationId,
+      user_id: user?.id || 0,
+      created_at: new Date().toISOString(),
+      last_updated: new Date().toISOString(),
+      title: "New conversation",
+      messages: []
+    }
+    
+    // Add temporary conversation to the top of the list
+    setConversations(prev => [tempConversation, ...prev])
+    setCurrentConversationId(tempConversationId)
   }
 
   const loadConversation = async (conversationId: string) => {
@@ -594,7 +611,7 @@ export default function ChatPage() {
 
   // Reload roadmap when conversation id changes
   useEffect(() => {
-    if (currentConversationId) {
+    if (currentConversationId && !currentConversationId.startsWith('temp-')) {
       loadRoadmap(currentConversationId)
     }
   }, [currentConversationId])
@@ -933,7 +950,10 @@ export default function ChatPage() {
                   }`}
                   onClick={() => {
                     setCurrentConversationId(conversation.id)
-                    loadConversation(conversation.id)
+                    // Only load conversation from server if it's not a temporary one
+                    if (!conversation.id.startsWith('temp-')) {
+                      loadConversation(conversation.id)
+                    }
                     if (window.innerWidth < 768) setSidebarOpen(false)
                   }}
                 >
