@@ -119,7 +119,7 @@ class ApiClient {
   async sendMessage(
     messages: Array<{ role: string; content: string }>, 
     conversationId?: string,
-    geolocation?: { latitude: number; longitude: number }
+    ipGeolocation?: { ip: string; country: string; country_name: string; city: string; region?: string }
   ) {
     const params = new URLSearchParams()
     if (conversationId) {
@@ -127,10 +127,13 @@ class ApiClient {
     }
 
     const requestBody: any = { messages }
-    if (geolocation) {
-      requestBody.geolocation = {
-        latitude: geolocation.latitude,
-        longitude: geolocation.longitude
+    if (ipGeolocation) {
+      requestBody.location = {
+        country: ipGeolocation.country,
+        country_name: ipGeolocation.country_name,
+        city: ipGeolocation.city,
+        region: ipGeolocation.region,
+        ip: ipGeolocation.ip
       }
     }
 
@@ -149,7 +152,7 @@ class ApiClient {
     conversationId?: string,
     onToolStart?: () => void,
     onToolOutput?: (output: any) => void,
-    geolocation?: { latitude: number; longitude: number }
+    ipGeolocation?: { ip: string; country: string; country_name: string; city: string; region?: string }
   ): AsyncGenerator<{
     type: 'text_chunk' | 'tool_output' | 'complete' | 'error'
     data?: any
@@ -174,10 +177,13 @@ class ApiClient {
       }
 
       const requestBody: any = { messages }
-      if (geolocation) {
-        requestBody.geolocation = {
-          latitude: geolocation.latitude,
-          longitude: geolocation.longitude
+      if (ipGeolocation) {
+        requestBody.location = {
+          country: ipGeolocation.country,
+          country_name: ipGeolocation.country_name,
+          city: ipGeolocation.city,
+          region: ipGeolocation.region,
+          ip: ipGeolocation.ip
         }
       }
 

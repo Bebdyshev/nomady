@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Bot } from "lucide-react"
 
 // Enhanced Search Animation Component
 export const SearchAnimation = ({ searchType }: { searchType: string }) => {
@@ -101,9 +100,6 @@ export const TypingIndicator = () => {
     >
       <div className="max-w-[85%] md:max-w-[80%] rounded-lg px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
         <div className="flex items-center space-x-2">
-          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-            <Bot className="w-3 h-3 text-white" />
-          </div>
           <div className="flex space-x-1">
             {[0, 1, 2].map((i) => (
               <motion.div

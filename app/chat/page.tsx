@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { useAuth } from "@/contexts/auth-context"
 import { apiClient } from "@/lib/api"
-import { Send, User, X, Menu, Plus, Loader2, MapPin, CheckCircle2, Heart, Sun, Moon, LogOut } from "lucide-react"
+import { Send, User, X, Menu, Plus, Loader2, MapPin, CheckCircle2, Heart, Sun, Moon, LogOut, Globe } from "lucide-react"
 import { useTheme } from "@/components/shared/theme-provider"
 import { motion, AnimatePresence } from "framer-motion"
 import { TicketDisplay } from "@/components/displays/ticket-display"
@@ -46,6 +46,14 @@ interface Conversation {
   }>
 }
 
+interface IpGeolocation {
+  ip: string
+  country: string
+  country_name: string
+  city: string
+  region?: string
+}
+
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
@@ -62,9 +70,8 @@ export default function ChatPage() {
   const [streamingToolOutput, setStreamingToolOutput] = useState<any>(null)
   const [activeSearches, setActiveSearches] = useState<Set<string>>(new Set())
   const [showTypingIndicator, setShowTypingIndicator] = useState(false)
-  const [geolocation, setGeolocation] = useState<{ latitude: number; longitude: number } | null>(null)
-  const [isRequestingLocation, setIsRequestingLocation] = useState(false)
-  const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt' | null>(null)
+  const [ipGeolocation, setIpGeolocation] = useState<IpGeolocation | null>(null)
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false)
 
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -135,6 +142,7 @@ export default function ChatPage() {
     }
 
     loadBookings()
+    getIpGeolocation() // Get IP geolocation automatically
 
     // Check for pending trip prompt from landing page
     const pendingPrompt = sessionStorage.getItem("pendingTripPrompt")
@@ -148,64 +156,100 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
-  // Geolocation functions
-  const requestGeolocation = async () => {
-    if (!navigator.geolocation) {
-      console.error("Geolocation is not supported by this browser.")
-      return
-    }
+  // IP Geolocation function
+  const getIpGeolocation = async () => {
+    if (ipGeolocation) return // Already have location data
 
-    setIsRequestingLocation(true)
-
-    try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(
-          resolve,
-          reject,
-          {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 300000, // 5 minutes
-          }
-        )
-      })
-
-      const coords = {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
+    setIsLoadingLocation(true)
+    
+    // Array of IP geolocation services to try
+    const geoServices = [
+      {
+        name: 'ipapi.co',
+        url: 'https://ipapi.co/json/',
+        parser: (data: any) => ({
+          ip: data.ip,
+          country: data.country_code || data.country,
+          country_name: data.country_name,
+          city: data.city,
+          region: data.region
+        })
+      },
+      {
+        name: 'ip-api.com',
+        url: 'https://ip-api.com/json/',
+        parser: (data: any) => ({
+          ip: data.query,
+          country: data.countryCode,
+          country_name: data.country,
+          city: data.city,
+          region: data.regionName
+        })
+      },
+      {
+        name: 'ipinfo.io',
+        url: 'https://ipinfo.io/json',
+        parser: (data: any) => ({
+          ip: data.ip,
+          country: data.country,
+          country_name: data.country, // ipinfo doesn't provide full country name in free tier
+          city: data.city,
+          region: data.region
+        })
       }
+    ]
 
-      setGeolocation(coords)
-      setLocationPermission('granted')
-      console.log("Location obtained:", coords)
-    } catch (error) {
-      console.error("Error getting location:", error)
-      setLocationPermission('denied')
-      setGeolocation(null)
-    } finally {
-      setIsRequestingLocation(false)
+    for (const service of geoServices) {
+      try {
+        console.log(`Trying ${service.name}...`)
+        const response = await fetch(service.url)
+        
+        if (!response.ok) {
+          console.warn(`${service.name} returned ${response.status}`)
+          continue
+        }
+        
+        const data = await response.json()
+        console.log(`${service.name} response:`, data)
+        
+        // Check if we got valid data
+        if (data && (data.ip || data.query)) {
+          const locationData = service.parser(data)
+          
+          // Validate we got useful location data
+          if (locationData.country && locationData.country !== 'Unknown' && locationData.city && locationData.city !== 'Unknown') {
+            setIpGeolocation(locationData)
+            console.log("IP Geolocation obtained from", service.name, ":", locationData)
+            setIsLoadingLocation(false)
+            return
+          } else {
+            console.warn(`${service.name} returned incomplete data:`, locationData)
+          }
+        }
+      } catch (error) {
+        console.error(`Error with ${service.name}:`, error)
+        continue
+      }
     }
-  }
-
-  const checkLocationPermission = async () => {
-    if (!navigator.permissions) {
-      return 'prompt'
-    }
-
+    
+    // If all services failed, set a basic fallback
+    console.warn("All IP geolocation services failed, using fallback")
     try {
-      const permission = await navigator.permissions.query({ name: 'geolocation' })
-      setLocationPermission(permission.state)
-      return permission.state
-    } catch (error) {
-      console.error("Error checking location permission:", error)
-      return 'prompt'
+      const response = await fetch('https://api.ipify.org?format=json')
+      const ipData = await response.json()
+      setIpGeolocation({
+        ip: ipData.ip,
+        country: 'US', // Default fallback
+        country_name: 'United States',
+        city: 'New York'
+      })
+    } catch (finalError) {
+      console.error("Even fallback IP service failed:", finalError)
+      // Don't set any geolocation data if everything fails
     }
+    
+    setIsLoadingLocation(false)
   }
-
-  // Check location permission on mount
-  useEffect(() => {
-    checkLocationPermission()
-  }, [])
 
   const loadConversations = async () => {
     const { data } = await apiClient.getConversations()
@@ -272,7 +316,7 @@ export default function ChatPage() {
     try {
       for await (const chunk of apiClient.sendMessageStream(
         messagesToSend,
-        currentConversationId?.startsWith('temp-') ? undefined : currentConversationId || undefined,
+        currentConversationId || undefined,
         () => {
           // onToolStart - show tool is starting
           console.log("Tool started")
@@ -281,7 +325,7 @@ export default function ChatPage() {
           // onToolOutput - handle tool output
           setStreamingToolOutput(output)
         },
-        geolocation || undefined // Pass geolocation if available
+        ipGeolocation || undefined // Pass IP geolocation if available
       )) {
         if (chunk.type === "text_chunk") {
           fullResponse += chunk.data
@@ -379,11 +423,6 @@ export default function ChatPage() {
 
         if (!currentConversationId) {
             setCurrentConversationId(finalConversationId)
-        } else if (currentConversationId?.startsWith('temp-')) {
-            // Replace temporary conversation with real one
-            setCurrentConversationId(finalConversationId)
-            // Remove the temporary conversation from the list
-            setConversations(prev => prev.filter(c => !c.id.startsWith('temp-')))
         }
         } else if (chunk.type === "error") {
           throw new Error(chunk.data || "Streaming error")
@@ -421,29 +460,11 @@ export default function ChatPage() {
 
   const startNewConversation = () => {
     setMessages([])
+    setCurrentConversationId(null)
+    localStorage.removeItem("lastConversationId")
     setInput("")
     
-    // Create a temporary conversation ID for the new chat
-    const tempConversationId = `temp-${Date.now()}`
-    
-    // Create a temporary conversation entry
-    const tempConversation: Conversation = {
-      id: tempConversationId,
-      user_id: user?.id || 0,
-      created_at: new Date().toISOString(),
-      last_updated: new Date().toISOString(),
-      title: "New conversation",
-      messages: []
-    }
-    
-    // Add the temporary conversation to the list
-    setConversations(prev => [tempConversation, ...prev])
-    
-    // Set as current conversation
-    setCurrentConversationId(tempConversationId)
-    localStorage.removeItem("lastConversationId")
-    
-    // Clear conversation ID from URL (we'll update it when we get real ID)
+    // Clear conversation ID from URL
     const url = new URL(window.location.href)
     url.searchParams.delete("c")
     window.history.replaceState({}, "", url.toString())
@@ -1171,33 +1192,26 @@ export default function ChatPage() {
         <div className="border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
           <div className="max-w-4xl mx-auto p-3 md:p-6">
             {/* Geolocation Status */}
-            {(geolocation || locationPermission === 'denied') && (
+            {(ipGeolocation || isLoadingLocation) && (
               <div className="mb-3 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                 <div className="flex items-center space-x-2">
-                  <MapPin className="h-3 w-3" />
+                  <Globe className="h-3 w-3" />
                   <span>
-                    {geolocation 
-                      ? `Location: ${geolocation.latitude.toFixed(4)}, ${geolocation.longitude.toFixed(4)}`
-                      : "Location access denied"
+                    {ipGeolocation 
+                      ? `Location: ${ipGeolocation.city}, ${ipGeolocation.country}`
+                      : "Location loading..."
                     }
                   </span>
                 </div>
-                {locationPermission === 'denied' && (
+                {isLoadingLocation && (
                   <Button
                     variant="ghost"
                     size="sm" 
-                    onClick={requestGeolocation}
-                    disabled={isRequestingLocation}
+                    disabled={true}
                     className="text-xs h-6 px-2"
                   >
-                    {isRequestingLocation ? (
-                      <>
-                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                        Getting...
-                      </>
-                    ) : (
-                      "Retry"
-                    )}
+                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                    Loading...
                   </Button>
                 )}
               </div>
@@ -1221,24 +1235,6 @@ export default function ChatPage() {
                   style={{ minHeight: "48px", maxHeight: "120px" }}
                 />
                 
-                {/* Location button */}
-                {!geolocation && locationPermission !== 'denied' && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={requestGeolocation}
-                    disabled={isRequestingLocation}
-                    className="absolute right-12 md:right-16 top-1/2 transform -translate-y-1/2 p-1.5 text-slate-500 hover:text-blue-600 transition-colors"
-                  >
-                    {isRequestingLocation ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <MapPin className="h-4 w-4" />
-                    )}
-                  </Button>
-                )}
-
                 <motion.button
                   type="submit"
                   disabled={isLoading || !input.trim() || isStreaming}
