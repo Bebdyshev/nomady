@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
+import { trackBooking } from "@/lib/gtag"
 import {
   MapPin,
   Star,
@@ -249,6 +250,7 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked }:
       })
 
       onBooked?.(activity, itemId, type)
+      trackBooking('activity', activity.title)
     } catch (error) {
       console.error("Booking error:", error)
       toast({

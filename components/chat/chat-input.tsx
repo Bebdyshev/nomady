@@ -3,6 +3,7 @@
 import { Send, Loader2 } from "lucide-react"
 import { motion } from "framer-motion"
 import { forwardRef, useEffect, useRef, useLayoutEffect, useState } from "react"
+import { trackSearch } from "@/lib/gtag"
 
 interface ChatInputProps {
   input: string
@@ -97,10 +98,17 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
       ? "Ask about flights, hotels..." 
       : "Ask about flights, hotels, restaurants, or activities..."
 
+    const handleSubmit = (e: React.FormEvent) => {
+      if (input.trim()) {
+        trackSearch(input.trim())
+      }
+      onSendMessage(e)
+    }
+
     return (
       <div className="border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
         <div className="max-w-4xl mx-auto p-3 md:p-6">
-          <form ref={formRef} onSubmit={onSendMessage} className="flex items-end space-x-2 md:space-x-4">
+          <form ref={formRef} onSubmit={handleSubmit} className="flex items-end space-x-2 md:space-x-4">
             <div className="flex-1 relative">
               <textarea
                 ref={textareaRef}
@@ -109,7 +117,7 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault()
-                    onSendMessage(e)
+                    handleSubmit(e)
                   }
                 }}
                 placeholder={placeholderText}

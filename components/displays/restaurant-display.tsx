@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
+import { trackBooking } from "@/lib/gtag"
 import {
   Utensils,
   Star,
@@ -299,6 +300,8 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
         title: "Reservation Confirmed! 🍽️",
         description: `Your table at ${restaurant.name} has been reserved.`,
       })
+
+      trackBooking('restaurant', restaurant.name)
 
       onBooked?.(restaurant, itemId, type)
     } catch (error) {

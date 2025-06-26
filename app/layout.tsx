@@ -1,12 +1,17 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
+import Script from "next/script"
 import "./globals.css"
 import { ThemeProvider } from "@/components/shared/theme-provider"
 import { AuthProvider } from "@/contexts/auth-context"
 import { Toaster } from "@/components/ui/toaster"
+import { GoogleAnalyticsProvider } from "@/components/analytics/ga-provider"
 
 const inter = Inter({ subsets: ["latin"] })
+
+// Google Analytics ID
+const GA_TRACKING_ID = process.env.NEXT_PUBLIC_GA_TRACKING_ID
 
 export const metadata: Metadata = {
   title: {
@@ -90,6 +95,26 @@ export default function RootLayout({
       <head>
         <script src="https://accounts.google.com/gsi/client" async defer />
         
+        {/* Google Analytics */}
+        {GA_TRACKING_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_TRACKING_ID}', {
+                  page_path: window.location.pathname,
+                });
+              `}
+            </Script>
+          </>
+        )}
+        
         {/* Enhanced favicon with cache busting */}
         <link rel="icon" href="/favicon.ico?v=2" sizes="any" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2" />
@@ -134,6 +159,7 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <ThemeProvider defaultTheme="system">
+          <GoogleAnalyticsProvider />
           <AuthProvider>{children}</AuthProvider>
           <Toaster />
         </ThemeProvider>
