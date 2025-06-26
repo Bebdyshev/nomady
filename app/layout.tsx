@@ -2,11 +2,17 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import Script from "next/script"
+import dynamic from "next/dynamic"
 import "./globals.css"
 import { ThemeProvider } from "@/components/shared/theme-provider"
 import { AuthProvider } from "@/contexts/auth-context"
 import { Toaster } from "@/components/ui/toaster"
-import { GoogleAnalyticsProvider } from "@/components/analytics/ga-provider"
+
+// Динамический импорт без SSR для Google Analytics
+const GoogleAnalyticsProvider = dynamic(
+  () => import("@/components/analytics/ga-provider").then(mod => ({ default: mod.GoogleAnalyticsProvider })),
+  { ssr: false }
+)
 
 const inter = Inter({ subsets: ["latin"] })
 

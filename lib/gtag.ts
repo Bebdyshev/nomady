@@ -2,12 +2,24 @@
 
 export const GA_TRACKING_ID = process.env.NEXT_PUBLIC_GA_TRACKING_ID
 
+// Проверка что мы на клиенте и GA инициализирован
+const isGAReady = () => {
+  return typeof window !== 'undefined' && 
+         window.gtag && 
+         GA_TRACKING_ID &&
+         typeof window.gtag === 'function'
+}
+
 // https://developers.google.com/analytics/devguides/collection/gtagjs/pages
 export const pageview = (url: string) => {
-  if (typeof window !== 'undefined' && GA_TRACKING_ID) {
-    window.gtag('config', GA_TRACKING_ID, {
-      page_path: url,
-    })
+  if (isGAReady()) {
+    try {
+      window.gtag('config', GA_TRACKING_ID!, {
+        page_path: url,
+      })
+    } catch (error) {
+      console.warn('GA pageview error:', error)
+    }
   }
 }
 
@@ -23,12 +35,16 @@ export const event = ({
   label?: string
   value?: number
 }) => {
-  if (typeof window !== 'undefined' && GA_TRACKING_ID) {
-    window.gtag('event', action, {
-      event_category: category,
-      event_label: label,
-      value: value,
-    })
+  if (isGAReady()) {
+    try {
+      window.gtag('event', action, {
+        event_category: category,
+        event_label: label,
+        value: value,
+      })
+    } catch (error) {
+      console.warn('GA event error:', error)
+    }
   }
 }
 

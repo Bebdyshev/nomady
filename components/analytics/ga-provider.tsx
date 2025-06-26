@@ -9,8 +9,11 @@ export function GoogleAnalyticsProvider() {
   const searchParams = useSearchParams()
 
   useEffect(() => {
-    const url = pathname + searchParams.toString()
-    pageview(url)
+    // Проверяем что мы на клиенте и GA загружен
+    if (typeof window !== 'undefined' && window.gtag) {
+      const url = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : '')
+      pageview(url)
+    }
   }, [pathname, searchParams])
 
   return null
