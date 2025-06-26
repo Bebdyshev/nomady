@@ -7,6 +7,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/shared/theme-provider"
 import { AuthProvider } from "@/contexts/auth-context"
 import { Toaster } from "@/components/ui/toaster"
+import { Analytics } from "@vercel/analytics/next"
 
 // Динамический импорт без SSR для Google Analytics
 const GoogleAnalyticsProvider = dynamic(
@@ -169,6 +170,7 @@ export default function RootLayout({
           <AuthProvider>{children}</AuthProvider>
           <Toaster />
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   )
