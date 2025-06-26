@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "framer-motion"
 import { SearchAnimation } from "@/components/search-animations"
 import { TicketDisplay } from "@/components/displays/ticket-display"
 import { HotelDisplay } from "@/components/displays/hotels-display"
+import { RestaurantDisplay } from "@/components/displays/restaurant-display"
+import { ActivityDisplay } from "@/components/displays/activity-display"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { Message } from "@/types/chat"
@@ -112,25 +114,25 @@ const MarkdownMessage = ({ content }: { content: string }) => {
 }
 
 const parseMessageContent = (content: string, toolOutput?: any) => {
-  // Remove all search tags and ticket/hotel tags from content for clean display
+  // Remove all search tags and content tags from content for clean display
   const textContent = content
     .replace(/<(?:searching_tickets|searching_hotels|searching_restaurants|searching_activities)>/g, "")
     .replace(/<\/(?:searching_tickets|searching_hotels|searching_restaurants|searching_activities)>/g, "")
-    .replace(/<(?:tickets|hotels)>[\s\S]*?<\/(?:tickets|hotels)>/g, "")
+    .replace(/<(?:tickets|hotels|restaurants|activities)>[\s\S]*?<\/(?:tickets|hotels|restaurants|activities)>/g, "")
     .trim()
   
-  // Show tickets if we have tool_output data (regardless of tags)
+  // Show content if we have tool_output data (regardless of tags)
   if (toolOutput) {
     return {
       text: textContent,
-      showTickets: true,
+      showContent: true,
       toolOutput,
     }
   }
   
   return {
     text: textContent,
-    showTickets: false,
+    showContent: false,
     toolOutput: null,
   }
 }
@@ -153,6 +155,52 @@ const findHotelData = (toolOutput: any) => {
   
   // If it's a single object, return it if it contains hotel data
   if (toolOutput.hotels || toolOutput.properties || toolOutput.destination) {
+    return toolOutput
+  }
+  
+  return null
+}
+
+// Helper function to find restaurant data in toolOutput
+const findRestaurantData = (toolOutput: any) => {
+  if (!toolOutput) return null
+  
+  // If it's an array, find the restaurant data object
+  if (Array.isArray(toolOutput)) {
+    const restaurantData = toolOutput.find(
+      (item) =>
+      item.restaurants || 
+      item.type === "restaurants" ||
+        (item.source === "tripadvisor" && item.restaurants && Array.isArray(item.restaurants)),
+    )
+    return restaurantData || null
+  }
+  
+  // If it's a single object, return it if it contains restaurant data
+  if (toolOutput.restaurants || toolOutput.type === "restaurants") {
+    return toolOutput
+  }
+  
+  return null
+}
+
+// Helper function to find activity data in toolOutput
+const findActivityData = (toolOutput: any) => {
+  if (!toolOutput) return null
+  
+  // If it's an array, find the activity data object
+  if (Array.isArray(toolOutput)) {
+    const activityData = toolOutput.find(
+      (item) =>
+      item.activities || 
+      item.type === "activities" ||
+        (item.items && Array.isArray(item.items)),
+    )
+    return activityData || null
+  }
+  
+  // If it's a single object, return it if it contains activity data
+  if (toolOutput.activities || toolOutput.type === "activities") {
     return toolOutput
   }
   
@@ -244,35 +292,67 @@ export function MessageBubble({
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3, delay: 0.1 }}
           >
-            {message.content.includes("<hotels>") || message.content.includes("Hotels in")
-              ? (() => {
-            const hotelData = findHotelData(message.toolOutput)
-            return hotelData ? (
-              <HotelDisplay
-                toolOutput={hotelData}
-                bookedIds={bookedIds}
-                onBooked={onBooked}
-              />
+            {message.content.includes("<hotels>") || message.content.includes("Hotels in") ? (
+              (() => {
+                const hotelData = findHotelData(message.toolOutput)
+                return hotelData ? (
+                  <HotelDisplay
+                    toolOutput={hotelData}
+                    bookedIds={bookedIds}
+                    onBooked={onBooked}
+                  />
+                ) : (
+                  <div className="text-sm text-slate-500 dark:text-slate-400 italic">
+                    No hotel data found
+                  </div>
+                )
+              })()
+            ) : message.content.includes("<restaurants>") || message.content.includes("Restaurants in") ? (
+              (() => {
+                const restaurantData = findRestaurantData(message.toolOutput)
+                return restaurantData ? (
+                  <RestaurantDisplay
+                    toolOutput={restaurantData}
+                    bookedIds={bookedIds}
+                    onBooked={onBooked}
+                  />
+                ) : (
+                  <div className="text-sm text-slate-500 dark:text-slate-400 italic">
+                    No restaurant data found
+                  </div>
+                )
+              })()
+            ) : message.content.includes("<activities>") || message.content.includes("Activities in") ? (
+              (() => {
+                const activityData = findActivityData(message.toolOutput)
+                return activityData ? (
+                  <ActivityDisplay
+                    toolOutput={activityData}
+                    bookedIds={bookedIds}
+                    onBooked={onBooked}
+                  />
+                ) : (
+                  <div className="text-sm text-slate-500 dark:text-slate-400 italic">
+                    No activity data found
+                  </div>
+                )
+              })()
             ) : (
-              <div className="text-sm text-slate-500 dark:text-slate-400 italic">
-                No hotel data found
-              </div>
-            )
-          })()
-              : (() => {
-            const ticketData = findTicketData(message.toolOutput)
-            return ticketData ? (
-              <TicketDisplay
-                toolOutput={ticketData}
-                bookedIds={bookedIds}
-                onBooked={onBooked}
-              />
-            ) : (
-              <div className="text-sm text-slate-500 dark:text-slate-400 italic">
-                No ticket data found
-              </div>
-            )
-                })()}
+              (() => {
+                const ticketData = findTicketData(message.toolOutput)
+                return ticketData ? (
+                  <TicketDisplay
+                    toolOutput={ticketData}
+                    bookedIds={bookedIds}
+                    onBooked={onBooked}
+                  />
+                ) : (
+                  <div className="text-sm text-slate-500 dark:text-slate-400 italic">
+                    No ticket data found
+                  </div>
+                )
+              })()
+            )}
           </motion.div>
         )}
       </div>
