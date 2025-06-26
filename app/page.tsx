@@ -220,7 +220,7 @@ export default function LandingPage() {
             >
                 <Logo width={40} height={40} className="rounded-xl" />
               <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent">
-                Nomady
+                I n F l i g h t
               </span>
             </motion.div>
 
