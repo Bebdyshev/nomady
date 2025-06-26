@@ -69,13 +69,13 @@ export default function BookingsPage() {
   const getBookingIcon = (type: string) => {
     switch (type.toLowerCase()) {
       case "flight":
-        return <Plane className="h-5 w-5" />
+        return <Plane className="h-4 w-4 sm:h-5 sm:w-5" />
       case "hotel":
-        return <Hotel className="h-5 w-5" />
+        return <Hotel className="h-4 w-4 sm:h-5 sm:w-5" />
       case "car":
-        return <Car className="h-5 w-5" />
+        return <Car className="h-4 w-4 sm:h-5 sm:w-5" />
       default:
-        return <Calendar className="h-5 w-5" />
+        return <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
     }
   }
 
@@ -139,10 +139,10 @@ export default function BookingsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-slate-900 flex items-center justify-center p-4">
         <div className="text-center">
-          <div className="h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-slate-600 dark:text-slate-300">Loading your bookings...</p>
+          <div className="h-8 w-8 sm:h-12 sm:w-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300">Loading your bookings...</p>
         </div>
       </div>
     )
@@ -152,51 +152,67 @@ export default function BookingsPage() {
     <div className="min-h-screen bg-white dark:bg-slate-900">
       {/* Header */}
       <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-        <div className="container mx-auto px-6 py-6">
+        <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden h-8 w-8"
+                onClick={() => router.push("/chat")}
+                className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0"
               >
-                <Menu className="h-5 w-5" />
+                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={() => router.push("/chat")}>
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">My Bookings</h1>
-                <p className="text-slate-600 dark:text-slate-300">Manage your travel reservations</p>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white truncate">
+                  My Bookings
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 hidden sm:block">
+                  Manage your travel reservations
+                </p>
               </div>
             </div>
-            <Button onClick={() => router.push("/chat")} className="bg-blue-600 hover:bg-blue-700 text-white">
-              <Plus className="h-4 w-4 mr-2" />
-              New Booking
+            <Button 
+              onClick={() => router.push("/chat")} 
+              className="bg-blue-600 hover:bg-blue-700 text-white ml-2 flex-shrink-0"
+              size="sm"
+            >
+              <Plus className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+              <span className="hidden sm:inline">New Booking</span>
+              <span className="sm:hidden">New</span>
             </Button>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {bookings.length === 0 ? (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16">
-            <div className="flex justify-center mx-auto mb-6">
-              <Logo width={96} height={96} className="rounded-full" />
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            className="text-center py-12 sm:py-16 px-4"
+          >
+            <div className="flex justify-center mx-auto mb-4 sm:mb-6">
+              <Logo width={64} height={64} className="rounded-full sm:w-24 sm:h-24" />
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">No bookings yet</h2>
-            <p className="text-slate-600 dark:text-slate-300 mb-8 max-w-md mx-auto">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mb-3 sm:mb-4">
+              No bookings yet
+            </h2>
+            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 mb-6 sm:mb-8 max-w-sm sm:max-w-md mx-auto leading-relaxed">
               Start planning your next adventure! Chat with our AI to find and book flights, hotels, and activities.
             </p>
-            <Button onClick={() => router.push("/chat")} size="lg" className="bg-blue-600 hover:bg-blue-700 text-white">
-              <Plus className="h-5 w-5 mr-2" />
+            <Button 
+              onClick={() => router.push("/chat")} 
+              size="lg" 
+              className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
+            >
+              <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
               Start Planning
             </Button>
           </motion.div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {bookings.map((booking, index) => {
               const bookingInfo = formatBookingData(booking)
               return (
@@ -205,30 +221,37 @@ export default function BookingsPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
+                  className="w-full"
                 >
-                  <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-800">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className={`p-2 rounded-lg ${getBookingColor(booking.booking_type)}`}>
+                  <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-800 h-full">
+                    <CardHeader className="pb-3 p-4 sm:p-6">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start space-x-3 min-w-0 flex-1">
+                          <div className={`p-1.5 sm:p-2 rounded-lg flex-shrink-0 ${getBookingColor(booking.booking_type)}`}>
                             {getBookingIcon(booking.booking_type)}
                           </div>
-                          <div>
-                            <CardTitle className="text-lg">{bookingInfo.title}</CardTitle>
-                            <CardDescription>{bookingInfo.subtitle}</CardDescription>
+                          <div className="min-w-0 flex-1">
+                            <CardTitle className="text-sm sm:text-lg font-semibold line-clamp-2 leading-tight">
+                              {bookingInfo.title}
+                            </CardTitle>
+                            <CardDescription className="text-xs sm:text-sm mt-1 line-clamp-1">
+                              {bookingInfo.subtitle}
+                            </CardDescription>
                           </div>
                         </div>
-                        <Badge variant="secondary" className="capitalize">
+                        <Badge variant="secondary" className="capitalize text-xs flex-shrink-0">
                           {booking.booking_type}
                         </Badge>
                       </div>
                     </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
+                    <CardContent className="p-4 sm:p-6 pt-0">
+                      <div className="space-y-2 sm:space-y-3">
                         {bookingInfo.details.map((detail, idx) => (
-                          <div key={idx} className="flex items-center space-x-3 text-sm">
-                            <detail.icon className="h-4 w-4 text-slate-500 dark:text-slate-400" />
-                            <span className="text-slate-700 dark:text-slate-300">{detail.text}</span>
+                          <div key={idx} className="flex items-center space-x-2 sm:space-x-3 text-xs sm:text-sm">
+                            <detail.icon className="h-3 w-3 sm:h-4 sm:w-4 text-slate-500 dark:text-slate-400 flex-shrink-0" />
+                            <span className="text-slate-700 dark:text-slate-300 line-clamp-2 leading-relaxed">
+                              {detail.text}
+                            </span>
                           </div>
                         ))}
                         <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
