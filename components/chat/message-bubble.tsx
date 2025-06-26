@@ -203,11 +203,11 @@ export function MessageBubble({
         }`}
       >
         <div className="text-sm md:text-base">
-          {/* Show search animations instead of text when searches are active */}
+          {/* Show search animations for assistant messages during streaming when searches are active */}
           {message.role === "assistant" && 
            isStreaming && 
-           message.content === streamingMessage && 
-           activeSearches.size > 0 ? (
+           activeSearches.size > 0 && 
+           (message.content === streamingMessage || message.content === "") ? (
             <div className="space-y-2">
               <AnimatePresence>
                 {Array.from(activeSearches).map((searchType) => (
