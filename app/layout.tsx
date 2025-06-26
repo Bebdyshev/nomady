@@ -51,18 +51,16 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    type: 'website',
-    locale: 'en_US',
+    title: 'Nomady - AI-Powered Trip Planner',
+    description: 'Plan your perfect trip with AI assistance. Find flights, hotels, restaurants, and activities all in one place!',
     url: 'https://nomady.live',
-    title: 'Nomady - AI-Powered Trip Planner & Travel Assistant',
-    description: 'Plan your perfect trip with AI assistance. Find flights, hotels, restaurants, and activities all in one place.',
-    siteName: 'Nomady',
+    type: 'website',
     images: [
       {
-        url: '/og-image.jpg', // You'll need to create this
+        url: 'https://nomady.live/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Nomady - AI-Powered Trip Planner',
+        alt: 'Preview image for Nomady',
       },
     ],
   },
@@ -72,7 +70,14 @@ export const metadata: Metadata = {
     description: 'Plan your perfect trip with AI assistance. Find flights, hotels, restaurants, and activities.',
     site: '@nomady', // Replace with your Twitter handle
     creator: '@nomady',
-    images: ['/twitter-image.jpg'], // You'll need to create this
+    images: [
+      {
+        url: 'https://nomady.live/twitter-image.png',
+        width: 1200,
+        height: 675,
+        alt: 'Twitter preview for Nomady',
+      }
+    ],
   },
   robots: {
     index: true,
