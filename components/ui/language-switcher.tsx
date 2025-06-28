@@ -41,14 +41,6 @@ export function LanguageSwitcher() {
         <span className="text-sm font-medium text-slate-600 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
           {currentLanguage?.name}
         </span>
-        <motion.div
-          initial={false}
-          animate={{ rotate: locale === 'ru' ? 360 : 0 }}
-          transition={{ duration: 0.3 }}
-          className="text-xs opacity-60 group-hover:opacity-100 transition-opacity duration-300"
-        >
-          {locale === 'en' ? '🇺🇸' : '🇷🇺'}
-        </motion.div>
       </Button>
     </motion.div>
   )
