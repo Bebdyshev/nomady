@@ -128,7 +128,9 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll }: Inte
             </Button>
           )}
         </div>
-        <p className="text-sm text-slate-600 dark:text-slate-300">{selectedItems.length} элементов выбрано</p>
+        <p className="text-sm text-slate-600 dark:text-slate-300">
+          {selectedItems.length} {selectedItems.length === 1 ? t('itemSelected') : t('itemsSelected')}
+        </p>
       </div>
 
       <div

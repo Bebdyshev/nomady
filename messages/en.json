@@ -307,7 +307,9 @@
       "clearAll": "Clear All",
       "remove": "Remove",
       "noItems": "No items to show on map",
-      "addItems": "Add items from your chat to see them here"
+      "addItems": "Add items from your chat to see them here",
+      "itemsSelected": "items selected",
+      "itemSelected": "item selected"
     },
     "displays": {
       "bookFlight": "Book Flight",
