@@ -2,12 +2,13 @@
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { MessageCircle, MapPin, CheckCircle2, Heart, Sun, Moon, LogOut, X, Plus, User } from "lucide-react"
+import { MessageCircle, MapPin, CheckCircle2, Heart, Sun, Moon, LogOut, X, Plus, User, Globe } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Logo } from "@/components/ui/logo"
 import { useTheme } from "@/components/shared/theme-provider"
 import { useRouter } from "next/navigation"
-import { useTranslations } from "@/lib/i18n-client"
+import { useTranslations, useI18n } from "@/lib/i18n-client"
+import { type Locale } from "@/i18n"
 import { Conversation } from "@/types/chat"
 
 interface ChatSidebarProps {
@@ -35,6 +36,21 @@ export function ChatSidebar({
   const router = useRouter()
   const t = useTranslations('chat.sidebar')
   const tCommon = useTranslations('common')
+  const { locale, setLocale } = useI18n()
+
+  const languages = [
+    { code: 'en' as Locale, name: 'EN' },
+    { code: 'ru' as Locale, name: 'RU' }
+  ]
+
+  const currentLanguage = languages.find(lang => lang.code === locale)
+  const otherLanguage = languages.find(lang => lang.code !== locale)
+
+  const handleLanguageChange = () => {
+    if (otherLanguage) {
+      setLocale(otherLanguage.code)
+    }
+  }
 
   return (
     <div
@@ -54,6 +70,19 @@ export function ChatSidebar({
               <span className="text-lg font-bold text-blue-600 dark:text-blue-400">Nomady</span>
             </div>
             <div className="flex items-center space-x-1">
+              {/* Language Switcher */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleLanguageChange}
+                className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
+                title={t('switchLanguage')}
+              >
+                <div className="flex items-center space-x-1">
+                  <Globe className="h-3 w-3" />
+                  <span className="text-xs font-medium">{currentLanguage?.name}</span>
+                </div>
+              </Button>
               <Button
                 variant="ghost"
                 size="icon"

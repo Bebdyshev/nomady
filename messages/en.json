@@ -265,7 +265,8 @@
       "newConversation": "New conversation",
       "noConversations": "No conversations yet",
       "startChat": "Start a new chat to begin",
-      "user": "User"
+      "user": "User",
+      "switchLanguage": "Switch language"
     },
     "input": {
       "placeholder": "Ask about flights, hotels, restaurants, or activities...",
