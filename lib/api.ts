@@ -92,9 +92,23 @@ class ApiClient {
   }
 
   async register(name: string, email: string, password: string) {
-    return this.request<{ access_token: string; type: string }>("/auth/register", {
+    return this.request<{ message: string; email: string }>("/auth/register", {
       method: "POST",
       body: JSON.stringify({ name, email, password }),
+    })
+  }
+
+  async verifyCode(email: string, code: string) {
+    return this.request<{ message: string; access_token?: string; type?: string }>("/auth/verify-code", {
+      method: "POST",
+      body: JSON.stringify({ email, code }),
+    })
+  }
+
+  async resendCode(email: string) {
+    return this.request<{ message: string }>("/auth/resend-code", {
+      method: "POST",
+      body: JSON.stringify({ email }),
     })
   }
 
@@ -116,10 +130,25 @@ class ApiClient {
   }
 
   // Chat methods
-  async sendMessage(messages: Array<{ role: string; content: string }>, conversationId?: string) {
+  async sendMessage(
+    messages: Array<{ role: string; content: string }>, 
+    conversationId?: string,
+    ipGeolocation?: { ip: string; country: string; country_name: string; city: string; region?: string }
+  ) {
     const params = new URLSearchParams()
     if (conversationId) {
       params.append("conversation_id", conversationId)
+    }
+
+    const requestBody: any = { messages }
+    if (ipGeolocation) {
+      requestBody.location = {
+        country: ipGeolocation.country,
+        country_name: ipGeolocation.country_name,
+        city: ipGeolocation.city,
+        region: ipGeolocation.region,
+        ip: ipGeolocation.ip
+      }
     }
 
     return this.request<{
@@ -128,7 +157,7 @@ class ApiClient {
       tool_output?: any
     }>(`/chat/?${params.toString()}`, {
       method: "POST",
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify(requestBody),
     })
   }
 
@@ -136,7 +165,8 @@ class ApiClient {
     messages: Array<{ role: string; content: string }>, 
     conversationId?: string,
     onToolStart?: () => void,
-    onToolOutput?: (output: any) => void
+    onToolOutput?: (output: any) => void,
+    ipGeolocation?: { ip: string; country: string; country_name: string; city: string; region?: string }
   ): AsyncGenerator<{
     type: 'text_chunk' | 'tool_output' | 'complete' | 'error'
     data?: any
@@ -160,10 +190,21 @@ class ApiClient {
         headers.Authorization = `Bearer ${this.token}`
       }
 
+      const requestBody: any = { messages }
+      if (ipGeolocation) {
+        requestBody.location = {
+          country: ipGeolocation.country,
+          country_name: ipGeolocation.country_name,
+          city: ipGeolocation.city,
+          region: ipGeolocation.region,
+          ip: ipGeolocation.ip
+        }
+      }
+
       const response = await fetch(url, {
         method: "POST",
         headers,
-        body: JSON.stringify({ messages }),
+        body: JSON.stringify(requestBody),
       })
 
       if (!response.ok) {

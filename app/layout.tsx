@@ -1,12 +1,25 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
+import Script from "next/script"
+import dynamic from "next/dynamic"
 import "./globals.css"
 import { ThemeProvider } from "@/components/shared/theme-provider"
 import { AuthProvider } from "@/contexts/auth-context"
+import { I18nProvider } from "@/lib/i18n-client"
 import { Toaster } from "@/components/ui/toaster"
+import { Analytics } from "@vercel/analytics/next"
 
-const inter = Inter({ subsets: ["latin"] })
+// Динамический импорт без SSR для Google Analytics
+const GoogleAnalyticsProvider = dynamic(
+  () => import("@/components/analytics/ga-provider").then(mod => ({ default: mod.GoogleAnalyticsProvider })),
+  { ssr: false }
+)
+
+const inter = Inter({ subsets: ["latin", "cyrillic"] })
+
+// Google Analytics ID
+const GA_TRACKING_ID = process.env.NEXT_PUBLIC_GA_TRACKING_ID
 
 export const metadata: Metadata = {
   title: {
@@ -24,7 +37,10 @@ export const metadata: Metadata = {
     "vacation planner",
     "travel recommendations",
     "smart travel",
-    "trip advisor"
+    "trip advisor",
+    "планировщик путешествий",
+    "ИИ помощник по путешествиям",
+    "планирование поездок"
   ],
   authors: [{ name: "Nomady Team" }],
   creator: "Nomady",
@@ -37,22 +53,26 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://nomady.live'),
   alternates: {
     canonical: '/',
+    languages: {
+      'en': '/en',
+      'ru': '/ru',
+      'x-default': '/'
+    }
   },
   openGraph: {
-    type: 'website',
-    locale: 'en_US',
+    title: 'Nomady - AI-Powered Trip Planner',
+    description: 'Plan your perfect trip with AI assistance. Find flights, hotels, restaurants, and activities all in one place!',
     url: 'https://nomady.live',
-    title: 'Nomady - AI-Powered Trip Planner & Travel Assistant',
-    description: 'Plan your perfect trip with AI assistance. Find flights, hotels, restaurants, and activities all in one place.',
-    siteName: 'Nomady',
+    type: 'website',
     images: [
       {
-        url: '/og-image.jpg', // You'll need to create this
+        url: 'https://nomady.live/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Nomady - AI-Powered Trip Planner',
+        alt: 'Preview image for Nomady',
       },
     ],
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',
@@ -60,7 +80,14 @@ export const metadata: Metadata = {
     description: 'Plan your perfect trip with AI assistance. Find flights, hotels, restaurants, and activities.',
     site: '@nomady', // Replace with your Twitter handle
     creator: '@nomady',
-    images: ['/twitter-image.jpg'], // You'll need to create this
+    images: [
+      {
+        url: 'https://nomady.live/twitter-image.png',
+        width: 1200,
+        height: 675,
+        alt: 'Twitter preview for Nomady',
+      }
+    ],
   },
   robots: {
     index: true,
@@ -90,12 +117,37 @@ export default function RootLayout({
       <head>
         <script src="https://accounts.google.com/gsi/client" async defer />
         
+        {/* Google Analytics */}
+        {GA_TRACKING_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_TRACKING_ID}', {
+                  page_path: window.location.pathname,
+                });
+              `}
+            </Script>
+          </>
+        )}
+        
         {/* Enhanced favicon with cache busting */}
         <link rel="icon" href="/favicon.ico?v=2" sizes="any" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
         <link rel="manifest" href="/manifest.json?v=2" />
+        
+        {/* Language alternates for SEO */}
+        <link rel="alternate" hrefLang="en" href="https://nomady.live" />
+        <link rel="alternate" hrefLang="ru" href="https://nomady.live" />
+        <link rel="alternate" hrefLang="x-default" href="https://nomady.live" />
         
         {/* Theme color for mobile browsers */}
         <meta name="theme-color" content="#2563eb" />
@@ -134,9 +186,13 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <ThemeProvider defaultTheme="system">
-          <AuthProvider>{children}</AuthProvider>
-          <Toaster />
+          <I18nProvider>
+            <GoogleAnalyticsProvider />
+            <AuthProvider>{children}</AuthProvider>
+            <Toaster />
+          </I18nProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   )

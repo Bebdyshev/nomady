@@ -1,0 +1,378 @@
+{
+  "landing": {
+    "hero": {
+      "badge": "AI-Powered Travel Planning",
+      "title": {
+        "line1": "Plan Your Perfect",
+        "line2": "Trip in Seconds"
+      },
+      "subtitle": "Skip the endless research.",
+      "placeholder": {
+        "text1": "Plan a 5-day trip to Tokyo for 2 people...",
+        "text2": "Budget-friendly weekend in Barcelona...",
+        "text3": "Romantic honeymoon in Bali for 7 days...",
+        "text4": "Family adventure in Disneyland next summer...",
+        "text5": "Solo backpacking across South America for a month..."
+      },
+      "helpText": "No credit card required • Get started in 30 seconds",
+      "backedBy": "Backed by nFactorial Incubator"
+    },
+    "stats": {
+      "travelers": "Happy Travelers",
+      "countries": "Countries Covered", 
+      "trips": "Trips Planned",
+      "rating": "User Rating"
+    },
+    "features": {
+      "title": "Everything You Need to Plan",
+      "subtitle": "Our AI-powered platform handles every aspect of your trip planning, from flights to local experiences.",
+      "items": {
+        "flights": {
+          "title": "Smart Flight Search",
+          "description": "Find the best flights with AI-powered recommendations and real-time price tracking"
+        },
+        "experiences": {
+          "title": "Local Experiences", 
+          "description": "Discover hidden gems and authentic local experiences curated by AI and locals"
+        },
+        "itineraries": {
+          "title": "Perfect Itineraries",
+          "description": "Get personalized day-by-day travel plans optimized for your preferences"
+        },
+        "group": {
+          "title": "Group Planning",
+          "description": "Plan trips with friends and family seamlessly with collaborative tools"
+        },
+        "coverage": {
+          "title": "Global Coverage",
+          "description": "Access travel information for 200+ countries with local insights"
+        },
+        "safety": {
+          "title": "Travel Safety",
+          "description": "Real-time safety updates and travel advisories for peace of mind"
+        }
+      }
+    },
+    "howItWorks": {
+      "title": "How It Works",
+      "subtitle": "Get from idea to itinerary in three simple steps",
+      "steps": {
+        "step1": {
+          "title": "Tell Us Your Dream",
+          "description": "Describe where you want to go, when, and what you're interested in. Our AI understands natural language."
+        },
+        "step2": {
+          "title": "AI Creates Your Plan", 
+          "description": "Our advanced AI analyzes millions of data points to create a personalized itinerary just for you."
+        },
+        "step3": {
+          "title": "Book & Enjoy",
+          "description": "Review, customize, and book your trip. Then enjoy your perfectly planned adventure!"
+        }
+      }
+    },
+    "testimonials": {
+      "title": "Loved by Travelers Worldwide",
+      "subtitle": "See what our users say about their Nomady experience",
+      "items": {
+        "sarah": {
+          "name": "Sarah Johnson",
+          "role": "Travel Blogger",
+          "content": "Nomady planned my entire 2-week Europe trip in minutes. The recommendations were spot-on and I discovered places I never would have found on my own."
+        },
+        "mike": {
+          "name": "Mike Chen", 
+          "role": "Business Executive",
+          "content": "As someone who travels frequently for work, Nomady has become indispensable. It saves me hours of planning and always finds the best deals."
+        },
+        "emma": {
+          "name": "Emma Rodriguez",
+          "role": "Family Traveler", 
+          "content": "Planning family trips used to be stressful. Nomady considers everyone's preferences and creates itineraries that keep both kids and adults happy."
+        }
+      }
+    },
+    "pricing": {
+      "title": "Simple, Transparent Pricing",
+      "subtitle": "Choose the plan that fits your travel needs. Upgrade or downgrade anytime.",
+      "plans": {
+        "free": {
+          "name": "Free",
+          "price": "$0",
+          "period": "forever",
+          "description": "Perfect for occasional travelers",
+          "popular": false,
+          "features": [
+            "3 trip plans per month",
+            "Basic recommendations", 
+            "Email support",
+            "Mobile app access"
+          ],
+          "cta": "Get Started Free"
+        },
+        "pro": {
+          "name": "Pro",
+          "price": "$9.99", 
+          "period": "per month",
+          "description": "Ideal for frequent travelers",
+          "popular": true,
+          "features": [
+            "Unlimited trip plans",
+            "Advanced AI recommendations",
+            "Priority support",
+            "Collaborative planning", 
+            "Real-time price alerts",
+            "Offline access"
+          ],
+          "cta": "Start Pro Plan"
+        },
+        "team": {
+          "name": "Team",
+          "price": "$19.99",
+          "period": "per month", 
+          "description": "Best for travel agencies & groups",
+          "popular": false,
+          "features": [
+            "Everything in Pro",
+            "Team collaboration tools",
+            "White-label options",
+            "API access",
+            "Custom integrations", 
+            "Dedicated account manager"
+          ],
+          "cta": "Start Team Plan"
+        }
+      },
+      "mostPopular": "Most Popular"
+    },
+    "cta": {
+      "title": "Ready to Plan Your Next Adventure?",
+      "subtitle": "Join thousands of travelers who trust Nomady to create their perfect trips.",
+      "button": "Start Planning for Free"
+    },
+    "footer": {
+      "description": "AI-powered travel planning that saves you time and money while creating unforgettable experiences.",
+      "product": "Product",
+      "company": "Company", 
+      "support": "Support",
+      "links": {
+        "features": "Features",
+        "pricing": "Pricing",
+        "api": "API",
+        "mobileApp": "Mobile App",
+        "about": "About",
+        "blog": "Blog", 
+        "careers": "Careers",
+        "contact": "Contact",
+        "helpCenter": "Help Center",
+        "privacy": "Privacy Policy",
+        "terms": "Terms of Service",
+        "status": "Status"
+      },
+      "copyright": "© 2025 Nomady. All rights reserved.",
+      "madeWith": "Made with ❤️ by Bebdtshev"
+    }
+  },
+  "auth": {
+    "welcome": "Welcome back",
+    "subtitle": "Sign in to continue planning your perfect trip",
+    "getStarted": "Get Started",
+    "chooseMethod": "Choose your preferred sign-in method",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "createAccount": "Create Account",
+    "email": "Email",
+    "password": "Password",
+    "fullName": "Full Name",
+    "confirmPassword": "Confirm Password",
+    "enterEmail": "Enter your email",
+    "enterPassword": "Enter your password",
+    "enterFullName": "Enter your full name",
+    "createPassword": "Create a password",
+    "confirmYourPassword": "Confirm your password",
+    "signingIn": "Signing in...",
+    "creatingAccount": "Creating account...",
+    "verifying": "Verifying...",
+    "sending": "Sending...",
+    "continueWithGoogle": "Continue with Google",
+    "orContinueWith": "Or continue with Google",
+    "verificationCode": "Verification Code",
+    "checkEmail": "Check your email!",
+    "verificationMessage": "Please enter the 6-digit verification code sent to",
+    "resendCode": "Resend Code",
+    "back": "Back",
+    "verifyCode": "Verify Code",
+    "codeInstructions": "Enter the 6-digit code sent to your email",
+    "errors": {
+      "loginFailed": "Login failed",
+      "registrationFailed": "Registration failed",
+      "passwordsNotMatch": "Passwords do not match",
+      "verifyEmail": "Please verify your email address before logging in. Check your inbox for the verification code.",
+      "invalidCode": "Invalid verification code",
+      "enterValidCode": "Please enter a 6-digit verification code",
+      "googleSignInFailed": "Google sign-in failed. Please try again.",
+      "resendFailed": "Failed to resend verification code"
+    }
+  },
+  "bookings": {
+    "title": "My Bookings",
+    "subtitle": "Manage your travel reservations",
+    "newBooking": "New Booking",
+    "new": "New",
+    "startPlanning": "Start Planning",
+    "noBookingsYet": "No bookings yet",
+    "startPlanningDescription": "Start planning your next adventure! Chat with our AI to find and book flights, hotels, and activities.",
+    "loading": "Loading your bookings...",
+    "bookedOn": "Booked on",
+    "types": {
+      "flight": "Flight",
+      "hotel": "Hotel", 
+      "car": "Car"
+    },
+    "placeholders": {
+      "dateTbd": "Date TBD",
+      "timeTbd": "Time TBD",
+      "priceTbd": "Price TBD",
+      "addressTbd": "Address TBD",
+      "locationTbd": "Location TBD",
+      "unknown": "Unknown",
+      "airline": "Airline",
+      "flight": "Flight",
+      "checkIn": "Check-in",
+      "checkOut": "Check-out",
+      "pickup": "Pickup",
+      "return": "Return",
+      "pickupLocation": "Pickup Location"
+    },
+    "bookingTypes": {
+      "hotelBooking": "Hotel Booking",
+      "carRental": "Car Rental",
+      "rentalCompany": "Rental Company",
+      "booking": "Booking",
+      "travelBooking": "Travel booking"
+    }
+  },
+  "chat": {
+    "title": "Chat with AI",
+    "subtitle": "Plan your perfect trip",
+    "sidebar": {
+      "chats": "Chats",
+      "explore": "Explore",
+      "bookings": "Bookings",
+      "saved": "Saved",
+      "recentChats": "Recent Chats",
+      "new": "New",
+      "newConversation": "New conversation",
+      "noConversations": "No conversations yet",
+      "startChat": "Start a new chat to begin",
+      "user": "User",
+      "switchLanguage": "Switch language"
+    },
+    "input": {
+      "placeholder": "Ask about flights, hotels, restaurants, or activities...",
+      "placeholderMobile": "Ask about flights, hotels...",
+      "searchingTickets": "Searching flights...",
+      "searchingHotels": "Searching hotels...",
+      "searchingRestaurants": "Searching restaurants...",
+      "searchingActivities": "Searching activities..."
+    },
+    "welcome": {
+      "title": "Welcome to Nomady AI",
+      "subtitle": "Your AI travel assistant is ready to help you plan the perfect trip. Ask me anything about destinations, flights, hotels, or activities.",
+      "suggestionsTitle": "Try asking me about:",
+      "suggestions": [
+        "Plan a weekend trip to Paris",
+        "Find flights from New York to Tokyo",
+        "Best hotels in London under $200",
+        "Things to do in Barcelona",
+        "Family-friendly restaurants in Rome",
+        "Budget travel tips for Southeast Asia"
+      ]
+    },
+    "messages": {
+      "thinking": "Thinking...",
+      "streaming": "Typing...",
+      "error": "Sorry, I encountered an error. Please try again.",
+      "book": "Book",
+      "booked": "Booked",
+      "viewMap": "View on Map",
+      "moreInfo": "More Info"
+    },
+    "header": {
+      "showMap": "Show Map",
+      "bookings": "Bookings"
+    },
+    "map": {
+      "title": "Your Travel Map",
+      "clearAll": "Clear All",
+      "remove": "Remove",
+      "noItems": "No items to show on map",
+      "addItems": "Add items from your chat to see them here",
+      "itemsSelected": "items selected",
+      "itemSelected": "item selected"
+    },
+    "displays": {
+      "bookFlight": "Book Flight",
+      "bookHotel": "Book Hotel",
+      "bookRestaurant": "Book Restaurant",
+      "bookActivity": "Book Activity",
+      "booking": "Booking...",
+      "booked": "Booked",
+      "refundable": "Refundable",
+      "duration": "Duration",
+      "direct": "Direct",
+      "stops": "stops",
+      "stop": "stop",
+      "seats": "Seats",
+      "available": "Available",
+      "outbound": "Outbound",
+      "return": "Return",
+      "totalPrice": "Total price",
+      "passenger": "passenger",
+      "passengers": "passengers",
+      "flightDetails": "Flight Details & Booking",
+      "baggageIncluded": "Baggage Included",
+      "wifiAvailable": "WiFi Available",
+      "bookingNotAvailable": "Booking Not Available",
+      "olderSearchError": "This item is from an older search. Please make a new search to book items."
+    }
+  },
+  "navigation": {
+    "features": "Features",
+    "howItWorks": "How it Works", 
+    "pricing": "Pricing",
+    "reviews": "Reviews",
+    "signIn": "Sign In",
+    "getStarted": "Get Started"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "save": "Save",
+    "cancel": "Cancel",
+    "back": "Back",
+    "next": "Next",
+    "continue": "Continue",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "open": "Open",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "retry": "Retry",
+    "submit": "Submit",
+    "reset": "Reset",
+    "clear": "Clear",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "view": "View",
+    "hide": "Hide",
+    "show": "Show",
+    "more": "More",
+    "less": "Less"
+  }
+} 
