@@ -6,6 +6,7 @@ import dynamic from "next/dynamic"
 import "./globals.css"
 import { ThemeProvider } from "@/components/shared/theme-provider"
 import { AuthProvider } from "@/contexts/auth-context"
+import { I18nProvider } from "@/lib/i18n-client"
 import { Toaster } from "@/components/ui/toaster"
 import { Analytics } from "@vercel/analytics/next"
 
@@ -15,7 +16,7 @@ const GoogleAnalyticsProvider = dynamic(
   { ssr: false }
 )
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ subsets: ["latin", "cyrillic"] })
 
 // Google Analytics ID
 const GA_TRACKING_ID = process.env.NEXT_PUBLIC_GA_TRACKING_ID
@@ -36,7 +37,10 @@ export const metadata: Metadata = {
     "vacation planner",
     "travel recommendations",
     "smart travel",
-    "trip advisor"
+    "trip advisor",
+    "планировщик путешествий",
+    "ИИ помощник по путешествиям",
+    "планирование поездок"
   ],
   authors: [{ name: "Nomady Team" }],
   creator: "Nomady",
@@ -49,6 +53,11 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://nomady.live'),
   alternates: {
     canonical: '/',
+    languages: {
+      'en': '/en',
+      'ru': '/ru',
+      'x-default': '/'
+    }
   },
   openGraph: {
     title: 'Nomady - AI-Powered Trip Planner',
@@ -63,6 +72,7 @@ export const metadata: Metadata = {
         alt: 'Preview image for Nomady',
       },
     ],
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',
@@ -134,6 +144,11 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
         <link rel="manifest" href="/manifest.json?v=2" />
         
+        {/* Language alternates for SEO */}
+        <link rel="alternate" hrefLang="en" href="https://nomady.live" />
+        <link rel="alternate" hrefLang="ru" href="https://nomady.live" />
+        <link rel="alternate" hrefLang="x-default" href="https://nomady.live" />
+        
         {/* Theme color for mobile browsers */}
         <meta name="theme-color" content="#2563eb" />
         <meta name="msapplication-TileColor" content="#2563eb" />
@@ -171,9 +186,11 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <ThemeProvider defaultTheme="system">
-          <GoogleAnalyticsProvider />
-          <AuthProvider>{children}</AuthProvider>
-          <Toaster />
+          <I18nProvider>
+            <GoogleAnalyticsProvider />
+            <AuthProvider>{children}</AuthProvider>
+            <Toaster />
+          </I18nProvider>
         </ThemeProvider>
         <Analytics />
       </body>

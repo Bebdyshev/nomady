@@ -1,0 +1,189 @@
+{
+  "landing": {
+    "hero": {
+      "badge": "AI-Powered Travel Planning",
+      "title": {
+        "line1": "Plan Your Perfect",
+        "line2": "Trip in Seconds"
+      },
+      "subtitle": "Skip the endless research.",
+      "placeholder": {
+        "text1": "Plan a 5-day trip to Tokyo for 2 people...",
+        "text2": "Budget-friendly weekend in Barcelona...",
+        "text3": "Romantic honeymoon in Bali for 7 days...",
+        "text4": "Family adventure in Disneyland next summer...",
+        "text5": "Solo backpacking across South America for a month..."
+      },
+      "helpText": "No credit card required • Get started in 30 seconds",
+      "backedBy": "Backed by nFactorial Incubator"
+    },
+    "stats": {
+      "travelers": "Happy Travelers",
+      "countries": "Countries Covered", 
+      "trips": "Trips Planned",
+      "rating": "User Rating"
+    },
+    "features": {
+      "title": "Everything You Need to Plan",
+      "subtitle": "Our AI-powered platform handles every aspect of your trip planning, from flights to local experiences.",
+      "items": {
+        "flights": {
+          "title": "Smart Flight Search",
+          "description": "Find the best flights with AI-powered recommendations and real-time price tracking"
+        },
+        "experiences": {
+          "title": "Local Experiences", 
+          "description": "Discover hidden gems and authentic local experiences curated by AI and locals"
+        },
+        "itineraries": {
+          "title": "Perfect Itineraries",
+          "description": "Get personalized day-by-day travel plans optimized for your preferences"
+        },
+        "group": {
+          "title": "Group Planning",
+          "description": "Plan trips with friends and family seamlessly with collaborative tools"
+        },
+        "coverage": {
+          "title": "Global Coverage",
+          "description": "Access travel information for 200+ countries with local insights"
+        },
+        "safety": {
+          "title": "Travel Safety",
+          "description": "Real-time safety updates and travel advisories for peace of mind"
+        }
+      }
+    },
+    "howItWorks": {
+      "title": "How It Works",
+      "subtitle": "Get from idea to itinerary in three simple steps",
+      "steps": {
+        "step1": {
+          "title": "Tell Us Your Dream",
+          "description": "Describe where you want to go, when, and what you're interested in. Our AI understands natural language."
+        },
+        "step2": {
+          "title": "AI Creates Your Plan", 
+          "description": "Our advanced AI analyzes millions of data points to create a personalized itinerary just for you."
+        },
+        "step3": {
+          "title": "Book & Enjoy",
+          "description": "Review, customize, and book your trip. Then enjoy your perfectly planned adventure!"
+        }
+      }
+    },
+    "testimonials": {
+      "title": "Loved by Travelers Worldwide",
+      "subtitle": "See what our users say about their Nomady experience",
+      "items": {
+        "sarah": {
+          "name": "Sarah Johnson",
+          "role": "Travel Blogger",
+          "content": "Nomady planned my entire 2-week Europe trip in minutes. The recommendations were spot-on and I discovered places I never would have found on my own."
+        },
+        "mike": {
+          "name": "Mike Chen", 
+          "role": "Business Executive",
+          "content": "As someone who travels frequently for work, Nomady has become indispensable. It saves me hours of planning and always finds the best deals."
+        },
+        "emma": {
+          "name": "Emma Rodriguez",
+          "role": "Family Traveler", 
+          "content": "Planning family trips used to be stressful. Nomady considers everyone's preferences and creates itineraries that keep both kids and adults happy."
+        }
+      }
+    },
+    "pricing": {
+      "title": "Simple, Transparent Pricing",
+      "subtitle": "Choose the plan that fits your travel needs. Upgrade or downgrade anytime.",
+      "plans": {
+        "free": {
+          "name": "Free",
+          "price": "$0",
+          "period": "forever",
+          "description": "Perfect for occasional travelers",
+          "popular": false,
+          "features": [
+            "3 trip plans per month",
+            "Basic recommendations", 
+            "Email support",
+            "Mobile app access"
+          ],
+          "cta": "Get Started Free"
+        },
+        "pro": {
+          "name": "Pro",
+          "price": "$9.99", 
+          "period": "per month",
+          "description": "Ideal for frequent travelers",
+          "popular": true,
+          "features": [
+            "Unlimited trip plans",
+            "Advanced AI recommendations",
+            "Priority support",
+            "Collaborative planning", 
+            "Real-time price alerts",
+            "Offline access"
+          ],
+          "cta": "Start Pro Plan"
+        },
+        "team": {
+          "name": "Team",
+          "price": "$19.99",
+          "period": "per month", 
+          "description": "Best for travel agencies & groups",
+          "popular": false,
+          "features": [
+            "Everything in Pro",
+            "Team collaboration tools",
+            "White-label options",
+            "API access",
+            "Custom integrations", 
+            "Dedicated account manager"
+          ],
+          "cta": "Start Team Plan"
+        }
+      },
+      "mostPopular": "Most Popular"
+    },
+    "cta": {
+      "title": "Ready to Plan Your Next Adventure?",
+      "subtitle": "Join thousands of travelers who trust Nomady to create their perfect trips.",
+      "button": "Start Planning for Free"
+    },
+    "footer": {
+      "description": "AI-powered travel planning that saves you time and money while creating unforgettable experiences.",
+      "product": "Product",
+      "company": "Company", 
+      "support": "Support",
+      "links": {
+        "features": "Features",
+        "pricing": "Pricing",
+        "api": "API",
+        "mobileApp": "Mobile App",
+        "about": "About",
+        "blog": "Blog", 
+        "careers": "Careers",
+        "contact": "Contact",
+        "helpCenter": "Help Center",
+        "privacy": "Privacy Policy",
+        "terms": "Terms of Service",
+        "status": "Status"
+      },
+      "copyright": "© 2025 Nomady. All rights reserved.",
+      "madeWith": "Made with ❤️ by Bebdtshev"
+    }
+  },
+  "navigation": {
+    "features": "Features",
+    "howItWorks": "How it Works", 
+    "pricing": "Pricing",
+    "reviews": "Reviews",
+    "signIn": "Sign In",
+    "getStarted": "Get Started"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  }
+} 
