@@ -7,6 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Logo } from "@/components/ui/logo"
 import { useTheme } from "@/components/shared/theme-provider"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "@/lib/i18n-client"
 import { Conversation } from "@/types/chat"
 
 interface ChatSidebarProps {
@@ -32,6 +33,8 @@ export function ChatSidebar({
 }: ChatSidebarProps) {
   const { theme, setTheme } = useTheme()
   const router = useRouter()
+  const t = useTranslations('chat.sidebar')
+  const tCommon = useTranslations('common')
 
   return (
     <div
@@ -81,14 +84,26 @@ export function ChatSidebar({
             {[
               {
                 icon: MessageCircle,
-                label: "Chats",
+                label: t('chats'),
                 active: true,
                 color: "text-blue-600 dark:text-blue-400",
                 activeColor: "bg-blue-100 dark:bg-blue-900/30",
               },
-              { icon: MapPin, label: "Explore", color: "text-slate-600 dark:text-slate-400" },
-              { icon: CheckCircle2, label: "Bookings", color: "text-slate-600 dark:text-slate-400" },
-              { icon: Heart, label: "Saved", color: "text-slate-600 dark:text-slate-400" },
+              { 
+                icon: MapPin, 
+                label: t('explore'), 
+                color: "text-slate-600 dark:text-slate-400" 
+              },
+              { 
+                icon: CheckCircle2, 
+                label: t('bookings'), 
+                color: "text-slate-600 dark:text-slate-400" 
+              },
+              { 
+                icon: Heart, 
+                label: t('saved'), 
+                color: "text-slate-600 dark:text-slate-400" 
+              },
             ].map((item, index) => (
               <Button
                 key={index}
@@ -99,7 +114,7 @@ export function ChatSidebar({
                     : `hover:bg-slate-100 dark:hover:bg-slate-700 ${item.color}`
                 }`}
                 onClick={() => {
-                  if (item.label === "Bookings") {
+                  if (item.label === t('bookings')) {
                     router.push("/bookings")
                   } else if (!item.active) {
                     // Handle other navigation
@@ -108,7 +123,7 @@ export function ChatSidebar({
               >
                 <item.icon className="h-4 w-4 mr-3" />
                 {item.label}
-                {item.label === "Chats" && conversations.length > 0 && (
+                {item.label === t('chats') && conversations.length > 0 && (
                   <span className="ml-auto text-xs bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 px-2 py-1 rounded-full">
                     {conversations.length}
                   </span>
@@ -119,7 +134,7 @@ export function ChatSidebar({
 
           {/* New Chat Button */}
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-slate-900 dark:text-white text-sm">Recent Chats</h3>
+            <h3 className="font-semibold text-slate-900 dark:text-white text-sm">{t('recentChats')}</h3>
             <Button
               onClick={onNewConversation}
               variant="ghost"
@@ -127,7 +142,7 @@ export function ChatSidebar({
               className="text-blue-600 dark:text-blue-400 h-8 text-xs hover:bg-blue-100 dark:hover:bg-blue-900/30"
             >
               <Plus className="h-3 w-3 mr-1" />
-              New
+              {t('new')}
             </Button>
           </div>
         </div>
@@ -152,7 +167,7 @@ export function ChatSidebar({
                   {conversation.title || 
                    (conversation.messages.length > 0
                      ? conversation.messages[0].content.slice(0, 40) + "..."
-                     : "New conversation")}
+                     : t('newConversation'))}
                 </div>
                 <div className="text-xs text-slate-500 dark:text-slate-400">
                   {new Date(conversation.created_at).toLocaleDateString()}
@@ -162,8 +177,8 @@ export function ChatSidebar({
             {conversations.length === 0 && (
               <div className="text-center py-8">
                 <MessageCircle className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-                <p className="text-sm text-slate-500 dark:text-slate-400">No conversations yet</p>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Start a new chat to begin</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{t('noConversations')}</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{t('startChat')}</p>
               </div>
             )}
           </div>
@@ -174,7 +189,7 @@ export function ChatSidebar({
           <div className="flex items-center space-x-3">
             <Avatar>
               {user?.picture ? (
-                <AvatarImage src={user.picture || "/placeholder.svg"} alt={user?.name || "User"} />
+                <AvatarImage src={user.picture || "/placeholder.svg"} alt={user?.name || t('user')} />
               ) : (
                 <AvatarFallback className="bg-blue-600 text-white">
                   {user?.name ? user.name.charAt(0).toUpperCase() : <User className="h-4 w-4" />}
@@ -183,7 +198,7 @@ export function ChatSidebar({
             </Avatar>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-medium text-slate-900 dark:text-white truncate">
-                {user?.name || "User"}
+                {user?.name || t('user')}
               </div>
               <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{user?.email}</div>
             </div>

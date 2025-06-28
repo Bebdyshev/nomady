@@ -2,33 +2,35 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useTranslations } from "@/lib/i18n-client"
 
 // Enhanced Search Animation Component
 export const SearchAnimation = ({ searchType }: { searchType: string }) => {
   const [currentStep, setCurrentStep] = useState(0)
+  const t = useTranslations('chat.input')
 
   const searchSteps: Record<string, { icon: string; steps: string[] }> = {
     tickets: {
       icon: "✈️",
-      steps: ["Scraping flight data...", "Analyzing prices...", "Collecting results..."],
+      steps: [t('searchingTickets'), "Анализирую цены...", "Собираю результаты..."],
     },
     hotels: {
       icon: "🏨",
-      steps: ["Searching accommodations...", "Checking availability...", "Gathering options..."],
+      steps: [t('searchingHotels'), "Проверяю доступность...", "Собираю варианты..."],
     },
     restaurants: {
       icon: "🍽️",
-      steps: ["Finding restaurants...", "Reading reviews...", "Curating recommendations..."],
+      steps: [t('searchingRestaurants'), "Читаю отзывы...", "Подбираю рекомендации..."],
     },
     activities: {
       icon: "🎯",
-      steps: ["Discovering activities...", "Checking schedules...", "Collecting experiences..."],
+      steps: [t('searchingActivities'), "Проверяю расписание...", "Собираю впечатления..."],
     },
   }
 
   const search = searchSteps[searchType] || {
     icon: "🔍",
-    steps: ["Searching...", "Processing...", "Finalizing..."],
+    steps: ["Ищу...", "Обрабатываю...", "Завершаю..."],
   }
 
   useEffect(() => {
@@ -91,6 +93,8 @@ export const SearchAnimation = ({ searchType }: { searchType: string }) => {
 
 // Typing Indicator Component
 export const TypingIndicator = () => {
+  const t = useTranslations('chat.messages')
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -100,6 +104,7 @@ export const TypingIndicator = () => {
     >
       <div className="max-w-[85%] md:max-w-[80%] rounded-lg px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
         <div className="flex items-center space-x-2">
+          <span className="text-sm text-slate-600 dark:text-slate-400">{t('thinking')}</span>
           <div className="flex space-x-1">
             {[0, 1, 2].map((i) => (
               <motion.div

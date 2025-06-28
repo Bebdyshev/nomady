@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
 import { GoogleSignInButton } from "@/components/google-signin-button"
 import { useAuth } from "@/contexts/auth-context"
+import { useTranslations } from "@/lib/i18n-client"
 import { Sparkles, Eye, EyeOff } from "lucide-react"
 import { motion } from "framer-motion"
 import { AnimatePresence } from "framer-motion"
@@ -29,6 +30,8 @@ export default function AuthPage() {
   const [resendLoading, setResendLoading] = useState(false)
   const { login, register, verifyCode, resendCode, googleLogin, isAuthenticated } = useAuth()
   const router = useRouter()
+  const t = useTranslations('auth')
+  const tCommon = useTranslations('common')
 
   // Login form state
   const [loginData, setLoginData] = useState({
@@ -62,11 +65,11 @@ export default function AuthPage() {
     } else {
       // Handle specific error for unverified email
       if (result.error?.includes("verify") || result.error?.includes("verified")) {
-        setError("Please verify your email address before logging in. Check your inbox for the verification code.")
+        setError(t('errors.verifyEmail'))
         setVerificationStep('verify-code')
         setVerificationEmail(loginData.email)
     } else {
-      setError(result.error || "Login failed")
+      setError(result.error || t('errors.loginFailed'))
       }
     }
 
@@ -79,7 +82,7 @@ export default function AuthPage() {
     setError("")
 
     if (registerData.password !== registerData.confirmPassword) {
-      setError("Passwords do not match")
+      setError(t('errors.passwordsNotMatch'))
       setIsLoading(false)
       return
     }
@@ -99,7 +102,7 @@ export default function AuthPage() {
         confirmPassword: "",
       })
     } else {
-      setError(result.error || "Registration failed")
+      setError(result.error || t('errors.registrationFailed'))
     }
 
     setIsLoading(false)
@@ -111,7 +114,7 @@ export default function AuthPage() {
     setError("")
 
     if (verificationCode.length !== 6) {
-      setError("Please enter a 6-digit verification code")
+      setError(t('errors.enterValidCode'))
       setIsLoading(false)
       return
     }
@@ -122,7 +125,7 @@ export default function AuthPage() {
       // Verification successful, user should now be logged in
       router.push("/chat")
     } else {
-      setError(result.error || "Invalid verification code")
+      setError(result.error || t('errors.invalidCode'))
     }
 
     setIsLoading(false)
@@ -136,7 +139,7 @@ export default function AuthPage() {
       setError("")
       // Could show a success message here
     } else {
-      setError(result.error || "Failed to resend verification code")
+      setError(result.error || t('errors.resendFailed'))
     }
     
     setResendLoading(false)
@@ -162,7 +165,7 @@ export default function AuthPage() {
     if (result.success) {
       router.push("/chat")
     } else {
-      setError(result.error || "Google sign-in failed")
+      setError(result.error || t('errors.googleSignInFailed'))
     }
 
     setIsLoading(false)
@@ -170,7 +173,7 @@ export default function AuthPage() {
 
   const handleGoogleError = (error: any) => {
     console.error("Google sign-in error:", error)
-    setError("Google sign-in failed. Please try again.")
+    setError(t('errors.googleSignInFailed'))
   }
 
   return (
@@ -186,14 +189,14 @@ export default function AuthPage() {
             <Logo width={40} height={40} className="rounded-lg" />
             <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">Nomady</span>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Welcome back</h1>
-          <p className="text-slate-600 dark:text-slate-300">Sign in to continue planning your perfect trip</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{t('welcome')}</h1>
+          <p className="text-slate-600 dark:text-slate-300">{t('subtitle')}</p>
         </div>
 
         <Card className="shadow-xl border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
           <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-center text-slate-900 dark:text-white">Get Started</CardTitle>
-            <CardDescription className="text-center">Choose your preferred sign-in method</CardDescription>
+            <CardTitle className="text-center text-slate-900 dark:text-white">{t('getStarted')}</CardTitle>
+            <CardDescription className="text-center">{t('chooseMethod')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
@@ -214,10 +217,10 @@ export default function AuthPage() {
                     </div>
                     <div className="flex-1">
                       <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                        Check your email!
+                        {t('checkEmail')}
                       </h3>
                       <p className="mt-1 text-sm text-blue-700 dark:text-blue-300">
-                        Please enter the 6-digit verification code sent to {verificationEmail}
+                        {t('verificationMessage')} {verificationEmail}
                       </p>
                       <div className="mt-3 flex space-x-2">
                         <Button
@@ -230,10 +233,10 @@ export default function AuthPage() {
                           {resendLoading ? (
                             <>
                               <div className="h-3 w-3 border border-blue-600 border-t-transparent rounded-full animate-spin mr-1" />
-                              Sending...
+                              {t('sending')}
                             </>
                           ) : (
-                            "Resend Code"
+                            t('resendCode')
                           )}
                         </Button>
                         <Button
@@ -242,7 +245,7 @@ export default function AuthPage() {
                           onClick={() => setVerificationStep(null)}
                           className="text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/30"
                         >
-                          Back
+                          {t('back')}
                         </Button>
                       </div>
                     </div>
@@ -260,7 +263,7 @@ export default function AuthPage() {
                   className="space-y-4"
                 >
                   <div className="space-y-2">
-                    <Label htmlFor="verification-code">Verification Code</Label>
+                    <Label htmlFor="verification-code">{t('verificationCode')}</Label>
                     <Input
                       id="verification-code"
                       type="text"
@@ -273,7 +276,7 @@ export default function AuthPage() {
                       autoComplete="one-time-code"
                     />
                     <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
-                      Enter the 6-digit code sent to your email
+                      {t('codeInstructions')}
                     </p>
                   </div>
                   {error && (
@@ -289,10 +292,10 @@ export default function AuthPage() {
                     {isLoading ? (
                       <div className="flex items-center space-x-2">
                         <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Verifying...</span>
+                        <span>{t('verifying')}</span>
                       </div>
                     ) : (
-                      "Verify Code"
+                      t('verifyCode')
                     )}
                   </Button>
                 </motion.form>
@@ -300,13 +303,13 @@ export default function AuthPage() {
               <Tabs defaultValue="login" className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-6 bg-slate-100 dark:bg-slate-700">
                   <TabsTrigger value="login" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-                    Sign In
+                    {t('signIn')}
                   </TabsTrigger>
                   <TabsTrigger
                     value="register"
                     className="data-[state=active]:bg-blue-600 data-[state=active]:text-white"
                   >
-                    Sign Up
+                    {t('signUp')}
                   </TabsTrigger>
                 </TabsList>
 
@@ -321,11 +324,11 @@ export default function AuthPage() {
                     className="space-y-4"
                   >
                     <div className="space-y-2">
-                      <Label htmlFor="login-email">Email</Label>
+                      <Label htmlFor="login-email">{t('email')}</Label>
                       <Input
                         id="login-email"
                         type="email"
-                        placeholder="Enter your email"
+                        placeholder={t('enterEmail')}
                         value={loginData.email}
                         onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
                         required
@@ -334,12 +337,12 @@ export default function AuthPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="login-password">Password</Label>
+                      <Label htmlFor="login-password">{t('password')}</Label>
                       <div className="relative">
                         <Input
                           id="login-password"
                           type={showPassword ? "text" : "password"}
-                          placeholder="Enter your password"
+                          placeholder={t('enterPassword')}
                           value={loginData.password}
                           onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
                           required
@@ -370,10 +373,10 @@ export default function AuthPage() {
                       {isLoading ? (
                         <div className="flex items-center space-x-2">
                           <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          <span>Signing in...</span>
+                          <span>{t('signingIn')}</span>
                         </div>
                       ) : (
-                        "Sign In"
+                        t('signIn')
                       )}
                     </Button>
                   </motion.form>
@@ -390,11 +393,11 @@ export default function AuthPage() {
                     className="space-y-4"
                   >
                     <div className="space-y-2">
-                      <Label htmlFor="register-name">Full Name</Label>
+                      <Label htmlFor="register-name">{t('fullName')}</Label>
                       <Input
                         id="register-name"
                         type="text"
-                        placeholder="Enter your full name"
+                        placeholder={t('enterFullName')}
                         value={registerData.name}
                         onChange={(e) => setRegisterData({ ...registerData, name: e.target.value })}
                         required
@@ -403,11 +406,11 @@ export default function AuthPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="register-email">Email</Label>
+                      <Label htmlFor="register-email">{t('email')}</Label>
                       <Input
                         id="register-email"
                         type="email"
-                        placeholder="Enter your email"
+                        placeholder={t('enterEmail')}
                         value={registerData.email}
                         onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
                         required
@@ -416,12 +419,12 @@ export default function AuthPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="register-password">Password</Label>
+                      <Label htmlFor="register-password">{t('password')}</Label>
                       <div className="relative">
                         <Input
                           id="register-password"
                           type={showPassword ? "text" : "password"}
-                          placeholder="Create a password"
+                          placeholder={t('createPassword')}
                           value={registerData.password}
                           onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
                           required
@@ -440,11 +443,11 @@ export default function AuthPage() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="register-confirm-password">Confirm Password</Label>
+                      <Label htmlFor="register-confirm-password">{t('confirmPassword')}</Label>
                       <Input
                         id="register-confirm-password"
                         type="password"
-                        placeholder="Confirm your password"
+                        placeholder={t('confirmYourPassword')}
                         value={registerData.confirmPassword}
                         onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
                         required
@@ -465,10 +468,10 @@ export default function AuthPage() {
                       {isLoading ? (
                         <div className="flex items-center space-x-2">
                           <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          <span>Creating account...</span>
+                          <span>{t('creatingAccount')}</span>
                         </div>
                       ) : (
-                        "Create Account"
+                        t('createAccount')
                       )}
                     </Button>
                   </motion.form>
@@ -485,7 +488,7 @@ export default function AuthPage() {
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
                     <span className="bg-white dark:bg-slate-800 px-2 text-slate-500 dark:text-slate-400">
-                      Or continue with Google
+                      {t('orContinueWith')}
                     </span>
                   </div>
                 </div>
@@ -494,7 +497,7 @@ export default function AuthPage() {
                   onSuccess={handleGoogleSuccess}
                   onError={handleGoogleError}
                   disabled={isLoading}
-                  text="Continue with Google"
+                  text={t('continueWithGoogle')}
                 />
               </div>
               )}

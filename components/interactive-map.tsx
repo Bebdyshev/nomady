@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { MapPin, Plane, Hotel, Car, Utensils, X, Star } from "lucide-react"
+import { useTranslations } from "@/lib/i18n-client"
 
 interface SelectedItem {
   id: string
@@ -29,6 +30,7 @@ interface InteractiveMapProps {
 
 export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll }: InteractiveMapProps) {
   const [isDragOver, setIsDragOver] = useState(false)
+  const t = useTranslations('chat.map')
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
@@ -114,7 +116,7 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll }: Inte
     <div className="h-full flex flex-col">
       <div className="p-4 border-b border-slate-200 dark:border-slate-700">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Your Itinerary</h3>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('title')}</h3>
           {selectedItems.length > 0 && (
             <Button
               variant="outline"
@@ -122,11 +124,11 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll }: Inte
               onClick={onClearAll}
               className="text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-950"
             >
-              Clear All
+              {t('clearAll')}
             </Button>
           )}
         </div>
-        <p className="text-sm text-slate-600 dark:text-slate-300">{selectedItems.length} items selected</p>
+        <p className="text-sm text-slate-600 dark:text-slate-300">{selectedItems.length} элементов выбрано</p>
       </div>
 
       <div
@@ -145,9 +147,9 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll }: Inte
               <div className="h-16 w-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
                 <MapPin className="h-8 w-8 text-slate-600 dark:text-slate-400" />
               </div>
-              <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Interactive Map</h4>
+              <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">{t('noItems')}</h4>
               <p className="text-slate-600 dark:text-slate-300 max-w-sm">
-                Drag tickets from the chat to build your travel itinerary
+                {t('addItems')}
               </p>
             </div>
           </div>

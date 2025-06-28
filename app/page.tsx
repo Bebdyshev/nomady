@@ -197,7 +197,7 @@ export default function LandingPage() {
       {/* Header */}
       <header className={`sticky top-0 z-50 transition-all duration-500 ${
         isScrolled 
-          ? 'glass-navbar' 
+          ? 'bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-700/50 shadow-lg shadow-slate-200/20 dark:shadow-slate-900/20' 
           : 'bg-transparent'
       }`}>
         <div className="container mx-auto px-6 py-4">
@@ -208,7 +208,7 @@ export default function LandingPage() {
               transition={{ duration: 0.8, type: "spring", bounce: 0.3 }}
               className="flex items-center space-x-3 group"
             >
-                <Logo width={40} height={40} className="rounded-xl glass-logo" />
+                <Logo width={40} height={40} className="rounded-xl" />
               <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent">
                 Nomady
               </span>
@@ -227,7 +227,7 @@ export default function LandingPage() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="relative px-4 py-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 rounded-lg glass-nav-link glass-reflection group"
+                  className="relative px-4 py-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 rounded-lg hover:bg-slate-100/50 dark:hover:bg-slate-800/50 group"
                 >
                   {item.label}
                   <span className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-blue-600 to-blue-800 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-full"></span>
@@ -247,7 +247,7 @@ export default function LandingPage() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                  className="relative rounded-full glass-button glass-enhanced transition-all duration-300 hover:scale-110 group"
+                  className="relative rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-300 hover:scale-110 group"
                 >
                   <motion.div
                     initial={false}
@@ -260,6 +260,7 @@ export default function LandingPage() {
                       <Moon className="h-5 w-5 text-slate-600" />
                     )}
                   </motion.div>
+                  <span className="absolute -inset-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
                 </Button>
               </motion.div>
               
@@ -271,7 +272,7 @@ export default function LandingPage() {
                 <Button 
                   variant="ghost" 
                   onClick={() => router.push("/auth")} 
-                  className="hidden md:inline-flex glass-button glass-enhanced transition-all duration-300 rounded-lg px-4 py-2 hover:scale-105"
+                  className="hidden md:inline-flex hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-300 rounded-lg px-4 py-2 hover:scale-105"
                 >
                   {tNav('signIn')}
                 </Button>
@@ -284,7 +285,7 @@ export default function LandingPage() {
               >
                 <Button 
                   onClick={() => router.push("/auth")} 
-                  className="relative bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-lg shadow-lg hover:shadow-blue-500/25 transition-all duration-300 hover:scale-105 overflow-hidden group glass-enhanced"
+                  className="relative bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-lg shadow-lg hover:shadow-blue-500/25 transition-all duration-300 hover:scale-105 overflow-hidden group"
                 >
                   <span className="relative z-10">{tNav('getStarted')}</span>
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>

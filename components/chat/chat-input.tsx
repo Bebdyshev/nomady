@@ -4,6 +4,7 @@ import { Send, Loader2 } from "lucide-react"
 import { motion } from "framer-motion"
 import { forwardRef, useEffect, useRef, useLayoutEffect, useState } from "react"
 import { trackSearch } from "@/lib/gtag"
+import { useTranslations } from "@/lib/i18n-client"
 
 interface ChatInputProps {
   input: string
@@ -20,6 +21,7 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const formRef = useRef<HTMLFormElement>(null)
     const [isMobile, setIsMobile] = useState(false)
+    const t = useTranslations('chat.input')
 
     // Combine refs
     useEffect(() => {
@@ -95,8 +97,8 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
 
     // Responsive placeholder text
     const placeholderText = isMobile 
-      ? "Ask about flights, hotels..." 
-      : "Ask about flights, hotels, restaurants, or activities..."
+      ? t('placeholderMobile') 
+      : t('placeholder')
 
     const handleSubmit = (e: React.FormEvent) => {
       if (input.trim()) {

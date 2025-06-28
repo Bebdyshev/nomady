@@ -1,6 +1,7 @@
 "use client"
 
 import { Menu, Map } from "lucide-react"
+import { useTranslations } from "@/lib/i18n-client"
 
 interface ChatHeaderProps {
   setSidebarOpen: (open: boolean) => void
@@ -13,6 +14,8 @@ export function ChatHeader({
   setShowMobileMap,
   bookedItemsCount
 }: ChatHeaderProps) {
+  const t = useTranslations('chat')
+
   return (
     <div className="md:hidden flex items-center justify-between p-3 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
       <button
@@ -21,7 +24,7 @@ export function ChatHeader({
       >
         <Menu className="h-5 w-5" />
       </button>
-      <h1 className="text-lg font-semibold text-slate-900 dark:text-white">Travel Assistant</h1>
+      <h1 className="text-lg font-semibold text-slate-900 dark:text-white">{t('title')}</h1>
       <button
         onClick={() => setShowMobileMap(true)}
         className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 relative"

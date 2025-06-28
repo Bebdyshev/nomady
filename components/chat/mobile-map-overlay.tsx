@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { X } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { InteractiveMap } from "@/components/interactive-map"
+import { useTranslations } from "@/lib/i18n-client"
 
 interface MobileMapOverlayProps {
   showMobileMap: boolean
@@ -20,6 +21,8 @@ export function MobileMapOverlay({
   onRemoveItem,
   onClearAll
 }: MobileMapOverlayProps) {
+  const t = useTranslations('chat.map')
+
   return (
     <AnimatePresence>
       {showMobileMap && (
@@ -39,7 +42,7 @@ export function MobileMapOverlay({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Trip Map</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('title')}</h3>
               <Button
                 variant="ghost"
                 size="icon"

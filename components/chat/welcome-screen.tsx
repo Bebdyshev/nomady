@@ -2,17 +2,23 @@
 
 import { MessageCircle } from "lucide-react"
 import { motion } from "framer-motion"
+import { useTranslations } from "@/lib/i18n-client"
 
 interface WelcomeScreenProps {
   onSuggestionClick: (text: string) => void
 }
 
 export function WelcomeScreen({ onSuggestionClick }: WelcomeScreenProps) {
+  const t = useTranslations('chat.welcome')
+
+  // Use translations for suggestions
   const suggestions = [
-    { icon: "✈️", text: "Find flights to Paris" },
-    { icon: "🏨", text: "Hotels in Tokyo" },
-    { icon: "🍽️", text: "Best restaurants in Rome" },
-    { icon: "🎯", text: "Things to do in New York" },
+    { icon: "✈️", text: t('suggestions.0') },
+    { icon: "🏨", text: t('suggestions.1') },
+    { icon: "🍽️", text: t('suggestions.2') },
+    { icon: "🎯", text: t('suggestions.3') },
+    { icon: "💰", text: t('suggestions.4') },
+    { icon: "🌏", text: t('suggestions.5') },
   ]
 
   return (
@@ -21,12 +27,14 @@ export function WelcomeScreen({ onSuggestionClick }: WelcomeScreenProps) {
         <MessageCircle className="w-8 h-8 md:w-10 md:h-10 text-white" />
       </div>
       <h2 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mb-2 md:mb-3">
-        Welcome to Your Travel Assistant
+        {t('title')}
       </h2>
       <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 mb-6 md:mb-8 max-w-md">
-        Ask me anything about flights, hotels, restaurants, or activities. I'll help you find and book the
-        perfect options for your trip.
+        {t('subtitle')}
       </p>
+      <div className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4">
+        {t('suggestionsTitle')}
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 w-full max-w-2xl">
         {suggestions.map((suggestion, index) => (
           <motion.button

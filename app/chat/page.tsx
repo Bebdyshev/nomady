@@ -5,6 +5,7 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
+import { useTranslations } from "@/lib/i18n-client"
 import { apiClient } from "@/lib/api"
 import { InteractiveMap } from "@/components/interactive-map"
 import { 
@@ -15,6 +16,20 @@ import {
   ChatInput 
 } from "@/components/chat"
 import { Message, Conversation, IpGeolocation } from "@/types/chat"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent } from "@/components/ui/card"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Send, PaperclipIcon, User, Bot, Loader2, MoreVertical, Menu } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { Logo } from "@/components/ui/logo"
+import { GoogleSignInButton } from "@/components/google-signin-button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 // Disable static generation for this page
 export const dynamic = "force-dynamic"
@@ -39,6 +54,8 @@ export default function ChatPage() {
   const [isLoadingLocation, setIsLoadingLocation] = useState(false)
   const [showMobileMap, setShowMobileMap] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const t = useTranslations('chat')
+  const tCommon = useTranslations('common')
 
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -484,52 +501,30 @@ export default function ChatPage() {
             const hasValidHotels = toolOutput.hotels && Array.isArray(toolOutput.hotels) && toolOutput.hotels.length > 0
             const hasValidRestaurants =
               toolOutput.restaurants && Array.isArray(toolOutput.restaurants) && toolOutput.restaurants.length > 0
-            
-            // Check what type of data the search results contain
-            const searchHasTickets = srArr.some(
-              (sr) => sr.data.flights && Array.isArray(sr.data.flights) && sr.data.flights.length > 0,
-            )
-            const searchHasHotels = srArr.some(
-              (sr) => sr.data.hotels && Array.isArray(sr.data.hotels) && sr.data.hotels.length > 0,
-            )
-            const searchHasRestaurants = srArr.some(
-              (sr) => sr.data.restaurants && Array.isArray(sr.data.restaurants) && sr.data.restaurants.length > 0,
-            )
-            
-            // Only replace if:
-            // 1. No valid data exists, OR
-            // 2. Search results match the same data type, OR  
-            // 3. Original data is empty but search has results
-            const shouldReplace =
-              (!hasValidTickets && !hasValidHotels && !hasValidRestaurants) ||
-                                   (hasValidTickets && searchHasTickets) ||
-                                   (hasValidHotels && searchHasHotels) ||
-                                   (hasValidRestaurants && searchHasRestaurants) ||
-              (toolOutput.total_found === 0 && srArr.some((sr) => sr.data.total_found > 0))
-            
-            if (shouldReplace) {
-              console.log("Replacing toolOutput with search results for message", msg.id, {
-                reason:
-                  !hasValidTickets && !hasValidHotels && !hasValidRestaurants
-                    ? "no valid data"
-                    : hasValidTickets && searchHasTickets
-                      ? "matching tickets"
-                      : hasValidHotels && searchHasHotels
-                        ? "matching hotels"
-                        : hasValidRestaurants && searchHasRestaurants
-                          ? "matching restaurants"
-                          : "empty data with new results",
-              })
-              
+            const hasValidActivities =
+              toolOutput.activities && Array.isArray(toolOutput.activities) && toolOutput.activities.length > 0
+
+            const hasAnyValid = hasValidTickets || hasValidHotels || hasValidRestaurants || hasValidActivities
+
+            console.log("Validity check:", {
+              hasValidTickets,
+              hasValidHotels,
+              hasValidRestaurants,
+              hasValidActivities,
+              hasAnyValid,
+            })
+
+            // Only override if the current toolOutput doesn't have valid data
+            if (!hasAnyValid) {
+              console.log("No valid data in toolOutput, using search results")
+              // Match search results to this message based on timing or other criteria
+              // For now, we'll just use the search results to create the tool output
               const mapped = srArr.map((sr: any) => {
-                // Create a copy of the search result data
                 const resultData = { ...sr.data }
-                
-                // Add search_result_id to the main object
                 resultData.search_result_id = sr.id
                 resultData.type = sr.search_type
                 
-                // Propagate search_result_id to all nested items
+                // Propagate search_result_id to nested items
                 if (resultData.flights && Array.isArray(resultData.flights)) {
                   resultData.flights = resultData.flights.map((flight: any) => ({
                     ...flight,
@@ -560,81 +555,71 @@ export default function ChatPage() {
                 
                 return resultData
               })
-              
-              const newToolOutput = mapped.length === 1 ? mapped[0] : mapped
-              console.log("New toolOutput:", {
-                original: toolOutput,
-                new: newToolOutput,
-                mapped: mapped,
-              })
-              
-              toolOutput = newToolOutput
-            } else {
-              console.log("Keeping existing toolOutput for message", msg.id, "because:", {
-                hasValidTickets,
-                hasValidHotels,
-                hasValidRestaurants,
-                searchHasTickets,
-                searchHasHotels,
-                searchHasRestaurants,
-                reason: "data type mismatch or already has valid data",
-              })
+              toolOutput = mapped.length === 1 ? mapped[0] : mapped
             }
           }
         }
-        
+
         return {
-          id: msg.id.toString(),
+          id: msg.id,
           role: msg.role,
           content: msg.content,
-          timestamp: new Date(msg.timestamp),
-          toolOutput: toolOutput,
+          timestamp: new Date(msg.created_at),
+          toolOutput,
         }
       })
+
       setMessages(loadedMessages)
       setCurrentConversationId(conversationId)
-      loadRoadmap(conversationId)
     }
   }
 
   const loadRoadmap = async (conversationId: string) => {
-    const { data } = await apiClient.getRoadmap(conversationId)
+    const { data } = await apiClient.getConversationSearchResults(conversationId)
     if (data) {
-      const items: any[] = []
       const pushItems = (arr: any[] | undefined, type: string) => {
-        if (arr && Array.isArray(arr)) {
-          arr.forEach((item) => items.push({ ...item, type }))
-        }
+        if (!arr || !Array.isArray(arr)) return
+        arr.forEach((item: any) => {
+          const existingId = item.id || item.combination_id
+          if (existingId && !bookedIds.has(existingId)) {
+            setBookedItems((prev) => ({
+              ...prev,
+              [existingId]: {
+                ...item,
+                id: existingId,
+                type,
+              },
+            }))
+          }
+        })
       }
-      pushItems(data.tickets, "flights")
-      pushItems(data.hotels, "hotels")
-      pushItems(data.restaurants, "restaurants")
-      pushItems(data.activities, "activities")
-      setBookedItems(items.reduce((acc, item) => ({ ...acc, [item.id]: item }), {} as Record<string, any>))
+
+      // Process all items from search results
+      data.forEach((sr: any) => {
+        pushItems(sr.data?.flights, "flight")
+        pushItems(sr.data?.hotels, "hotel")
+        pushItems(sr.data?.restaurants, "restaurant")
+        pushItems(sr.data?.items, "activity")
+      })
     }
   }
 
-  // Reload roadmap when conversation id changes
-  useEffect(() => {
-    if (currentConversationId) {
-      loadRoadmap(currentConversationId)
-    }
-  }, [currentConversationId])
-
   const handleBooked = (bookedItem: any, id: string, type: string) => {
-    setBookedItems((prev) => ({ ...prev, [id]: { ...bookedItem, type } }))
-    setBookedIds(new Set(bookedIds).add(id))
+    setBookedItems((prev) => ({ ...prev, [id]: { ...bookedItem, id, type } }))
+    setBookedIds((prev) => new Set([...prev, id]))
   }
 
   const handleRemoveItem = (id: string) => {
     setBookedItems((prev) => {
-      const newItems = { ...prev }
-      delete newItems[id]
-      return newItems
+      const updated = { ...prev }
+      delete updated[id]
+      return updated
     })
-    const newBookedIds = new Set(bookedIds)
-    newBookedIds.delete(id)
-    setBookedIds(newBookedIds)
+    setBookedIds((prev) => {
+      const updated = new Set(prev)
+      updated.delete(id)
+      return updated
+    })
   }
 
   const handleClearAll = () => {
@@ -643,34 +628,27 @@ export default function ChatPage() {
   }
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    setIsResizing(true)
     e.preventDefault()
-  }
+    setIsResizing(true)
 
-  useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isResizing) return
-      
-      const containerWidth = window.innerWidth - 320 // Subtract sidebar width
-      const rightOffset = window.innerWidth - e.clientX
-      const newMapWidth = Math.max(20, Math.min(60, (rightOffset / containerWidth) * 100))
-      setMapWidth(newMapWidth)
+      const newWidth = Math.max(20, Math.min(60, (1 - e.clientX / window.innerWidth) * 100))
+      setMapWidth(newWidth)
     }
 
     const handleMouseUp = () => {
       setIsResizing(false)
     }
 
-    if (isResizing) {
-      document.addEventListener("mousemove", handleMouseMove)
-      document.addEventListener("mouseup", handleMouseUp)
-    }
+    document.addEventListener("mousemove", handleMouseMove)
+    document.addEventListener("mouseup", handleMouseUp)
 
     return () => {
       document.removeEventListener("mousemove", handleMouseMove)
       document.removeEventListener("mouseup", handleMouseUp)
     }
-  }, [isResizing])
+  }
 
   console.log(messages)
 

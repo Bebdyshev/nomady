@@ -6,6 +6,7 @@ import { TicketDisplay } from "@/components/displays/ticket-display"
 import { HotelDisplay } from "@/components/displays/hotels-display"
 import { RestaurantDisplay } from "@/components/displays/restaurant-display"
 import { ActivityDisplay } from "@/components/displays/activity-display"
+import { useTranslations } from "@/lib/i18n-client"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { Message } from "@/types/chat"
@@ -235,6 +236,8 @@ export function MessageBubble({
   bookedIds,
   onBooked
 }: MessageBubbleProps) {
+  const t = useTranslations('chat.messages')
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -303,7 +306,7 @@ export function MessageBubble({
                   />
                 ) : (
                   <div className="text-sm text-slate-500 dark:text-slate-400 italic">
-                    No hotel data found
+                    {t('error')}
                   </div>
                 )
               })()
@@ -318,7 +321,7 @@ export function MessageBubble({
                   />
                 ) : (
                   <div className="text-sm text-slate-500 dark:text-slate-400 italic">
-                    No restaurant data found
+                    {t('error')}
                   </div>
                 )
               })()
@@ -333,7 +336,7 @@ export function MessageBubble({
                   />
                 ) : (
                   <div className="text-sm text-slate-500 dark:text-slate-400 italic">
-                    No activity data found
+                    {t('error')}
                   </div>
                 )
               })()
@@ -348,7 +351,7 @@ export function MessageBubble({
                   />
                 ) : (
                   <div className="text-sm text-slate-500 dark:text-slate-400 italic">
-                    No ticket data found
+                    {t('error')}
                   </div>
                 )
               })()
