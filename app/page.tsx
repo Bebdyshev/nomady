@@ -31,6 +31,8 @@ import { useTranslations } from "@/lib/i18n-client"
 import { motion } from "framer-motion"
 import { Globe as GlobeComponent } from "@/components/magicui/globe"
 import { AnimatedGradientText } from "@/components/magicui/animated-gradient-text"
+import { BorderBeam } from "@/components/magicui/border-beam"
+import { BlurFade } from "@/components/magicui/blur-fade"
 import { cn } from "@/lib/utils"
 import { Logo } from "@/components/ui/logo"
 
@@ -194,26 +196,53 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-900">
-      {/* Header */}
-      <header className={`sticky top-0 z-50 transition-all duration-500 ${
+      {/* Enhanced Header with Glass Effects */}
+      <header className={cn(
+        "sticky top-0 z-50 transition-all duration-700 ease-out relative overflow-hidden",
         isScrolled 
-          ? 'bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-700/50 shadow-lg shadow-slate-200/20 dark:shadow-slate-900/20' 
-          : 'bg-transparent'
-      }`}>
-        <div className="container mx-auto px-6 py-4">
+          ? 'py-2 backdrop-blur-2xl bg-white/80 dark:bg-slate-900/80 border-b border-white/20 dark:border-slate-700/30 shadow-2xl shadow-black/10 dark:shadow-black/20' 
+          : 'py-6 bg-gradient-to-b from-white/90 via-white/70 to-transparent dark:from-slate-900/90 dark:via-slate-900/70 dark:to-transparent backdrop-blur-sm'
+      )}>
+        {/* Animated border beam - more prominent when scrolled */}
+        <BorderBeam 
+          size={isScrolled ? 200 : 300}
+          duration={isScrolled ? 8 : 12}
+          borderWidth={isScrolled ? 2 : 1}
+          colorFrom="#3b82f6"
+          colorTo="#1d4ed8"
+          className={cn(
+            "transition-opacity duration-700",
+            isScrolled ? "opacity-100" : "opacity-40"
+          )}
+        />
+        
+        {/* Glass effect overlay */}
+        <div className={cn(
+          "absolute inset-0 transition-all duration-700",
+          isScrolled 
+            ? "bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-blue-500/5 backdrop-blur-xl"
+            : "bg-gradient-to-r from-transparent via-white/10 to-transparent dark:via-slate-800/10"
+        )} />
+        
+        <div className="container mx-auto px-6 relative">
           <div className="flex items-center justify-between">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, type: "spring", bounce: 0.3 }}
-              className="flex items-center space-x-3 group"
-            >
-                <Logo width={40} height={40} className="rounded-xl" />
-              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent">
-                Nomady
-              </span>
-            </motion.div>
+            {/* Logo with BlurFade animation */}
+            <BlurFade delay={0.1} duration={0.8}>
+              <div className="flex items-center space-x-3 group">
+                <Logo width={isScrolled ? 35 : 40} height={isScrolled ? 35 : 40} className={cn(
+                  "rounded-xl transition-all duration-500 transform",
+                  isScrolled ? "scale-90" : "scale-100"
+                )} />
+                <span className={cn(
+                  "font-bold bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent transition-all duration-500",
+                  isScrolled ? "text-xl" : "text-2xl"
+                )}>
+                  Nomady
+                </span>
+              </div>
+            </BlurFade>
 
+            {/* Navigation with BlurFade animations */}
             <nav className="hidden md:flex items-center space-x-1">
               {[
                 { href: "#features", label: tNav('features') },
@@ -221,33 +250,38 @@ export default function LandingPage() {
                 { href: "#pricing", label: tNav('pricing') },
                 { href: "#testimonials", label: tNav('reviews') }
               ].map((item, index) => (
-                <motion.a
-                  key={item.href}
-                  href={item.href}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="relative px-4 py-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 rounded-lg hover:bg-slate-100/50 dark:hover:bg-slate-800/50 group"
-                >
-                  {item.label}
-                  <span className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-blue-600 to-blue-800 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-full"></span>
-                </motion.a>
+                <BlurFade key={item.href} delay={0.2 + index * 0.1} duration={0.6}>
+                  <a
+                    href={item.href}
+                    className={cn(
+                      "relative px-4 py-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 rounded-lg group",
+                      "hover:bg-white/50 dark:hover:bg-slate-800/50 hover:backdrop-blur-sm",
+                      "before:absolute before:inset-0 before:rounded-lg before:bg-gradient-to-r before:from-blue-500/10 before:to-purple-500/10 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100"
+                    )}
+                  >
+                    <span className="relative z-10">{item.label}</span>
+                    <span className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-blue-600 to-blue-800 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-full"></span>
+                  </a>
+                </BlurFade>
               ))}
             </nav>
 
+            {/* Action buttons with BlurFade animations */}
             <div className="flex items-center space-x-3">
-              <LanguageSwitcher />
+              <BlurFade delay={0.6} duration={0.6}>
+                <LanguageSwitcher />
+              </BlurFade>
               
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-              >
+              <BlurFade delay={0.7} duration={0.6}>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                  className="relative rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-300 hover:scale-110 group"
+                  className={cn(
+                    "relative rounded-full transition-all duration-300 hover:scale-110 group overflow-hidden",
+                    "hover:bg-white/50 dark:hover:bg-slate-800/50 hover:backdrop-blur-sm",
+                    "before:absolute before:inset-0 before:rounded-full before:bg-gradient-to-r before:from-amber-400/20 before:to-orange-400/20 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100"
+                  )}
                 >
                   <motion.div
                     initial={false}
@@ -260,37 +294,35 @@ export default function LandingPage() {
                       <Moon className="h-5 w-5 text-slate-600" />
                     )}
                   </motion.div>
-                  <span className="absolute -inset-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
                 </Button>
-              </motion.div>
+              </BlurFade>
               
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
+              <BlurFade delay={0.8} duration={0.6}>
                 <Button 
                   variant="ghost" 
                   onClick={() => router.push("/auth")} 
-                  className="hidden md:inline-flex hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-300 rounded-lg px-4 py-2 hover:scale-105"
+                  className={cn(
+                    "hidden md:inline-flex transition-all duration-300 rounded-lg px-4 py-2 hover:scale-105 relative overflow-hidden group",
+                    "hover:bg-white/50 dark:hover:bg-slate-800/50 hover:backdrop-blur-sm",
+                    "before:absolute before:inset-0 before:rounded-lg before:bg-gradient-to-r before:from-blue-500/10 before:to-purple-500/10 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100"
+                  )}
                 >
-                  {tNav('signIn')}
+                  <span className="relative z-10">{tNav('signIn')}</span>
                 </Button>
-              </motion.div>
+              </BlurFade>
               
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-              >
+              <BlurFade delay={0.9} duration={0.6}>
                 <Button 
                   onClick={() => router.push("/auth")} 
-                  className="relative bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-lg shadow-lg hover:shadow-blue-500/25 transition-all duration-300 hover:scale-105 overflow-hidden group"
+                  className={cn(
+                    "relative bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-lg transition-all duration-300 hover:scale-105 overflow-hidden group",
+                    "shadow-lg hover:shadow-blue-500/25 hover:shadow-xl",
+                    "before:absolute before:inset-0 before:bg-gradient-to-r before:from-blue-400 before:to-blue-500 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100"
+                  )}
                 >
                   <span className="relative z-10">{tNav('getStarted')}</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </Button>
-              </motion.div>
+              </BlurFade>
             </div>
           </div>
         </div>
