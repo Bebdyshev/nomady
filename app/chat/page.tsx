@@ -463,6 +463,11 @@ export default function ChatPage() {
     const url = new URL(window.location.href)
     url.searchParams.delete("c")
     window.history.replaceState({}, "", url.toString())
+    
+    // Close sidebar on mobile devices when starting new conversation
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false)
+    }
   }
 
   const loadConversation = async (conversationId: string) => {

@@ -13,61 +13,6 @@ body {
   .animate-gradient {
     animation: gradient 8s linear infinite;
   }
-  
-  /* Enhanced Glass Effects */
-  .glass-effect {
-    backdrop-filter: blur(20px) saturate(180%);
-    background: rgba(255, 255, 255, 0.75);
-    border: 1px solid rgba(255, 255, 255, 0.125);
-  }
-  
-  .glass-effect-dark {
-    backdrop-filter: blur(20px) saturate(180%);
-    background: rgba(15, 23, 42, 0.75);
-    border: 1px solid rgba(255, 255, 255, 0.125);
-  }
-  
-  .glass-navbar {
-    backdrop-filter: blur(40px) saturate(200%);
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.8) 0%,
-      rgba(255, 255, 255, 0.6) 50%,
-      rgba(255, 255, 255, 0.4) 100%
-    );
-  }
-  
-  .glass-navbar-dark {
-    backdrop-filter: blur(40px) saturate(200%);
-    background: linear-gradient(
-      135deg,
-      rgba(15, 23, 42, 0.9) 0%,
-      rgba(15, 23, 42, 0.7) 50%,
-      rgba(15, 23, 42, 0.5) 100%
-    );
-  }
-  
-  /* Smooth height transitions */
-  .navbar-transition {
-    transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  
-  /* Enhanced backdrop blur */
-  .backdrop-blur-enhanced {
-    backdrop-filter: blur(24px) brightness(1.1) contrast(1.1);
-  }
-  
-  /* Shimmer effect for buttons */
-  .shimmer {
-    background: linear-gradient(
-      45deg,
-      transparent 30%,
-      rgba(255, 255, 255, 0.3) 50%,
-      transparent 70%
-    );
-    background-size: 200% 200%;
-    animation: shimmer 2s infinite;
-  }
 }
 
 @layer base {
@@ -218,14 +163,6 @@ body {
     }
   100% {
     background-position: 100% -100%;
-    }
-  }
-  @keyframes shimmer {
-    0% {
-      background-position: -200% 0;
-    }
-    100% {
-      background-position: 200% 0;
     }
   }
 }

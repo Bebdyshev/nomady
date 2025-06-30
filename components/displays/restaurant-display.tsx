@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { trackBooking } from "@/lib/gtag"
+import { useTranslations } from "@/lib/i18n-client"
 import {
   Utensils,
   Star,
@@ -67,27 +68,30 @@ interface RestaurantDisplayProps {
 
 // Price Range Display
 const getPriceRangeDisplay = (priceRange: string) => {
+  const t = useTranslations('chat.displays.restaurants')
+  
   switch (priceRange?.toLowerCase()) {
     case "budget":
     case "$":
-      return { symbol: "$", label: "Budget", color: "text-green-400" }
+      return { symbol: "$", label: t('budget'), color: "text-green-400" }
     case "mid-range":
     case "$$":
     case "$$ - $$$":
-      return { symbol: "$$", label: "Mid-range", color: "text-yellow-400" }
+      return { symbol: "$$", label: t('midRange'), color: "text-yellow-400" }
     case "expensive":
     case "$$$":
-      return { symbol: "$$$", label: "Expensive", color: "text-orange-400" }
+      return { symbol: "$$$", label: t('expensive'), color: "text-orange-400" }
     case "luxury":
     case "$$$$":
-      return { symbol: "$$$$", label: "Luxury", color: "text-red-400" }
+      return { symbol: "$$$$", label: t('luxury'), color: "text-red-400" }
     default:
-      return { symbol: "$$", label: "Mid-range", color: "text-yellow-400" }
+      return { symbol: "$$", label: t('midRange'), color: "text-yellow-400" }
   }
 }
 
 // Enhanced Restaurant Card Component (Hotel-style)
 const RestaurantCard = ({ restaurant, onBook, isBooked, isBooking }: any) => {
+  const t = useTranslations('chat.displays')
   const priceDisplay = getPriceRangeDisplay(restaurant.price_range)
   
   // Get cuisine display - handle both single cuisine and array
@@ -95,12 +99,12 @@ const RestaurantCard = ({ restaurant, onBook, isBooked, isBooking }: any) => {
     if (restaurant.cuisine_types && Array.isArray(restaurant.cuisine_types)) {
       // Filter out "Menu" entries and take first 2
       const validCuisines = restaurant.cuisine_types.filter((c: string) => c !== "Menu")
-      return validCuisines.slice(0, 2).join(", ") || "Restaurant"
+      return validCuisines.slice(0, 2).join(", ") || t('restaurants.restaurant')
     }
     if (restaurant.cuisine) {
       return restaurant.cuisine
     }
-    return "Restaurant"
+    return t('restaurants.restaurant')
   }
 
   const renderStars = (rating: number) => {
@@ -179,7 +183,7 @@ const RestaurantCard = ({ restaurant, onBook, isBooked, isBooking }: any) => {
               {restaurant.travelers_choice_2024 && (
                 <Badge className="bg-orange-500/90 text-white border-none text-xs">
                   <Award className="h-3 w-3 mr-1" />
-                  Traveler's Choice
+                  {t('restaurants.travelersChoice')}
                 </Badge>
               )}
             </div>
@@ -187,12 +191,12 @@ const RestaurantCard = ({ restaurant, onBook, isBooked, isBooking }: any) => {
               {isBooked && (
                 <Badge className="bg-green-500/90 text-white border-none text-sm">
                   <CheckCircle2 className="h-3 w-3 mr-1" />
-                  Reserved
+                  {t('restaurants.reserved')}
                 </Badge>
               )}
               {restaurant.sponsored && (
                 <Badge variant="secondary" className="text-xs bg-white/20 text-white border-white/30">
-                  Sponsored
+                  {t('restaurants.sponsored')}
                 </Badge>
               )}
             </div>
@@ -210,7 +214,7 @@ const RestaurantCard = ({ restaurant, onBook, isBooked, isBooking }: any) => {
               </p>
               {restaurant.review_count && (
                 <p className="text-white/60 text-xs">
-                  {restaurant.review_count} reviews
+                  {restaurant.review_count} {t('common.reviews')}
                 </p>
               )}
             </div>
@@ -223,7 +227,7 @@ const RestaurantCard = ({ restaurant, onBook, isBooked, isBooking }: any) => {
                   <div className="flex items-center space-x-1">
                     <div className={`w-2 h-2 rounded-full ${restaurant.status === 'open' ? 'bg-green-400' : 'bg-red-400'}`} />
                     <span className="text-white/80 text-xs">
-                      {restaurant.status === 'open' ? 'Open' : 'Closed'}
+                      {restaurant.status === 'open' ? t('restaurants.open') : t('restaurants.closed')}
                     </span>
                   </div>
                 )}
@@ -271,7 +275,7 @@ const RestaurantCard = ({ restaurant, onBook, isBooked, isBooking }: any) => {
                   ) : isBooked ? (
                     <CheckCircle2 className="h-3 w-3" />
                   ) : (
-                    "Reserve"
+                    t('restaurants.reserve')
                   )}
                 </Button>
               </div>
@@ -287,6 +291,7 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
   const [bookingStates, setBookingStates] = useState<Record<string, boolean>>({})
   const [sortBy, setSortBy] = useState<"rating" | "name">("rating")
   const { toast } = useToast()
+  const t = useTranslations('chat.displays')
 
   const handleBooking = async (restaurant: any, type: string) => {
     const itemId = restaurant.url || restaurant.search_result_id || `${restaurant.name}-${Date.now()}`
@@ -297,8 +302,8 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
       toast({
-        title: "Reservation Confirmed! 🍽️",
-        description: `Your table at ${restaurant.name} has been reserved.`,
+        title: t('restaurants.reservationConfirmed'),
+        description: t('restaurants.reservationConfirmedDesc', { name: restaurant.name }),
       })
 
       trackBooking('restaurant', restaurant.name)
@@ -307,8 +312,8 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
     } catch (error) {
       console.error("Booking error:", error)
       toast({
-        title: "Reservation Failed",
-        description: "There was an error processing your reservation. Please try again.",
+        title: t('restaurants.reservationFailed'),
+        description: t('restaurants.reservationFailedDesc'),
         variant: "destructive",
       })
     } finally {
@@ -334,9 +339,9 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
       return toolOutput.search_parameters.location
     }
     if (toolOutput.source === 'tripadvisor') {
-      return "your area"
+      return t('restaurants.yourArea')
     }
-    return "your search"
+    return t('restaurants.yourSearch')
   }
 
   const totalResults = toolOutput.total_found || toolOutput.total_results || toolOutput.restaurants?.length || 0
@@ -357,13 +362,13 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
             </div>
             <div>
               <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                Restaurants in {getLocationDisplay()}
+                {t('restaurants.restaurantsIn', { location: getLocationDisplay() })}
               </h3>
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                {totalResults.toLocaleString()} restaurants found
+                {t('restaurants.restaurantsFound', { count: totalResults.toLocaleString() })}
                 {toolOutput.source && (
                   <span className="ml-2 text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
-                    via {toolOutput.source}
+                    {t('restaurants.via')} {toolOutput.source}
                   </span>
                 )}
               </p>
@@ -372,14 +377,14 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
 
           {/* Sort Options - Simplified */}
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-slate-600 dark:text-slate-300">Sort:</span>
+            <span className="text-sm text-slate-600 dark:text-slate-300">{t('common.sort')}</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
               className="text-sm border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 bg-white dark:bg-slate-800"
             >
-              <option value="rating">Rating</option>
-              <option value="name">Name</option>
+              <option value="rating">{t('common.rating')}</option>
+              <option value="name">{t('common.name')}</option>
             </select>
           </div>
         </div>
@@ -418,7 +423,7 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
               variant="ghost"
               className="text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950"
             >
-              View {(toolOutput.restaurants?.length || 0) - 12} more restaurants
+              {t('common.viewMore', { count: (toolOutput.restaurants?.length || 0) - 12, type: 'restaurants' })}
             </Button>
           </div>
         )}
@@ -432,7 +437,7 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
               className="text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800 hover:bg-orange-50 dark:hover:bg-orange-950"
             >
               <Globe className="h-4 w-4 mr-2" />
-              View all on {toolOutput.source || 'external site'}
+              {t('restaurants.viewAllExternal', { source: toolOutput.source || 'external site' })}
             </Button>
           </div>
         )}

@@ -123,7 +123,7 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
                   }
                 }}
                 placeholder={placeholderText}
-                className="w-full p-3 md:p-4 pr-12 md:pr-14 border border-slate-300 dark:border-slate-600 rounded-xl resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 text-sm md:text-base leading-6 transition-all duration-200 ease-out"
+                className="w-full p-3 md:p-4 pr-16 md:pr-14 border border-slate-300 dark:border-slate-600 rounded-xl resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 text-sm md:text-base leading-6 transition-all duration-200 ease-out"
                 rows={1}
                 style={{ 
                   minHeight: "52px",
@@ -136,14 +136,14 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
               <motion.button
                 type="submit"
                 disabled={isLoading || !input.trim() || isStreaming}
-                className="absolute right-2 md:right-3 bottom-2 md:bottom-3 p-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-600 text-white rounded-lg transition-colors"
+                className="absolute right-2 md:right-3 bottom-2 md:bottom-3 p-3 md:p-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-600 text-white rounded-lg transition-colors shadow-md md:shadow-none"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
                 {isLoading || isStreaming ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-5 w-5 md:h-4 md:w-4 animate-spin" />
                 ) : (
-                  <Send className="h-4 w-4" />
+                  <Send className="h-5 w-5 md:h-4 md:w-4" />
                 )}
               </motion.button>
             </div>

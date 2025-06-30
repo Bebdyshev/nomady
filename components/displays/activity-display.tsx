@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { trackBooking } from "@/lib/gtag"
+import { useTranslations } from "@/lib/i18n-client"
 import {
   MapPin,
   Star,
@@ -71,6 +72,8 @@ const getCategoryIcon = (category: string) => {
 
 // Enhanced Activity Card Component (Restaurant-style)
 const ActivityCard = ({ activity, onBook, isBooked, isBooking }: any) => {
+  const t = useTranslations('chat.displays')
+  
   const renderStars = (rating: string | number) => {
     const numRating = typeof rating === 'string' ? parseFloat(rating) : rating
     return (
@@ -134,7 +137,7 @@ const ActivityCard = ({ activity, onBook, isBooked, isBooking }: any) => {
               {activity.type === 'tour_activity' && (
                 <Badge className="bg-blue-500/90 text-white border-none text-xs">
                   <Camera className="h-3 w-3 mr-1" />
-                  Tour
+                  {t('activities.tour')}
                 </Badge>
               )}
             </div>
@@ -142,7 +145,7 @@ const ActivityCard = ({ activity, onBook, isBooked, isBooking }: any) => {
               {isBooked && (
                 <Badge className="bg-green-500/90 text-white border-none text-xs">
                   <CheckCircle2 className="h-3 w-3 mr-1" />
-                  Booked
+                  {t('common.booked')}
                 </Badge>
               )}
             </div>
@@ -160,7 +163,7 @@ const ActivityCard = ({ activity, onBook, isBooked, isBooking }: any) => {
               </p>
               {activity.review_count && (
                 <p className="text-white/60 text-xs">
-                  {activity.review_count} reviews
+                  {activity.review_count} {t('common.reviews')}
                 </p>
               )}
             </div>
@@ -174,14 +177,14 @@ const ActivityCard = ({ activity, onBook, isBooked, isBooking }: any) => {
                     <span className="font-bold text-sm text-green-400">
                       {activity.price}
                     </span>
-                    <span className="text-white/60 text-xs">per person</span>
+                    <span className="text-white/60 text-xs">{t('activities.perPerson')}</span>
                   </div>
                 )}
                 
                 {/* Category icon */}
                 <div className="flex items-center space-x-1">
                   {getCategoryIcon(activity.category || "")}
-                  <span className="text-white/60 text-xs">{activity.type === 'tour_activity' ? 'Tour' : 'Attraction'}</span>
+                  <span className="text-white/60 text-xs">{activity.type === 'tour_activity' ? t('activities.tour') : t('activities.attraction')}</span>
                 </div>
               </div>
 
@@ -219,7 +222,7 @@ const ActivityCard = ({ activity, onBook, isBooked, isBooking }: any) => {
                   ) : isBooked ? (
                     <CheckCircle2 className="h-3 w-3" />
                   ) : (
-                    "Book"
+                    t('common.book')
                   )}
                 </Button>
               </div>
@@ -235,6 +238,7 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked }:
   const [bookingStates, setBookingStates] = useState<Record<string, boolean>>({})
   const [sortBy, setSortBy] = useState<"rating" | "name">("rating")
   const { toast } = useToast()
+  const t = useTranslations('chat.displays')
 
   const handleBooking = async (activity: any, type: string) => {
     const itemId = activity.url || activity.title || `${activity.title}-${Date.now()}`
@@ -245,8 +249,8 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked }:
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
       toast({
-        title: "Activity Booked Successfully! 🎯",
-        description: `${activity.title} has been added to your itinerary.`,
+        title: t('activities.bookingSuccess'),
+        description: t('activities.bookingSuccessDesc', { name: activity.title }),
       })
 
       onBooked?.(activity, itemId, type)
@@ -254,8 +258,8 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked }:
     } catch (error) {
       console.error("Booking error:", error)
       toast({
-        title: "Booking Failed",
-        description: "There was an error processing your booking. Please try again.",
+        title: t('common.bookingFailed'),
+        description: t('common.bookingFailedDesc'),
         variant: "destructive",
       })
     } finally {
@@ -307,7 +311,7 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked }:
     if (toolOutput.search_parameters?.location) {
       return toolOutput.search_parameters.location
     }
-    return "your search"
+    return t('restaurants.yourSearch')
   }
 
   const totalResults = toolOutput.total_found || toolOutput.total_results || getAllActivities().length
@@ -328,24 +332,24 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked }:
             </div>
             <div>
               <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                Activities in {getLocationDisplay()}
+                {t('activities.activitiesIn', { location: getLocationDisplay() })}
               </h3>
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                {totalResults.toLocaleString()} activities found
+                {t('activities.activitiesFound', { count: totalResults.toLocaleString() })}
               </p>
             </div>
           </div>
 
           {/* Sort Options - Simplified */}
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-slate-600 dark:text-slate-300">Sort:</span>
+            <span className="text-sm text-slate-600 dark:text-slate-300">{t('common.sort')}</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
               className="text-sm border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 bg-white dark:bg-slate-800"
             >
-              <option value="rating">Rating</option>
-              <option value="name">Name</option>
+              <option value="rating">{t('common.rating')}</option>
+              <option value="name">{t('common.name')}</option>
             </select>
           </div>
         </div>
@@ -384,7 +388,7 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked }:
               variant="ghost"
               className="text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950"
             >
-              View {getAllActivities().length - 12} more activities
+              {t('common.viewMore', { count: getAllActivities().length - 12, type: 'activities' })}
             </Button>
           </div>
         )}
@@ -398,7 +402,7 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked }:
               className="text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 hover:bg-green-50 dark:hover:bg-green-950"
             >
               <Globe className="h-4 w-4 mr-2" />
-              View all on TripAdvisor
+              {t('activities.viewAllTripadvisor')}
             </Button>
           </div>
         )}

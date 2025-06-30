@@ -64,47 +64,75 @@ export function ChatSidebar({
       <div className="flex flex-col h-full">
         {/* Sidebar Header */}
         <div className="p-3 md:p-4 border-b border-slate-200 dark:border-slate-700">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-2">
-              <Logo width={32} height={32} className="rounded-lg" />
-              <span className="text-lg font-bold text-blue-600 dark:text-blue-400">Nomady</span>
+          {/* Mobile Header - Single row layout */}
+          <div className="md:hidden">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <Logo width={32} height={32} className="rounded-lg" />
+                <span className="text-lg font-bold text-blue-600 dark:text-blue-400">Nomady</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                {/* Language Switcher */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleLanguageChange}
+                  className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
+                  title={t('switchLanguage')}
+                >
+                  <div className="flex items-center space-x-1">
+                    <Globe className="h-3 w-3" />
+                    <span className="text-xs font-medium">{currentLanguage?.name}</span>
+                  </div>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700"
+                >
+                  {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </Button>
+                <button
+                  onClick={() => setSidebarOpen(false)}
+                  className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </div>
-            <div className="flex items-center space-x-1">
-              {/* Language Switcher */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleLanguageChange}
-                className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
-                title={t('switchLanguage')}
-              >
-                <div className="flex items-center space-x-1">
-                  <Globe className="h-3 w-3" />
-                  <span className="text-xs font-medium">{currentLanguage?.name}</span>
-                </div>
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700"
-              >
-                {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={logout}
-                className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
-              <button
-                onClick={() => setSidebarOpen(false)}
-                className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
-              >
-                <X className="h-4 w-4" />
-              </button>
+          </div>
+
+          {/* Desktop Header - Single row layout */}
+          <div className="hidden md:block">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <Logo width={32} height={32} className="rounded-lg" />
+                <span className="text-lg font-bold text-blue-600 dark:text-blue-400">Nomady</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                {/* Language Switcher */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleLanguageChange}
+                  className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
+                  title={t('switchLanguage')}
+                >
+                  <div className="flex items-center space-x-1">
+                    <Globe className="h-3 w-3" />
+                    <span className="text-xs font-medium">{currentLanguage?.name}</span>
+                  </div>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700"
+                >
+                  {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -121,16 +149,19 @@ export function ChatSidebar({
               { 
                 icon: MapPin, 
                 label: t('explore'), 
+                href: "/explore",
                 color: "text-slate-600 dark:text-slate-400" 
               },
               { 
                 icon: CheckCircle2, 
                 label: t('bookings'), 
+                href: "/bookings",
                 color: "text-slate-600 dark:text-slate-400" 
               },
               { 
                 icon: Heart, 
                 label: t('saved'), 
+                href: "/favorites",
                 color: "text-slate-600 dark:text-slate-400" 
               },
             ].map((item, index) => (
@@ -143,7 +174,9 @@ export function ChatSidebar({
                     : `hover:bg-slate-100 dark:hover:bg-slate-700 ${item.color}`
                 }`}
                 onClick={() => {
-                  if (item.label === t('bookings')) {
+                  if (item.href) {
+                    router.push(item.href)
+                  } else if (item.label === t('bookings')) {
                     router.push("/bookings")
                   } else if (!item.active) {
                     // Handle other navigation
@@ -215,22 +248,33 @@ export function ChatSidebar({
 
         {/* User Profile */}
         <div className="p-3 md:p-4 border-t border-slate-200 dark:border-slate-700 mt-auto">
-          <div className="flex items-center space-x-3">
-            <Avatar>
-              {user?.picture ? (
-                <AvatarImage src={user.picture || "/placeholder.svg"} alt={user?.name || t('user')} />
-              ) : (
-                <AvatarFallback className="bg-blue-600 text-white">
-                  {user?.name ? user.name.charAt(0).toUpperCase() : <User className="h-4 w-4" />}
-                </AvatarFallback>
-              )}
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-slate-900 dark:text-white truncate">
-                {user?.name || t('user')}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Avatar>
+                {user?.picture ? (
+                  <AvatarImage src={user.picture || "/placeholder.svg"} alt={user?.name || t('user')} />
+                ) : (
+                  <AvatarFallback className="bg-blue-600 text-white">
+                    {user?.name ? user.name.charAt(0).toUpperCase() : <User className="h-4 w-4" />}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                  {user?.name || t('user')}
+                </div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{user?.email}</div>
               </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{user?.email}</div>
             </div>
+            <Button
+              onClick={logout}
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
+              title="Sign out"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>

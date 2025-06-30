@@ -71,7 +71,8 @@ export function AppSidebar({
     {
       icon: Search,
       label: "Explore",
-      href: "/chat",
+      href: "/explore",
+      active: pathname === "/explore",
       color: "text-slate-600 dark:text-slate-400",
       activeColor: "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300",
     },
@@ -86,7 +87,8 @@ export function AppSidebar({
     {
       icon: Heart,
       label: "Saved",
-      href: "/chat",
+      href: "/favorites",
+      active: pathname === "/favorites",
       color: "text-slate-600 dark:text-slate-400",
       activeColor: "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300",
     },
