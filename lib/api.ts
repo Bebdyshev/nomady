@@ -400,6 +400,20 @@ class ApiClient {
       activities?: any[]
     }>(`/roadmap/${conversationId}`)
   }
+
+  async getUserRoadmaps(activeOnly: boolean = true) {
+    const params = new URLSearchParams()
+    params.append("active_only", activeOnly ? "true" : "false")
+    return this.request<any[]>(`/roadmap/?${params.toString()}`)
+  }
+
+  async getRoadmapById(roadmapId: number) {
+    return this.request<any>(`/roadmap/${roadmapId}`)
+  }
+
+  async getRoadmapCoordinates(roadmapId: number) {
+    return this.request<any[]>(`/roadmap/${roadmapId}/coordinates`)
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL)

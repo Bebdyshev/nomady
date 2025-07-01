@@ -10,7 +10,7 @@ export function GoogleAnalyticsProvider() {
 
   useEffect(() => {
     // Проверяем что мы на клиенте и GA загружен
-    if (typeof window !== 'undefined' && window.gtag) {
+    if (typeof window !== 'undefined' && typeof (window as any).gtag === 'function') {
       const url = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : '')
       pageview(url)
     }
