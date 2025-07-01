@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { useTranslations } from "@/lib/i18n-client"
+import { apiClient } from "@/lib/api"
 import {
   Hotel,
   MapPin,
@@ -831,28 +832,48 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
   const destination = searchParams ? ('query' in searchParams ? searchParams.query : searchParams.destination) : ''
 
   const handleBooking = async (hotel: any, type: string) => {
-    const itemId = hotel.link || hotel.detail_url || `${hotel.name}-${Date.now()}`
-    setBookingStates((prev) => ({ ...prev, [itemId]: true }))
+    // Определяем идентификатор выбранного элемента (индекс или link / detail_url)
+    const index = hotels.findIndex((h) => h === hotel)
+    const selected_item_id = hotel.id || hotel.link || hotel.detail_url || `${index}`
+    setBookingStates((prev) => ({ ...prev, [selected_item_id]: true }))
 
     try {
-      // Simulate booking API call
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      // Проверяем наличие search_result_id (обязателен для API)
+      if (!hotel.search_result_id) {
+        toast({
+          title: t('common.bookingNotAvailable'),
+          description: t('olderSearchError'),
+          variant: "destructive",
+        })
+        return
+      }
 
-      toast({
-        title: t('hotels.hotelBooked'),
-        description: t('hotels.hotelBookedDesc', { name: hotel.name }),
-      })
+      const bookingData = {
+        search_result_id: hotel.search_result_id,
+        selected_item_id: selected_item_id.toString(),
+      }
 
-      onBooked?.(hotel, itemId, type)
+      const response = await apiClient.bookHotel(bookingData)
+
+      if (response.data) {
+        toast({
+          title: t('hotels.hotelBooked'),
+          description: t('hotels.hotelBookedDesc', { name: hotel.name }),
+        })
+
+        onBooked?.(hotel, selected_item_id, type)
+      } else {
+        throw new Error(response.error || 'Booking failed')
+      }
     } catch (error) {
-      console.error("Booking error:", error)
+      console.error('Booking error:', error)
       toast({
         title: t('common.bookingFailed'),
         description: t('common.bookingFailedDesc'),
-        variant: "destructive",
+        variant: 'destructive',
       })
     } finally {
-      setBookingStates((prev) => ({ ...prev, [itemId]: false }))
+      setBookingStates((prev) => ({ ...prev, [selected_item_id]: false }))
     }
   }
 
