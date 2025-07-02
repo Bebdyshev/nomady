@@ -33,6 +33,9 @@ import { Globe as GlobeComponent } from "@/components/magicui/globe"
 import { AnimatedGradientText } from "@/components/magicui/animated-gradient-text"
 import { cn } from "@/lib/utils"
 import { Logo } from "@/components/ui/logo"
+import dynamic from "next/dynamic"
+
+const DemoChat = dynamic(() => import("@/components/demo-chat"), { ssr: false })
 
 export default function LandingPage() {
   const [tripPrompt, setTripPrompt] = useState("")
@@ -504,6 +507,14 @@ export default function LandingPage() {
                 </div>
               </motion.div>
           </div>
+        </div>
+      </section>
+
+      {/* Demo Chat Section */}
+      <section className="py-20 bg-white dark:bg-slate-900">
+        <div className="container mx-auto px-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 text-slate-900 dark:text-white">Try Nomady Chatbot</h2>
+          <DemoChat />
         </div>
       </section>
 

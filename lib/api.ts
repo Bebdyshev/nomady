@@ -414,6 +414,40 @@ class ApiClient {
   async getRoadmapCoordinates(roadmapId: number) {
     return this.request<any[]>(`/roadmap/${roadmapId}/coordinates`)
   }
+
+  async *sendDemoMessageStream(messages: Array<{ role: string; content: string }>): AsyncGenerator<any> {
+    try {
+      const url = `${this.baseURL}/chat/demo/stream`
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages }),
+      })
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}))
+        throw new Error(errData.detail || `HTTP ${response.status}`)
+      }
+      const reader = response.body?.getReader()
+      if (!reader) throw new Error("No response body")
+      const decoder = new TextDecoder()
+      let buf = ""
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buf += decoder.decode(value, { stream: true })
+        const lines = buf.split("\n")
+        buf = lines.pop() || ""
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const data = JSON.parse(line.slice(6))
+            yield data
+          }
+        }
+      }
+    } catch (e) {
+      yield { type: "error", data: e instanceof Error ? e.message : "Unknown" }
+    }
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL)
