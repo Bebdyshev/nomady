@@ -610,8 +610,16 @@ export default function ChatPage() {
   }
 
   const handleBooked = (bookedItem: any, id: string, type: string) => {
-    setBookedItems((prev) => ({ ...prev, [id]: { ...bookedItem, id, type } }))
-    setBookedIds((prev) => new Set([...prev, id]))
+    // Enhance display for flights: name as route
+    let enhancedItem = { ...bookedItem }
+    if (type === 'flight' || type === 'flights') {
+      const origin = bookedItem.from || bookedItem.origin || (bookedItem.flights_to?.[0]?.from) || '???'
+      const destination = bookedItem.to || bookedItem.destination || (bookedItem.flights_to?.slice(-1)?.[0]?.to) || '???'
+      enhancedItem.name = `${origin} → ${destination}`
+      enhancedItem.location = `${origin} → ${destination}`
+    }
+    setBookedItems((prev) => ({ ...prev, [id]: { ...enhancedItem, id, type } }))
+    setBookedIds((prev) => new Set([...prev, id.toString()]))
   }
 
   const handleRemoveItem = (id: string) => {

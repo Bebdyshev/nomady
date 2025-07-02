@@ -436,8 +436,10 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
   // Get the primary image for background
   const backgroundImage = hotelImages.length > 0 ? hotelImages[0] : ''
 
+  const [open, setOpen] = useState(false)
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <motion.div
           whileHover={{ scale: 1.02, y: -4 }}
@@ -587,7 +589,10 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
 
                 <Button
                   size="lg"
-                  onClick={() => onBook?.(hotel, "hotels")}
+                  onClick={() => {
+                    onBook?.(hotel, "hotels")
+                    setOpen(false)
+                  }}
                   disabled={isBooking || isBooked}
                   className="bg-white text-slate-900 hover:bg-white/90 px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                 >
@@ -792,7 +797,10 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
 
             <Button
               size="sm"
-              onClick={() => onBook?.(hotel, "hotels")}
+              onClick={() => {
+                onBook?.(hotel, "hotels")
+                setOpen(false)
+              }}
               disabled={isBooking || isBooked}
               className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-200 w-full sm:w-auto"
             >
@@ -895,6 +903,20 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
     }
   })
 
+  const getHotelId = (hotel: any, idx: number) => {
+    return (hotel.id ? hotel.id.toString() : undefined) || hotel.link || hotel.detail_url || `${hotel.name}-${idx}`
+  }
+
+  const hasBookedHotel = hotels.some((hotel, idx) => {
+    const id = getHotelId(hotel, idx)
+    return bookedIds.has(id) || hotel.is_selected
+  })
+
+  const displayHotels = hasBookedHotel ? hotels.filter((hotel, idx) => {
+    const id = getHotelId(hotel, idx)
+    return bookedIds.has(id) || hotel.is_selected
+  }) : sortedHotels
+
   return (
     <div className="mt-6 space-y-6">
       <motion.div
@@ -937,8 +959,8 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
         {/* Hotels Grid */}
         <div className="grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))' }}>
           <AnimatePresence>
-            {sortedHotels.slice(0, 6).map((hotel: Hotel, index: number) => {
-              const itemId = hotel.link || hotel.detail_url || `${hotel.name}-${index}`
+            {displayHotels.slice(0, 6).map((hotel: Hotel, index: number) => {
+              const itemId = getHotelId(hotel, index)
               const isBooked = bookedIds.has(itemId)
               const isBooking = bookingStates[itemId] || false
 
@@ -963,7 +985,7 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
           </AnimatePresence>
         </div>
 
-        {hotels.length > 6 && (
+        {(!hasBookedHotel && hotels.length > 6) && (
           <div className="text-center">
             <Button
               variant="ghost"

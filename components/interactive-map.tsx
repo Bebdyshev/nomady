@@ -8,17 +8,13 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { MapPin, Plane, Hotel, Car, Utensils, X, Star } from "lucide-react"
 import { useTranslations } from "@/lib/i18n-client"
-import dynamic from "next/dynamic"
-
-// dynamic import to avoid SSR issues with mapbox
-const RoadmapMap = dynamic(() => import("@/components/roadmap-map").then(m => m.RoadmapMap), { ssr: false })
 
 interface SelectedItem {
   id: string
   name: string
   type: string
   price?: string | number
-  location?: string
+  location?: string | { address?: string; distance_from_center?: string; coordinates?: any; distances?: any }
   rating?: number
   description?: string
   duration?: string
@@ -116,23 +112,15 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll }: Inte
     )
   }
 
-  // Extract coordinates from selected items
-  const coordinates = selectedItems
-    .map((item, idx) => {
-      const coord = (item as any).coordinates
-      // Accept {latitude, longitude} or {lat, lng}
-      if (coord && (coord.latitude || coord.lat) && (coord.longitude || coord.lng)) {
-        return {
-          id: item.id || idx,
-          latitude: coord.latitude ?? coord.lat,
-          longitude: coord.longitude ?? coord.lng,
-          title: item.name,
-          order: idx,
-        }
-      }
-      return null
-    })
-    .filter(Boolean) as import("@/types/coordinate").Coordinate[]
+  const getLocationDisplay = (loc: any): string => {
+    if (!loc) return ""
+    if (typeof loc === "string") return loc
+    if (typeof loc === "object") {
+      if (loc.address && loc.address !== "N/A") return loc.address
+      if (loc.distance_from_center && loc.distance_from_center !== "N/A") return loc.distance_from_center
+    }
+    return ""
+  }
 
   return (
     <div className="h-full flex flex-col">
@@ -156,7 +144,7 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll }: Inte
       </div>
 
       <div
-        className={`flex-1 flex flex-col transition-colors duration-200 ${
+        className={`flex-1 transition-colors duration-200 ${
           isDragOver
             ? "bg-blue-50 dark:bg-blue-950/30 border-2 border-dashed border-blue-400"
             : "bg-slate-50 dark:bg-slate-900"
@@ -178,81 +166,71 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll }: Inte
             </div>
           </div>
         ) : (
-          <>
-            {/* Map Section */}
-            {coordinates.length > 0 && (
-              <div className="w-full h-64 border-b border-slate-200 dark:border-slate-700">
-                <RoadmapMap coordinates={coordinates} />
-              </div>
-            )}
-
-            {/* List Section */}
-            <ScrollArea className="flex-1 p-4">
-              <div className="space-y-3">
-                {selectedItems.map((item, idx) => (
-                  <div key={item.id} className="flex items-start space-x-3">
-                    {/* Timeline indicator */}
-                    <div className="flex flex-col items-center">
-                      <div className="h-6 w-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-medium">
-                        {idx + 1}
-                      </div>
-                      {idx < selectedItems.length - 1 && (
-                        <div className="flex-1 w-px bg-slate-300 dark:bg-slate-700"></div>
-                      )}
+          <ScrollArea className="h-full p-4">
+            <div className="space-y-3">
+              {selectedItems.map((item, idx) => (
+                <div key={item.id} className="flex items-start space-x-3">
+                  {/* Timeline indicator */}
+                  <div className="flex flex-col items-center">
+                    <div className="h-6 w-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-medium">
+                      {idx + 1}
                     </div>
+                    {idx < selectedItems.length - 1 && (
+                      <div className="flex-1 w-px bg-slate-300 dark:bg-slate-700"></div>
+                    )}
+                  </div>
 
-                    {/* Card */}
-                    <Card className="relative flex-1">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-2">
-                          {getIcon(item.type)}
-                            <CardTitle className="text-sm font-semibold text-slate-900 dark:text-white line-clamp-1">
-                            {item.name}
-                          </CardTitle>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onRemoveItem(item.id)}
-                          className="h-6 w-6 p-0 text-slate-400 hover:text-red-600"
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
+                  {/* Card */}
+                  <Card className="relative flex-1">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center space-x-2">
+                        {getIcon(item.type)}
+                          <CardTitle className="text-sm font-semibold text-slate-900 dark:text-white line-clamp-1">
+                          {item.name}
+                        </CardTitle>
                       </div>
-                      <Badge className={`${getTypeColor(item.type)} w-fit`}>{item.type}</Badge>
-                    </CardHeader>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onRemoveItem(item.id)}
+                        className="h-6 w-6 p-0 text-slate-400 hover:text-red-600"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <Badge className={`${getTypeColor(item.type)} w-fit`}>{item.type}</Badge>
+                  </CardHeader>
 
-                    <CardContent className="pt-0">
-                      {item.description && (
-                        <p className="text-xs text-slate-600 dark:text-slate-300 mb-2 line-clamp-2">{item.description}</p>
+                  <CardContent className="pt-0">
+                    {item.description && (
+                      <p className="text-xs text-slate-600 dark:text-slate-300 mb-2 line-clamp-2">{item.description}</p>
+                    )}
+
+                    <div className="space-y-1">
+                      {item.location && getLocationDisplay(item.location) && (
+                        <div className="flex items-center space-x-1 text-xs text-slate-500 dark:text-slate-400">
+                          <MapPin className="h-3 w-3" />
+                          <span>{getLocationDisplay(item.location)}</span>
+                        </div>
                       )}
 
-                      <div className="space-y-1">
-                        {item.location && (
-                          <div className="flex items-center space-x-1 text-xs text-slate-500 dark:text-slate-400">
-                            <MapPin className="h-3 w-3" />
-                            <span>{item.location}</span>
-                          </div>
-                        )}
+                      {item.price && (
+                        <div className="flex items-center space-x-1 text-xs text-slate-500 dark:text-slate-400">
+                          <span className="font-semibold text-green-600 dark:text-green-400">
+                            {formatPrice(item.price)}
+                          </span>
+                        </div>
+                      )}
 
-                        {item.price && (
-                          <div className="flex items-center space-x-1 text-xs text-slate-500 dark:text-slate-400">
-                            <span className="font-semibold text-green-600 dark:text-green-400">
-                              {formatPrice(item.price)}
-                            </span>
-                          </div>
-                        )}
-
-                        {item.rating && <div className="flex items-center space-x-1">{renderStars(item.rating)}</div>}
-                      </div>
-                    </CardContent>
-                  </Card>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </>
+                      {item.rating && <div className="flex items-center space-x-1">{renderStars(item.rating)}</div>}
+                    </div>
+                  </CardContent>
+                </Card>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
         )}
       </div>
     </div>

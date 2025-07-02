@@ -321,8 +321,10 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
     }
   }
 
+  const allRestaurants = toolOutput.restaurants || []
+
   // Sort restaurants
-  const sortedRestaurants = [...(toolOutput.restaurants || [])].sort((a, b) => {
+  const sortedRestaurants = [...allRestaurants].sort((a, b) => {
     switch (sortBy) {
       case "rating":
         return (b.rating || 0) - (a.rating || 0)
@@ -332,6 +334,11 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
         return 0
     }
   })
+
+  // Always display all restaurants (multiple bookings allowed)
+  const displayRestaurants = sortedRestaurants
+
+  const totalResults = toolOutput.total_found || toolOutput.total_results || displayRestaurants.length
 
   // Get location for header - try different sources
   const getLocationDisplay = () => {
@@ -343,8 +350,6 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
     }
     return t('restaurants.yourSearch')
   }
-
-  const totalResults = toolOutput.total_found || toolOutput.total_results || toolOutput.restaurants?.length || 0
 
   return (
     <div className="mt-6 space-y-6">
@@ -392,7 +397,7 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
         {/* Restaurants Grid */}
         <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
           <AnimatePresence>
-            {sortedRestaurants.slice(0, 12).map((restaurant: RestaurantProperty, index: number) => {
+            {displayRestaurants.slice(0, 12).map((restaurant: RestaurantProperty, index: number) => {
               const itemId = restaurant.url || restaurant.search_result_id || `${restaurant.name}-${index}`
               const isBooked = bookedIds.has(itemId.toString())
               const isBooking = bookingStates[itemId] || false
@@ -417,13 +422,13 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
           </AnimatePresence>
         </div>
 
-        {(toolOutput.restaurants?.length || 0) > 12 && (
+        {(allRestaurants.length || 0) > 12 && (
           <div className="text-center">
             <Button
               variant="ghost"
               className="text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950"
             >
-              {t('common.viewMore', { count: (toolOutput.restaurants?.length || 0) - 12, type: 'restaurants' })}
+              {t('common.viewMore', { count: (allRestaurants.length || 0) - 12, type: 'restaurants' })}
             </Button>
           </div>
         )}

@@ -290,7 +290,8 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked }:
   }
 
   // Sort activities
-  const sortedActivities = [...getAllActivities()].sort((a, b) => {
+  const allActivities = getAllActivities()
+  const sortedActivities = [...allActivities].sort((a, b) => {
     switch (sortBy) {
       case "rating":
         const ratingA = typeof a.rating === 'string' ? parseFloat(a.rating) : (a.rating || 0)
@@ -314,7 +315,10 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked }:
     return t('restaurants.yourSearch')
   }
 
-  const totalResults = toolOutput.total_found || toolOutput.total_results || getAllActivities().length
+  // Always display all activities (multiple booking allowed)
+  const displayActivities = sortedActivities
+
+  const totalResults = toolOutput.total_found || toolOutput.total_results || displayActivities.length
 
   return (
     <div className="mt-6 space-y-6">
@@ -357,7 +361,7 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked }:
         {/* Activities Grid */}
         <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
           <AnimatePresence>
-            {sortedActivities.slice(0, 12).map((activity: ActivityItem, index: number) => {
+            {displayActivities.slice(0, 12).map((activity: ActivityItem, index: number) => {
               const itemId = activity.url || activity.title || `${activity.title}-${index}`
               const isBooked = bookedIds.has(itemId.toString())
               const isBooking = bookingStates[itemId] || false
@@ -382,13 +386,13 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked }:
           </AnimatePresence>
         </div>
 
-        {getAllActivities().length > 12 && (
+        {allActivities.length > 12 && (
           <div className="text-center">
             <Button
               variant="ghost"
               className="text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950"
             >
-              {t('common.viewMore', { count: getAllActivities().length - 12, type: 'activities' })}
+              {t('common.viewMore', { count: allActivities.length - 12, type: 'activities' })}
             </Button>
           </div>
         )}

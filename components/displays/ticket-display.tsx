@@ -157,6 +157,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice }: any) => 
   const [currentPage, setCurrentPage] = useState(0)
   const itemId = item.combination_id || item.id || `flight-${Date.now()}`
   const t = useTranslations('chat.displays')
+  const [open, setOpen] = useState(false)
 
   const totalDuration =
     item.flights_to?.reduce((acc: number, flight: FlightSegment) => {
@@ -176,7 +177,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice }: any) => 
   }
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <motion.div
           whileHover={{ scale: 1.02, y: -4 }}
@@ -379,7 +380,10 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice }: any) => 
 
             <Button
               size="sm"
-              onClick={() => onBook?.(item, "flights")}
+              onClick={() => {
+                onBook?.(item, "flights")
+                setOpen(false)
+              }}
               disabled={isBooking || isBooked}
               className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-200 w-full sm:w-auto"
             >
@@ -557,6 +561,12 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
     {} as Record<string, any[]>,
   )
 
+  // Determine if any flight is already booked
+  const hasBookedFlight = (groupedResults.flights || []).some((flt: any, idx: number) => {
+    const id = flt.combination_id || flt.id || `${'flights'}-${idx}`
+    return bookedIds.has(id.toString()) || flt.is_selected
+  })
+
   const getIcon = (type: string) => {
     switch (type) {
       case "flights":
@@ -632,10 +642,11 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                     <AnimatePresence>
                       {displayItems.map((item, index) => {
                         const itemId = item.id || item.combination_id || `${type}-${index}`
-                        const isBooked = bookedIds.has(itemId) || item.is_selected
+                        const isBooked = bookedIds.has(itemId.toString()) || item.is_selected
                         const isBooking = bookingStates[itemId] || false
 
                         if (type === "flights") {
+                          if (hasBookedFlight && !isBooked) return null;
                           return (
                             <motion.div
                               key={itemId}
@@ -696,9 +707,9 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                                     {item.price ? formatPrice(item.price, item.currency) : t('common.priceOnRequest')}
                                   </span>
                                   <Button
+                                    disabled={(type === 'flights' && hasBookedFlight && !isBooked) || isBooking || isBooked}
                                     size="sm"
                                     onClick={() => handleBooking(item, type)}
-                                    disabled={isBooking || isBooked}
                                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm font-medium transition-colors"
                                   >
                                     {isBooking ? (
@@ -726,11 +737,11 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
               // For new searches, use the existing logic (show booked items or first 6)
               const hasBooked = items.some((it: any, idx: number) => {
                 const itId = it.id || it.combination_id || `${type}-${idx}`
-                return bookedIds.has(itId) || it.is_selected
+                return bookedIds.has(itId.toString()) || it.is_selected
               })
               const displayItems = hasBooked ? items.filter((it: any, idx: number) => {
                 const itId = it.id || it.combination_id || `${type}-${idx}`
-                return bookedIds.has(itId) || it.is_selected
+                return bookedIds.has(itId.toString()) || it.is_selected
               }) : items.slice(0, 6)
 
               return (
@@ -740,10 +751,11 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                     <AnimatePresence>
                       {displayItems.map((item, index) => {
                         const itemId = item.id || item.combination_id || `${type}-${index}`
-                        const isBooked = bookedIds.has(itemId) || item.is_selected
+                        const isBooked = bookedIds.has(itemId.toString()) || item.is_selected
                         const isBooking = bookingStates[itemId] || false
 
                         if (type === "flights") {
+                          if (hasBookedFlight && !isBooked) return null;
                           return (
                             <motion.div
                               key={itemId}
@@ -804,9 +816,9 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                                     {item.price ? formatPrice(item.price, item.currency) : t('common.priceOnRequest')}
                                   </span>
                                   <Button
+                                    disabled={(type === 'flights' && hasBookedFlight && !isBooked) || isBooking || isBooked}
                                     size="sm"
                                     onClick={() => handleBooking(item, type)}
-                                    disabled={isBooking || isBooked}
                                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm font-medium transition-colors"
                                   >
                                     {isBooking ? (
