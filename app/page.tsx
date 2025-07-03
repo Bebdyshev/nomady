@@ -30,11 +30,15 @@ import {
 import { useTheme } from "@/components/shared/theme-provider"
 import { useTranslations } from "@/lib/i18n-client"
 import { motion } from "framer-motion"
-import { Globe as GlobeComponent } from "@/components/magicui/globe"
+import dynamic from "next/dynamic"
+import Image from "next/image"
 import { AnimatedGradientText } from "@/components/magicui/animated-gradient-text"
 import { cn } from "@/lib/utils"
 import { Logo } from "@/components/ui/logo"
-import { DemoChat } from "@/components/landing/demo-chat"
+
+// Lazy-load heavy client-only components to cut initial JS
+const GlobeComponent = dynamic(() => import("@/components/magicui/globe").then(m => m.Globe), { ssr: false })
+const DemoChat = dynamic(() => import("@/components/landing/demo-chat").then(m => m.DemoChat), { ssr: false })
 
 export default function LandingPage() {
   const [tripPrompt, setTripPrompt] = useState("")
@@ -80,7 +84,7 @@ export default function LandingPage() {
       setIsScrolled(window.scrollY > 50)
     }
     
-    window.addEventListener('scroll', handleScroll)
+    window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
@@ -501,7 +505,7 @@ export default function LandingPage() {
                       WebkitClipPath: "padding-box",
                     }}
                   />
-                  <img src="/nfactorial-logo.png" alt="nFactorial Incubator" className="h-5 w-5 mr-2" />
+                  <Image src="/nfactorial-logo.png" alt="nFactorial Incubator" width={20} height={20} className="h-5 w-5 mr-2" />
                   <span className="text-slate-600 dark:text-slate-300 text-sm font-medium mr-1">{t('hero.backedBy')}</span>
                 </div>
               </motion.div>
