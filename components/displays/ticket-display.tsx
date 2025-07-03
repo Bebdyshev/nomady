@@ -638,7 +638,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
               return (
                 <div className="max-w-6xl mx-auto px-4">
                   {/* Auto-responsive grid that adapts to parent container width */}
-                  <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))' }}>
+                  <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))' }}>
                     <AnimatePresence>
                       {displayItems.map((item, index) => {
                         const itemId = item.id || item.combination_id || `${type}-${index}`
@@ -747,7 +747,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
               return (
                 <div className="max-w-6xl mx-auto px-4">
                   {/* Auto-responsive grid that adapts to parent container width */}
-                  <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))' }}>
+                  <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))' }}>
                     <AnimatePresence>
                       {displayItems.map((item, index) => {
                         const itemId = item.id || item.combination_id || `${type}-${index}`
