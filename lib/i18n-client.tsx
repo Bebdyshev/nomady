@@ -25,12 +25,12 @@ export function I18nProvider({ children }: I18nProviderProps) {
   const loadMessages = async (newLocale: Locale) => {
     try {
       const messageModule = await import(`../messages/${newLocale}.json`)
-      setMessages(messageModule.default)
+      setMessages(messageModule.default as unknown as AbstractIntlMessages)
     } catch (error) {
       console.error(`Failed to load messages for locale: ${newLocale}`, error)
       // Fallback to English
       const fallbackModule = await import(`../messages/en.json`)
-      setMessages(fallbackModule.default)
+      setMessages(fallbackModule.default as unknown as AbstractIntlMessages)
     }
   }
 

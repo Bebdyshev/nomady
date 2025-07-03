@@ -400,6 +400,27 @@ class ApiClient {
       activities?: any[]
     }>(`/roadmap/${conversationId}`)
   }
+
+  // Roadmap methods
+  async getUserRoadmaps(activeOnly: boolean = true) {
+    return this.request(`/roadmap/?active_only=${activeOnly}`)
+  }
+
+  async getRoadmapById(roadmapId: number) {
+    return this.request(`/roadmap/${roadmapId}`)
+  }
+
+  async getRoadmapCoordinates(roadmapId: number) {
+    return this.request(`/roadmap/${roadmapId}/coordinates`)
+  }
+
+  // Demo chat (no auth)
+  async sendDemoMessage(messages: Array<{ role: string; content: string }>) {
+    return this.request<{ response: string }>("/chat/demo", {
+      method: "POST",
+      body: JSON.stringify({ messages }),
+    })
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL)

@@ -25,6 +25,7 @@ import {
   Zap,
   MessageCircle,
   TrendingUp,
+  Hotel,
 } from "lucide-react"
 import { useTheme } from "@/components/shared/theme-provider"
 import { useTranslations } from "@/lib/i18n-client"
@@ -33,6 +34,7 @@ import { Globe as GlobeComponent } from "@/components/magicui/globe"
 import { AnimatedGradientText } from "@/components/magicui/animated-gradient-text"
 import { cn } from "@/lib/utils"
 import { Logo } from "@/components/ui/logo"
+import { DemoChat } from "@/components/landing/demo-chat"
 
 export default function LandingPage() {
   const [tripPrompt, setTripPrompt] = useState("")
@@ -201,7 +203,71 @@ export default function LandingPage() {
           : 'bg-transparent'
       }`}>
         <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
+          {/* Mobile Header - Two rows layout */}
+          <div className="md:hidden">
+            {/* First row: Logo + Name */}
+            <div className="flex items-center justify-center mb-3">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, type: "spring", bounce: 0.3 }}
+                className="flex items-center space-x-3 group"
+              >
+                <Logo width={40} height={40} className="rounded-xl" />
+                <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent">
+                  Nomady
+                </span>
+              </motion.div>
+            </div>
+            
+            {/* Second row: Action buttons */}
+            <div className="flex items-center justify-center space-x-3">
+              <LanguageSwitcher />
+              
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="relative rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-300 hover:scale-110 group"
+                >
+                  <motion.div
+                    initial={false}
+                    animate={{ rotate: theme === "dark" ? 180 : 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {theme === "dark" ? (
+                      <Sun className="h-5 w-5 text-amber-500" />
+                    ) : (
+                      <Moon className="h-5 w-5 text-slate-600" />
+                    )}
+                  </motion.div>
+                  <span className="absolute -inset-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
+                </Button>
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+              >
+                <Button 
+                  onClick={() => router.push("/auth")} 
+                  className="relative bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-lg shadow-lg hover:shadow-blue-500/25 transition-all duration-300 hover:scale-105 overflow-hidden group"
+                >
+                  <span className="relative z-10">{tNav('getStarted')}</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </Button>
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Desktop Header - Single row layout */}
+          <div className="hidden md:flex items-center justify-between">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -214,7 +280,7 @@ export default function LandingPage() {
               </span>
             </motion.div>
 
-            <nav className="hidden md:flex items-center space-x-1">
+            <nav className="flex items-center space-x-1">
               {[
                 { href: "#features", label: tNav('features') },
                 { href: "#how-it-works", label: tNav('howItWorks') },
@@ -272,7 +338,7 @@ export default function LandingPage() {
                 <Button 
                   variant="ghost" 
                   onClick={() => router.push("/auth")} 
-                  className="hidden md:inline-flex hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-300 rounded-lg px-4 py-2 hover:scale-105"
+                  className="hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-300 rounded-lg px-4 py-2 hover:scale-105"
                 >
                   {tNav('signIn')}
                 </Button>
@@ -443,6 +509,21 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Live Demo Section */}
+      <section id="demo" className="py-20 bg-slate-50 dark:bg-slate-800/50">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-12 max-w-3xl mx-auto">
+            <motion.h2 initial={{opacity:0,y:20}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4">
+              {t('hero.badge')}
+            </motion.h2>
+            <motion.p initial={{opacity:0,y:10}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6,delay:0.2}} className="text-xl text-slate-600 dark:text-slate-300">
+              Try chatting with our AI below – no sign-up needed.
+            </motion.p>
+          </div>
+          <DemoChat />
+        </div>
+      </section>
+
       {/* Stats Section */}
       <section className="py-16 bg-slate-50 dark:bg-slate-800/50">
         <div className="container mx-auto px-6">
@@ -466,8 +547,9 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Demo Section */}
       {/* Features Section */}
-      <section id="features" className="py-20">
+      {/* <section id="features" className="py-20">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <motion.div
@@ -507,7 +589,7 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* How It Works Section */}
       <section id="how-it-works" className="py-20 bg-slate-50 dark:bg-slate-800/50">
@@ -679,7 +761,6 @@ export default function LandingPage() {
                     </div>
                     <p className="text-slate-600 dark:text-slate-300">{plan.description}</p>
                   </div>
-
                   <ul className="space-y-4 mb-8">
                     {Array.isArray(plan.features) && plan.features.map((feature: string, featureIndex: number) => (
                       <li key={featureIndex} className="flex items-center">
@@ -707,29 +788,74 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-6">
+      <section className="py-24 relative overflow-hidden">
+        {/* Decorative dots pattern */}
+        <svg
+          className="absolute left-1/2 top-0 w-[1200px] -translate-x-1/2 -translate-y-1/3 opacity-20 dark:opacity-10 pointer-events-none"
+          width="1200" height="600" fill="none"
+        >
+          <defs>
+            <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+              <circle cx="1" cy="1" r="1" className="text-white/30" fill="currentColor" />
+            </pattern>
+          </defs>
+          <rect width="1200" height="600" fill="url(#dots)" />
+        </svg>
+
+        <div className="container mx-auto px-6 relative">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="text-center max-w-4xl mx-auto"
+            className="max-w-5xl mx-auto"
           >
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-3xl p-12 text-white">
-              <h2 className="text-4xl md:text-5xl font-bold mb-6">{t('cta.title')}</h2>
-              <p className="text-xl mb-8 opacity-90">
+            <div className="relative overflow-hidden rounded-3xl p-10 md:p-16 bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700 shadow-xl">
+              {/* flying icons */}
+              <motion.div
+                initial={{ x: -80, opacity: 0 }}
+                animate={{ x: 0, opacity: 0.25 }}
+                transition={{ duration: 1.2, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }}
+                className="absolute -left-10 top-10 text-white"
+              >
+                <Plane className="h-16 w-16 mb-6" />
+                <MapPin className="h-16 w-16 mb-6" />
+                <Hotel className="h-16 w-16" />
+              </motion.div>
+
+              <div className="relative z-10 text-center md:text-left md:max-w-md md:ml-auto">
+                <h2 className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">
+                  <span className="block text-white">{t('cta.title')}</span>
+                  <span className="block bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text text-transparent">
+                    {t('cta.highlight') || t('cta.subtitle')}
+                  </span>
+                </h2>
+                <p className="text-lg md:text-xl text-white/90 mb-8">
                 {t('cta.subtitle')}
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+
+                <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                 <Button
                   size="lg"
-                  onClick={() => router.push("/auth")}
-                  className="bg-white text-blue-600 hover:bg-slate-100 px-8 py-4 text-lg font-semibold"
+                    onClick={() => router.push('/auth')}
+                    className="relative px-8 py-4 text-lg font-semibold text-white bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30"
                 >
                   {t('cta.button')}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="px-8 py-4 text-lg font-semibold border-white text-white hover:bg-white/10"
+                  >
+                    {t('cta.secondary') || 'See How It Works'}
+                  </Button>
+                </div>
+
+                <p className="mt-6 text-sm text-white/80">
+                  {t('cta.microcopy') || 'No credit card required · Cancel anytime'}
+                </p>
               </div>
             </div>
           </motion.div>

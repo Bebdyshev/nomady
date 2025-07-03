@@ -14,7 +14,7 @@ interface SelectedItem {
   name: string
   type: string
   price?: string | number
-  location?: string
+  location?: string | { address?: string; distance_from_center?: string; coordinates?: any; distances?: any }
   rating?: number
   description?: string
   duration?: string
@@ -112,6 +112,16 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll }: Inte
     )
   }
 
+  const getLocationDisplay = (loc: any): string => {
+    if (!loc) return ""
+    if (typeof loc === "string") return loc
+    if (typeof loc === "object") {
+      if (loc.address && loc.address !== "N/A") return loc.address
+      if (loc.distance_from_center && loc.distance_from_center !== "N/A") return loc.distance_from_center
+    }
+    return ""
+  }
+
   return (
     <div className="h-full flex flex-col">
       <div className="p-4 border-b border-slate-200 dark:border-slate-700">
@@ -198,10 +208,10 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll }: Inte
                     )}
 
                     <div className="space-y-1">
-                      {item.location && (
+                      {item.location && getLocationDisplay(item.location) && (
                         <div className="flex items-center space-x-1 text-xs text-slate-500 dark:text-slate-400">
                           <MapPin className="h-3 w-3" />
-                          <span>{item.location}</span>
+                          <span>{getLocationDisplay(item.location)}</span>
                         </div>
                       )}
 

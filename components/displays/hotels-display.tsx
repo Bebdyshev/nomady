@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
+import { useTranslations } from "@/lib/i18n-client"
+import { apiClient } from "@/lib/api"
 import {
   Hotel,
   MapPin,
@@ -317,6 +319,8 @@ const getAmenityIcon = (amenity: string) => {
 
 // Enhanced Hotel Card Component
 const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) => {
+  const t = useTranslations('chat.displays')
+  
   const formatPrice = (priceInput: number | string | null | undefined) => {
     // Handle new format search_price
     if (hotel.search_price && hotel.search_price !== "N/A") {
@@ -349,7 +353,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
     if (typeof priceInput === 'string' && priceInput.toLowerCase() !== 'n/a') {
       return priceInput
     }
-    return "Price on request"
+    return t('common.priceOnRequest')
   }
 
   // Handle rating from multiple sources
@@ -432,8 +436,10 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
   // Get the primary image for background
   const backgroundImage = hotelImages.length > 0 ? hotelImages[0] : ''
 
+  const [open, setOpen] = useState(false)
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <motion.div
           whileHover={{ scale: 1.02, y: -4 }}
@@ -470,7 +476,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                 {isBooked && (
                   <Badge className="bg-green-500/90 text-white border-none">
                     <CheckCircle2 className="h-3 w-3 mr-1" />
-                    Booked
+                    {t('common.booked')}
                   </Badge>
                 )}
               </div>
@@ -496,7 +502,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                       {formatPrice(hotel.price)}
                     </div>
                     <div className="text-white/80 text-sm">
-                      {nights > 0 ? `for ${nights} nights` : 'total'}
+                      {nights > 0 ? t('hotels.forNights', { nights }) : t('hotels.totalPrice')}
                     </div>
                   </div>
 
@@ -519,7 +525,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                     ) : isBooked ? (
                       <CheckCircle2 className="h-4 w-4" />
                     ) : (
-                      "Book"
+                      t('common.book')
                     )}
                   </Button>
                 </div>
@@ -583,7 +589,10 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
 
                 <Button
                   size="lg"
-                  onClick={() => onBook?.(hotel, "hotels")}
+                  onClick={() => {
+                    onBook?.(hotel, "hotels")
+                    setOpen(false)
+                  }}
                   disabled={isBooking || isBooked}
                   className="bg-white text-slate-900 hover:bg-white/90 px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                 >
@@ -617,7 +626,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                   <div>
                     <div className="flex items-center justify-center space-x-1 text-xs text-slate-600 dark:text-slate-300 mb-1">
                       <Calendar className="h-3 w-3" />
-                      <span>Check-in</span>
+                      <span>{t('hotels.checkIn')}</span>
                     </div>
                     <div className="font-semibold text-sm text-slate-900 dark:text-white">
                       {new Date(searchParams.check_in_date).toLocaleDateString("en-US", {
@@ -630,7 +639,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                   <div>
                     <div className="flex items-center justify-center space-x-1 text-xs text-slate-600 dark:text-slate-300 mb-1">
                       <Calendar className="h-3 w-3" />
-                      <span>Check-out</span>
+                      <span>{t('hotels.checkOut')}</span>
                     </div>
                     <div className="font-semibold text-sm text-slate-900 dark:text-white">
                       {new Date(searchParams.check_out_date).toLocaleDateString("en-US", {
@@ -643,10 +652,10 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                   <div>
                     <div className="flex items-center justify-center space-x-1 text-xs text-slate-600 dark:text-slate-300 mb-1">
                       <Users className="h-3 w-3" />
-                      <span>Guests</span>
+                      <span>{t('hotels.guests')}</span>
                     </div>
                     <div className="font-semibold text-sm text-slate-900 dark:text-white">{searchParams.adults}</div>
-                    <div className="text-xs text-slate-500">{nights} nights</div>
+                    <div className="text-xs text-slate-500">{nights} {t('hotels.nights')}</div>
                   </div>
                 </div>
               </div>
@@ -656,7 +665,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
               {/* Hotel Description - Compact */}
               {hotel.description && (
                 <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">About</h3>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('hotels.about')}</h3>
                   <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-4">
                     {hotel.description}
                   </p>
@@ -666,7 +675,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
               {/* Room Information */}
               {hotel.rooms && hotel.rooms.length > 0 && (
                 <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Rooms Available</h3>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('hotels.roomsAvailable')}</h3>
                   <div className="space-y-2 max-h-32 overflow-y-auto">
                     {hotel.rooms.slice(0, 3).map((room: any, idx: number) => (
                       <div key={idx} className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
@@ -674,12 +683,12 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                           <div>
                             <div className="font-medium text-sm text-slate-900 dark:text-white">{room.room_type}</div>
                             {room.max_guests && (
-                              <div className="text-xs text-slate-500">Max guests: {room.max_guests}</div>
+                              <div className="text-xs text-slate-500">{t('hotels.maxGuests')} {room.max_guests}</div>
                             )}
                           </div>
                           <div className="text-right">
                             <div className="font-semibold text-sm text-green-600 dark:text-green-400">
-                              {room.price_text || 'Price on request'}
+                              {room.price_text || t('common.priceOnRequest')}
                             </div>
                           </div>
                         </div>
@@ -692,7 +701,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
               {/* Amenities Grid - More Compact */}
               {amenities.length > 0 && (
                 <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Amenities</h3>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('hotels.amenities')}</h3>
                   <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
                     {amenities.map((amenity: string, index: number) => (
                       <div
@@ -712,7 +721,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
               {/* Reviews */}
               {hotel.featured_reviews && hotel.featured_reviews.length > 0 && (
                 <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Reviews</h3>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('hotels.reviews')}</h3>
                   <div className="space-y-2 max-h-32 overflow-y-auto">
                     {hotel.featured_reviews.slice(0, 2).map((review: string, idx: number) => (
                       <div key={idx} className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
@@ -727,7 +736,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
 
               {/* Location & Contact - Compact */}
               <div className="space-y-2">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Location</h3>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('hotels.location')}</h3>
                 <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 space-y-3">
                   {hotel.location?.address && (
                     <div className="flex items-center space-x-2">
@@ -747,13 +756,13 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                         onClick={() => window.open(hotel.booking_url || hotel.link || hotel.detail_url, '_blank')}
                       >
                         <ExternalLink className="h-3 w-3" />
-                        <span>View Details</span>
+                        <span>{t('hotels.viewDetails')}</span>
                       </Button>
                     )}
                     
                     <Button variant="outline" size="sm" className="flex items-center space-x-1 text-xs">
                       <Phone className="h-3 w-3" />
-                      <span>Contact</span>
+                      <span>{t('hotels.contact')}</span>
                     </Button>
                   </div>
                 </div>
@@ -762,7 +771,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
               {/* Rating Breakdown */}
               {hotel.rating_subscores && Object.keys(hotel.rating_subscores).length > 0 && (
                 <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Ratings</h3>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('hotels.ratings')}</h3>
                   <div className="grid grid-cols-2 gap-2">
                     {Object.entries(hotel.rating_subscores).slice(0, 6).map(([category, score]: [string, any]) => (
                       <div key={category} className="flex justify-between items-center bg-slate-50 dark:bg-slate-800 rounded p-2">
@@ -776,6 +785,44 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
             </div>
           </div>
         </div>
+
+        <DialogFooter className="pt-4 md:pt-6 border-t border-slate-200 dark:border-slate-700">
+          <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-4">
+            <div className="text-center sm:text-left">
+              <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">{formatPrice(hotel.price)}</div>
+              <div className="text-xs md:text-sm text-slate-500 dark:text-slate-400">
+                {nights > 0 ? t('hotels.forNights', { nights }) : t('hotels.totalPrice')}
+              </div>
+            </div>
+
+            <Button
+              size="sm"
+              onClick={() => {
+                onBook?.(hotel, "hotels")
+                setOpen(false)
+              }}
+              disabled={isBooking || isBooked}
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-200 w-full sm:w-auto"
+            >
+              {isBooking ? (
+                <>
+                  <Loader2 className="h-4 w-4 md:h-5 md:w-5 animate-spin mr-2" />
+                  {t('common.booking')}
+                </>
+              ) : isBooked ? (
+                <>
+                  <CheckCircle2 className="h-4 w-4 md:h-5 md:w-5 mr-2" />
+                  {t('common.booked')}
+                </>
+              ) : (
+                <>
+                  <CreditCard className="h-4 w-4 md:h-5 md:w-5 mr-2" />
+                  {t('hotels.bookHotel')}
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )
@@ -785,6 +832,7 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
   const [bookingStates, setBookingStates] = useState<Record<string, boolean>>({})
   const [sortBy, setSortBy] = useState<"price" | "rating" | "name">("price")
   const { toast } = useToast()
+  const t = useTranslations('chat.displays')
 
   const hotels = toolOutput.properties || toolOutput.hotels || []
   const searchParams = toolOutput.search_parameters || toolOutput.search_params
@@ -792,28 +840,48 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
   const destination = searchParams ? ('query' in searchParams ? searchParams.query : searchParams.destination) : ''
 
   const handleBooking = async (hotel: any, type: string) => {
-    const itemId = hotel.link || hotel.detail_url || `${hotel.name}-${Date.now()}`
-    setBookingStates((prev) => ({ ...prev, [itemId]: true }))
+    // Определяем идентификатор выбранного элемента (индекс или link / detail_url)
+    const index = hotels.findIndex((h) => h === hotel)
+    const selected_item_id = hotel.id || hotel.link || hotel.detail_url || `${index}`
+    setBookingStates((prev) => ({ ...prev, [selected_item_id]: true }))
 
     try {
-      // Simulate booking API call
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      // Проверяем наличие search_result_id (обязателен для API)
+      if (!hotel.search_result_id) {
+        toast({
+          title: t('common.bookingNotAvailable'),
+          description: t('olderSearchError'),
+          variant: "destructive",
+        })
+        return
+      }
 
-      toast({
-        title: "Hotel Booked Successfully! 🏨",
-        description: `${hotel.name} has been reserved for your stay.`,
-      })
+      const bookingData = {
+        search_result_id: hotel.search_result_id,
+        selected_item_id: selected_item_id.toString(),
+      }
 
-      onBooked?.(hotel, itemId, type)
+      const response = await apiClient.bookHotel(bookingData)
+
+      if (response.data) {
+        toast({
+          title: t('hotels.hotelBooked'),
+          description: t('hotels.hotelBookedDesc', { name: hotel.name }),
+        })
+
+        onBooked?.(hotel, selected_item_id, type)
+      } else {
+        throw new Error(response.error || 'Booking failed')
+      }
     } catch (error) {
-      console.error("Booking error:", error)
+      console.error('Booking error:', error)
       toast({
-        title: "Booking Failed",
-        description: "There was an error processing your booking. Please try again.",
-        variant: "destructive",
+        title: t('common.bookingFailed'),
+        description: t('common.bookingFailedDesc'),
+        variant: 'destructive',
       })
     } finally {
-      setBookingStates((prev) => ({ ...prev, [itemId]: false }))
+      setBookingStates((prev) => ({ ...prev, [selected_item_id]: false }))
     }
   }
 
@@ -835,6 +903,20 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
     }
   })
 
+  const getHotelId = (hotel: any, idx: number) => {
+    return (hotel.id ? hotel.id.toString() : undefined) || hotel.link || hotel.detail_url || `${hotel.name}-${idx}`
+  }
+
+  const hasBookedHotel = hotels.some((hotel, idx) => {
+    const id = getHotelId(hotel, idx)
+    return bookedIds.has(id) || hotel.is_selected
+  })
+
+  const displayHotels = hasBookedHotel ? hotels.filter((hotel, idx) => {
+    const id = getHotelId(hotel, idx)
+    return bookedIds.has(id) || hotel.is_selected
+  }) : sortedHotels
+
   return (
     <div className="mt-6 space-y-6">
       <motion.div
@@ -851,25 +933,25 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
             </div>
             <div>
               <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                Hotels in {destination}
+                {t('hotels.hotelsIn', { location: destination })}
               </h3>
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                {totalResults.toLocaleString()} properties found
+                {t('hotels.propertiesFound', { count: totalResults.toLocaleString() })}
               </p>
             </div>
           </div>
 
           {/* Sort Options */}
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-slate-600 dark:text-slate-300">Sort by:</span>
+            <span className="text-sm text-slate-600 dark:text-slate-300">{t('common.sortBy')}</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
               className="text-sm border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1 bg-white dark:bg-slate-800"
             >
-              <option value="price">Price</option>
-              <option value="rating">Rating</option>
-              <option value="name">Name</option>
+              <option value="price">{t('common.price')}</option>
+              <option value="rating">{t('common.rating')}</option>
+              <option value="name">{t('common.name')}</option>
             </select>
           </div>
         </div>
@@ -877,8 +959,8 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
         {/* Hotels Grid */}
         <div className="grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))' }}>
           <AnimatePresence>
-            {sortedHotels.slice(0, 6).map((hotel: Hotel, index: number) => {
-              const itemId = hotel.link || hotel.detail_url || `${hotel.name}-${index}`
+            {displayHotels.slice(0, 6).map((hotel: Hotel, index: number) => {
+              const itemId = getHotelId(hotel, index)
               const isBooked = bookedIds.has(itemId)
               const isBooking = bookingStates[itemId] || false
 
@@ -903,13 +985,13 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
           </AnimatePresence>
         </div>
 
-        {hotels.length > 6 && (
+        {(!hasBookedHotel && hotels.length > 6) && (
           <div className="text-center">
             <Button
               variant="ghost"
               className="text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950"
             >
-              View {hotels.length - 6} more hotels
+              {t('common.viewMore', { count: hotels.length - 6, type: 'hotels' })}
             </Button>
           </div>
         )}

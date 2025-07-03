@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { apiClient } from "@/lib/api"
+import { useTranslations } from "@/lib/i18n-client"
 import { 
   Plane, 
   Hotel, 
@@ -80,6 +81,7 @@ interface TicketDisplayProps {
 // Animated Flight Path Component
 const FlightPath = ({ segments, isReturn = false }: { segments: FlightSegment[]; isReturn?: boolean }) => {
   const [animationProgress, setAnimationProgress] = useState(0)
+  const t = useTranslations('chat.displays')
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -142,7 +144,7 @@ const FlightPath = ({ segments, isReturn = false }: { segments: FlightSegment[];
       {isReturn && (
         <div className="absolute top-0 right-0">
           <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200">
-            Return
+            {t('flights.return')}
           </Badge>
         </div>
       )}
@@ -154,6 +156,8 @@ const FlightPath = ({ segments, isReturn = false }: { segments: FlightSegment[];
 const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice }: any) => {
   const [currentPage, setCurrentPage] = useState(0)
   const itemId = item.combination_id || item.id || `flight-${Date.now()}`
+  const t = useTranslations('chat.displays')
+  const [open, setOpen] = useState(false)
 
   const totalDuration =
     item.flights_to?.reduce((acc: number, flight: FlightSegment) => {
@@ -173,7 +177,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice }: any) => 
   }
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <motion.div
           whileHover={{ scale: 1.02, y: -4 }}
@@ -260,7 +264,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice }: any) => 
                 {isBooked && (
                   <div className="flex items-center justify-center space-x-2 text-green-600 dark:text-green-400 pt-2">
                     <CheckCircle2 className="h-4 w-4" />
-                    <span className="text-sm font-medium text-horizontal">Booked</span>
+                    <span className="text-sm font-medium text-horizontal">{t('common.booked')}</span>
                   </div>
                 )}
               </div>
@@ -376,7 +380,10 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice }: any) => 
 
             <Button
               size="sm"
-              onClick={() => onBook?.(item, "flights")}
+              onClick={() => {
+                onBook?.(item, "flights")
+                setOpen(false)
+              }}
               disabled={isBooking || isBooked}
               className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-200 w-full sm:w-auto"
             >
@@ -388,7 +395,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice }: any) => 
               ) : isBooked ? (
                 <>
                   <CheckCircle2 className="h-4 w-4 md:h-5 md:w-5 mr-2" />
-                  Booked
+                  {t('common.booked')}
                 </>
               ) : (
                 <>
@@ -407,6 +414,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice }: any) => 
 export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: TicketDisplayProps) {
   const [bookingStates, setBookingStates] = useState<Record<string, boolean>>({})
   const { toast } = useToast()
+  const t = useTranslations('chat.displays')
 
   // Global price formatting function
   const formatPrice = (price: number, currency: string = "USD") => {
@@ -477,8 +485,8 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
       if (!item.search_result_id) {
         console.error("Missing search_result_id. Full item data:", item)
         toast({
-          title: "Booking Not Available",
-          description: "This item is from an older search. Please make a new search to book items.",
+          title: t('common.bookingNotAvailable'),
+          description: t('olderSearchError'),
           variant: "destructive",
         })
         return
@@ -511,16 +519,16 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
       console.log("Booking response:", response)
 
       toast({
-        title: "Booking Successful! ✈️",
-        description: `Your ${type} has been booked successfully.`,
+        title: t('flights.bookingSuccess'),
+        description: t('flights.bookingSuccessDesc', { type }),
       })
 
       onBooked?.(item, itemId, type)
     } catch (error) {
       console.error("Booking error:", error)
       toast({
-        title: "Booking Failed",
-        description: "There was an error processing your booking. Please try again.",
+        title: t('common.bookingFailed'),
+        description: t('common.bookingFailedDesc'),
         variant: "destructive",
       })
     } finally {
@@ -552,6 +560,12 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
     },
     {} as Record<string, any[]>,
   )
+
+  // Determine if any flight is already booked
+  const hasBookedFlight = (groupedResults.flights || []).some((flt: any, idx: number) => {
+    const id = flt.combination_id || flt.id || `${'flights'}-${idx}`
+    return bookedIds.has(id.toString()) || flt.is_selected
+  })
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -605,7 +619,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
               <div className="flex-1">
                 <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white capitalize text-horizontal">{type}</h3>
                 <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 text-horizontal">
-                {items.length} option{items.length !== 1 ? "s" : ""} found
+                {t('common.optionsFound', { count: items.length, plural: items.length !== 1 ? 's' : '' })}
               </p>
               </div>
               <Badge className={`${getTypeColor(type)} text-sm px-3 py-1 text-horizontal`}>{items.length}</Badge>
@@ -628,10 +642,11 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                     <AnimatePresence>
                       {displayItems.map((item, index) => {
                         const itemId = item.id || item.combination_id || `${type}-${index}`
-                        const isBooked = bookedIds.has(itemId) || item.is_selected
+                        const isBooked = bookedIds.has(itemId.toString()) || item.is_selected
                         const isBooking = bookingStates[itemId] || false
 
                         if (type === "flights") {
+                          if (hasBookedFlight && !isBooked) return null;
                           return (
                             <motion.div
                               key={itemId}
@@ -689,12 +704,12 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                                 </div>
                                 <div className="flex items-center justify-between mt-auto pt-4">
                                   <span className="font-semibold text-xl text-slate-900 dark:text-white text-horizontal">
-                                    {item.price ? formatPrice(item.price, item.currency) : 'Price on request'}
+                                    {item.price ? formatPrice(item.price, item.currency) : t('common.priceOnRequest')}
                                   </span>
                                   <Button
+                                    disabled={(type === 'flights' && hasBookedFlight && !isBooked) || isBooking || isBooked}
                                     size="sm"
                                     onClick={() => handleBooking(item, type)}
-                                    disabled={isBooking || isBooked}
                                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm font-medium transition-colors"
                                   >
                                     {isBooking ? (
@@ -702,10 +717,10 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                                     ) : isBooked ? (
                                       <>
                                         <CheckCircle2 className="h-4 w-4 mr-2" />
-                                        <span className="text-horizontal">Booked</span>
+                                        {t('common.booked')}
                                       </>
                                     ) : (
-                                      <span className="text-horizontal">Book Now</span>
+                                      <span className="text-horizontal">{t('common.bookNow')}</span>
                                     )}
                                   </Button>
                                 </div>
@@ -722,11 +737,11 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
               // For new searches, use the existing logic (show booked items or first 6)
               const hasBooked = items.some((it: any, idx: number) => {
                 const itId = it.id || it.combination_id || `${type}-${idx}`
-                return bookedIds.has(itId) || it.is_selected
+                return bookedIds.has(itId.toString()) || it.is_selected
               })
               const displayItems = hasBooked ? items.filter((it: any, idx: number) => {
                 const itId = it.id || it.combination_id || `${type}-${idx}`
-                return bookedIds.has(itId) || it.is_selected
+                return bookedIds.has(itId.toString()) || it.is_selected
               }) : items.slice(0, 6)
 
               return (
@@ -736,10 +751,11 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                     <AnimatePresence>
                       {displayItems.map((item, index) => {
                         const itemId = item.id || item.combination_id || `${type}-${index}`
-                        const isBooked = bookedIds.has(itemId) || item.is_selected
+                        const isBooked = bookedIds.has(itemId.toString()) || item.is_selected
                         const isBooking = bookingStates[itemId] || false
 
                         if (type === "flights") {
+                          if (hasBookedFlight && !isBooked) return null;
                           return (
                             <motion.div
                               key={itemId}
@@ -797,12 +813,12 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                                 </div>
                                 <div className="flex items-center justify-between mt-auto pt-4">
                                   <span className="font-semibold text-xl text-slate-900 dark:text-white text-horizontal">
-                                    {item.price ? formatPrice(item.price, item.currency) : 'Price on request'}
+                                    {item.price ? formatPrice(item.price, item.currency) : t('common.priceOnRequest')}
                                   </span>
                                   <Button
+                                    disabled={(type === 'flights' && hasBookedFlight && !isBooked) || isBooking || isBooked}
                                     size="sm"
                                     onClick={() => handleBooking(item, type)}
-                                    disabled={isBooking || isBooked}
                                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm font-medium transition-colors"
                                   >
                                     {isBooking ? (
@@ -810,10 +826,10 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                                     ) : isBooked ? (
                                       <>
                                         <CheckCircle2 className="h-4 w-4 mr-2" />
-                                        <span className="text-horizontal">Booked</span>
+                                        {t('common.booked')}
                                       </>
                                     ) : (
-                                      <span className="text-horizontal">Book Now</span>
+                                      <span className="text-horizontal">{t('common.bookNow')}</span>
                                     )}
                                   </Button>
                                 </div>

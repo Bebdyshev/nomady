@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/auth-context"
 import { I18nProvider } from "@/lib/i18n-client"
 import { Toaster } from "@/components/ui/toaster"
 import { Analytics } from "@vercel/analytics/next"
+import 'leaflet/dist/leaflet.css'
 
 // Динамический импорт без SSR для Google Analytics
 const GoogleAnalyticsProvider = dynamic(

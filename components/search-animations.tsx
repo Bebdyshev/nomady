@@ -12,25 +12,25 @@ export const SearchAnimation = ({ searchType }: { searchType: string }) => {
   const searchSteps: Record<string, { icon: string; steps: string[] }> = {
     tickets: {
       icon: "✈️",
-      steps: [t('searchingTickets'), "Анализирую цены...", "Собираю результаты..."],
+      steps: [t('searchingTickets'), t('analyzingPrices'), t('collectingResults')],
     },
     hotels: {
       icon: "🏨",
-      steps: [t('searchingHotels'), "Проверяю доступность...", "Собираю варианты..."],
+      steps: [t('searchingHotels'), t('checkingAvailability'), t('collectingOptions')],
     },
     restaurants: {
       icon: "🍽️",
-      steps: [t('searchingRestaurants'), "Читаю отзывы...", "Подбираю рекомендации..."],
+      steps: [t('searchingRestaurants'), t('readingReviews'), t('preparingRecommendations')],
     },
     activities: {
       icon: "🎯",
-      steps: [t('searchingActivities'), "Проверяю расписание...", "Собираю впечатления..."],
+      steps: [t('searchingActivities'), t('checkingSchedule'), t('collectingExperiences')],
     },
   }
 
   const search = searchSteps[searchType] || {
     icon: "🔍",
-    steps: ["Ищу...", "Обрабатываю...", "Завершаю..."],
+    steps: [t('searching'), t('processing'), t('finishing')],
   }
 
   useEffect(() => {

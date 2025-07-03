@@ -148,6 +148,9 @@
     "cta": {
       "title": "Ready to Plan Your Next Adventure?",
       "subtitle": "Join thousands of travelers who trust Nomady to create their perfect trips.",
+      "highlight": "Start Planning Free",
+      "secondary": "See How It Works",
+      "microcopy": "No credit card required · Cancel anytime",
       "button": "Start Planning for Free"
     },
     "footer": {
@@ -176,7 +179,7 @@
   "auth": {
     "welcome": "Welcome back",
     "subtitle": "Sign in to continue planning your perfect trip",
-    "getStarted": "Get Started",
+    "getStarted": "Plan Your Trip",
     "chooseMethod": "Choose your preferred sign-in method",
     "signIn": "Sign In",
     "signUp": "Sign Up",
@@ -274,7 +277,18 @@
       "searchingTickets": "Searching flights...",
       "searchingHotels": "Searching hotels...",
       "searchingRestaurants": "Searching restaurants...",
-      "searchingActivities": "Searching activities..."
+      "searchingActivities": "Searching activities...",
+      "analyzingPrices": "Analyzing prices...",
+      "collectingResults": "Collecting results...",
+      "checkingAvailability": "Checking availability...",
+      "collectingOptions": "Collecting options...",
+      "readingReviews": "Reading reviews...",
+      "preparingRecommendations": "Preparing recommendations...",
+      "checkingSchedule": "Checking schedule...",
+      "collectingExperiences": "Collecting experiences...",
+      "searching": "Searching...",
+      "processing": "Processing...",
+      "finishing": "Finishing..."
     },
     "welcome": {
       "title": "Welcome to Nomady AI",
@@ -334,7 +348,102 @@
       "baggageIncluded": "Baggage Included",
       "wifiAvailable": "WiFi Available",
       "bookingNotAvailable": "Booking Not Available",
-      "olderSearchError": "This item is from an older search. Please make a new search to book items."
+      "olderSearchError": "This item is from an older search. Please make a new search to book items.",
+      "common": {
+        "book": "Book",
+        "booked": "Booked",
+        "booking": "Booking...",
+        "reviews": "reviews",
+        "rating": "Rating",
+        "name": "Name",
+        "price": "Price",
+        "sort": "Sort:",
+        "sortBy": "Sort by:",
+        "viewMore": "View {count} more {type}",
+        "optionsFound": "{count} option{plural} found",
+        "priceOnRequest": "Price on request",
+        "bookingFailed": "Booking Failed",
+        "bookingFailedDesc": "There was an error processing your booking. Please try again.",
+        "bookingNotAvailable": "Booking Not Available",
+        "bookNow": "Book Now"
+      },
+      "activities": {
+        "tour": "Tour",
+        "attraction": "Attraction",
+        "perPerson": "per person",
+        "activitiesIn": "Activities in {location}",
+        "activitiesFound": "{count} activities found",
+        "bookingSuccess": "Activity Booked Successfully! 🎯",
+        "bookingSuccessDesc": "{name} has been added to your itinerary.",
+        "viewAllTripadvisor": "View all on TripAdvisor"
+      },
+      "restaurants": {
+        "budget": "Budget",
+        "midRange": "Mid-range",
+        "expensive": "Expensive",
+        "luxury": "Luxury",
+        "restaurant": "Restaurant",
+        "open": "Open",
+        "closed": "Closed",
+        "reserve": "Reserve",
+        "reserved": "Reserved",
+        "sponsored": "Sponsored",
+        "travelersChoice": "Traveler's Choice",
+        "restaurantsIn": "Restaurants in {location}",
+        "restaurantsFound": "{count} restaurants found",
+        "via": "via",
+        "yourArea": "your area",
+        "yourSearch": "your search",
+        "reservationConfirmed": "Reservation Confirmed! 🍽️",
+        "reservationConfirmedDesc": "Your table at {name} has been reserved.",
+        "reservationFailed": "Reservation Failed",
+        "reservationFailedDesc": "There was an error processing your reservation. Please try again.",
+        "viewAllExternal": "View all on {source}"
+      },
+      "hotels": {
+        "forNights": "for {nights} nights",
+        "total": "total",
+        "totalPrice": "total price",
+        "checkIn": "Check-in",
+        "checkOut": "Check-out",
+        "guests": "Guests",
+        "nights": "nights",
+        "about": "About",
+        "roomsAvailable": "Rooms Available",
+        "maxGuests": "Max guests:",
+        "amenities": "Amenities",
+        "location": "Location",
+        "viewDetails": "View Details",
+        "contact": "Contact",
+        "ratings": "Ratings",
+        "bookHotel": "Book Hotel",
+        "hotelsIn": "Hotels in {location}",
+        "propertiesFound": "{count} properties found",
+        "hotelBooked": "Hotel Booked Successfully! 🏨",
+        "hotelBookedDesc": "{name} has been reserved for your stay.",
+        "reviews": "Reviews"
+      },
+      "flights": {
+        "refundable": "Refundable",
+        "duration": "Duration:",
+        "stop": "stop",
+        "stops": "stops",
+        "direct": "Direct",
+        "seats": "Seats:",
+        "available": "Available",
+        "outbound": "Outbound",
+        "return": "Return",
+        "flightDetails": "Flight Details & Booking",
+        "totalFor": "Total for {count} passenger{plural}",
+        "totalPrice": "Total price for {count} passenger{plural}",
+        "baggageIncluded": "Baggage Included",
+        "baggage": "Baggage",
+        "wifiAvailable": "WiFi Available",
+        "wifi": "WiFi",
+        "bookFlight": "Book Flight",
+        "bookingSuccess": "Booking Successful! ✈️",
+        "bookingSuccessDesc": "Your {type} has been booked successfully."
+      }
     }
   },
   "navigation": {
@@ -343,7 +452,7 @@
     "pricing": "Pricing",
     "reviews": "Reviews",
     "signIn": "Sign In",
-    "getStarted": "Get Started"
+    "getStarted": "Plan Your Trip"
   },
   "common": {
     "loading": "Loading...",
@@ -374,5 +483,75 @@
     "show": "Show",
     "more": "More",
     "less": "Less"
+  },
+  "explore": {
+    "title": "Explore Destinations",
+    "subtitle": "Discover amazing places around the world",
+    "comingSoon": "Coming Soon",
+    "underDevelopment": "This page is currently under development",
+    "description": "We're building an amazing discovery experience where you can explore trending destinations, discover hidden gems, and find inspiration for your next adventure!",
+    "startExploring": "Start Exploring with AI",
+    "viewBookings": "View Your Bookings",
+    "features": {
+      "discover": {
+        "title": "Discover Destinations",
+        "description": "Find trending and off-the-beaten-path locations"
+      },
+      "maps": {
+        "title": "Interactive Maps",
+        "description": "Explore destinations with rich visual content"
+      },
+      "personalized": {
+        "title": "Personalized Suggestions",
+        "description": "Get recommendations based on your preferences"
+      }
+    },
+    "categories": {
+      "trending": "Trending Now",
+      "beaches": "Beaches",
+      "mountains": "Mountains",
+      "cities": "Cities",
+      "culture": "Culture",
+      "adventure": "Adventure"
+    },
+    "stats": {
+      "destinations": "Destinations",
+      "countries": "Countries",
+      "experiences": "Unique Experiences"
+    }
+  },
+  "favorites": {
+    "title": "Saved Favorites",
+    "subtitle": "Your collection of dream destinations",
+    "comingSoon": "Coming Soon", 
+    "underDevelopment": "This page is currently under development",
+    "description": "We're working hard to bring you the ability to save and organize your favorite destinations, hotels, and experiences. Stay tuned for amazing features coming your way!",
+    "startPlanning": "Start Planning Your Trip",
+    "viewBookings": "View Your Bookings",
+    "features": {
+      "save": {
+        "title": "Save Destinations",
+        "description": "Keep track of places you want to visit"
+      },
+      "organize": {
+        "title": "Organize Collections",
+        "description": "Create custom lists for different trip types"
+      },
+      "share": {
+        "title": "Share & Collaborate",
+        "description": "Share your favorite spots with friends"
+      }
+    },
+    "collections": {
+      "wishlist": "Wishlist",
+      "visited": "Places I've Been",
+      "planning": "Trip Planning",
+      "recommendations": "Recommended for You"
+    },
+    "empty": {
+      "title": "No favorites yet",
+      "description": "Start exploring and save places you love",
+      "action": "Explore Destinations"
+    }
   }
 } 

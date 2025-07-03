@@ -1,4 +1,3 @@
-export { ChatSidebar } from "./chat-sidebar"
 export { MobileMapOverlay } from "./mobile-map-overlay"
 export { ChatHeader } from "./chat-header"
 export { MessagesList } from "./messages-list"
