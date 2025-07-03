@@ -61,6 +61,8 @@ export default function LandingPage() {
 
   // Typing effect for placeholder
   const [charIndex, setCharIndex] = useState(0)
+  // Delay heavy globe initialization until browser is idle to improve first-load performance
+  const [showGlobe, setShowGlobe] = useState(false)
 
   useEffect(() => {
     const currentText = placeholders[placeholderIndex]
@@ -80,6 +82,16 @@ export default function LandingPage() {
   }, [charIndex, placeholderIndex, placeholders])
 
   useEffect(() => {
+    // show globe after main content is interactive
+    if (typeof window !== 'undefined') {
+      const cb = () => setShowGlobe(true)
+      if ('requestIdleCallback' in window) {
+        ;(window as any).requestIdleCallback(cb)
+      } else {
+        setTimeout(cb, 300)
+      }
+    }
+
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50)
     }
@@ -371,9 +383,11 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-slate-50 dark:from-blue-950/20 dark:to-slate-900" />
         
         {/* Background Globe */}
-        <div className="absolute bottom-[150px] left-1/2 -translate-x-1/2 w-full h-full opacity-30 dark:opacity-15 z-0">
-          <GlobeComponent className="w-full h-full" />
-        </div>
+        {showGlobe && (
+          <div className="absolute bottom-[150px] left-1/2 -translate-x-1/2 w-full h-full opacity-30 dark:opacity-15 z-0">
+            <GlobeComponent className="w-full h-full" />
+          </div>
+        )}
         
         <div className="container mx-auto px-6 relative">
           <div className="text-center max-w-4xl mx-auto">
