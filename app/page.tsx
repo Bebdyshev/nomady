@@ -30,11 +30,15 @@ import {
 import { useTheme } from "@/components/shared/theme-provider"
 import { useTranslations } from "@/lib/i18n-client"
 import { motion } from "framer-motion"
-import { Globe as GlobeComponent } from "@/components/magicui/globe"
+import dynamic from "next/dynamic"
+import Image from "next/image"
 import { AnimatedGradientText } from "@/components/magicui/animated-gradient-text"
 import { cn } from "@/lib/utils"
 import { Logo } from "@/components/ui/logo"
-import { DemoChat } from "@/components/landing/demo-chat"
+
+// Lazy-load heavy client-only components to cut initial JS
+const GlobeComponent = dynamic(() => import("@/components/magicui/globe").then(m => m.Globe), { ssr: false })
+const DemoChat = dynamic(() => import("@/components/landing/demo-chat").then(m => m.DemoChat), { ssr: false })
 
 export default function LandingPage() {
   const [tripPrompt, setTripPrompt] = useState("")
@@ -57,6 +61,8 @@ export default function LandingPage() {
 
   // Typing effect for placeholder
   const [charIndex, setCharIndex] = useState(0)
+  // Delay heavy globe initialization until browser is idle to improve first-load performance
+  const [showGlobe, setShowGlobe] = useState(false)
 
   useEffect(() => {
     const currentText = placeholders[placeholderIndex]
@@ -76,11 +82,21 @@ export default function LandingPage() {
   }, [charIndex, placeholderIndex, placeholders])
 
   useEffect(() => {
+    // show globe after main content is interactive
+    if (typeof window !== 'undefined') {
+      const cb = () => setShowGlobe(true)
+      if ('requestIdleCallback' in window) {
+        ;(window as any).requestIdleCallback(cb)
+      } else {
+        setTimeout(cb, 300)
+      }
+    }
+
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50)
     }
     
-    window.addEventListener('scroll', handleScroll)
+    window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
@@ -367,9 +383,11 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-slate-50 dark:from-blue-950/20 dark:to-slate-900" />
         
         {/* Background Globe */}
-        <div className="absolute bottom-[150px] left-1/2 -translate-x-1/2 w-full h-full opacity-30 dark:opacity-15 z-0">
-          <GlobeComponent className="w-full h-full" />
-        </div>
+        {showGlobe && (
+          <div className="absolute bottom-[150px] left-1/2 -translate-x-1/2 w-full h-full opacity-30 dark:opacity-15 z-0">
+            <GlobeComponent className="w-full h-full" />
+          </div>
+        )}
         
         <div className="container mx-auto px-6 relative">
           <div className="text-center max-w-4xl mx-auto">
@@ -501,26 +519,11 @@ export default function LandingPage() {
                       WebkitClipPath: "padding-box",
                     }}
                   />
-                  <img src="/nfactorial-logo.png" alt="nFactorial Incubator" className="h-5 w-5 mr-2" />
+                  <Image src="/nfactorial-logo.png" alt="nFactorial Incubator" width={20} height={20} className="h-5 w-5 mr-2" />
                   <span className="text-slate-600 dark:text-slate-300 text-sm font-medium mr-1">{t('hero.backedBy')}</span>
                 </div>
               </motion.div>
           </div>
-        </div>
-      </section>
-
-      {/* Live Demo Section */}
-      <section id="demo" className="py-20 bg-slate-50 dark:bg-slate-800/50">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-12 max-w-3xl mx-auto">
-            <motion.h2 initial={{opacity:0,y:20}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4">
-              {t('hero.badge')}
-            </motion.h2>
-            <motion.p initial={{opacity:0,y:10}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6,delay:0.2}} className="text-xl text-slate-600 dark:text-slate-300">
-              Try chatting with our AI below – no sign-up needed.
-            </motion.p>
-          </div>
-          <DemoChat />
         </div>
       </section>
 
@@ -787,78 +790,18 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-24 relative overflow-hidden">
-        {/* Decorative dots pattern */}
-        <svg
-          className="absolute left-1/2 top-0 w-[1200px] -translate-x-1/2 -translate-y-1/3 opacity-20 dark:opacity-10 pointer-events-none"
-          width="1200" height="600" fill="none"
-        >
-          <defs>
-            <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-              <circle cx="1" cy="1" r="1" className="text-white/30" fill="currentColor" />
-            </pattern>
-          </defs>
-          <rect width="1200" height="600" fill="url(#dots)" />
-        </svg>
-
-        <div className="container mx-auto px-6 relative">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="max-w-5xl mx-auto"
-          >
-            <div className="relative overflow-hidden rounded-3xl p-10 md:p-16 bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700 shadow-xl">
-              {/* flying icons */}
-              <motion.div
-                initial={{ x: -80, opacity: 0 }}
-                animate={{ x: 0, opacity: 0.25 }}
-                transition={{ duration: 1.2, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }}
-                className="absolute -left-10 top-10 text-white"
-              >
-                <Plane className="h-16 w-16 mb-6" />
-                <MapPin className="h-16 w-16 mb-6" />
-                <Hotel className="h-16 w-16" />
-              </motion.div>
-
-              <div className="relative z-10 text-center md:text-left md:max-w-md md:ml-auto">
-                <h2 className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">
-                  <span className="block text-white">{t('cta.title')}</span>
-                  <span className="block bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text text-transparent">
-                    {t('cta.highlight') || t('cta.subtitle')}
-                  </span>
-                </h2>
-                <p className="text-lg md:text-xl text-white/90 mb-8">
-                {t('cta.subtitle')}
-              </p>
-
-                <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-                <Button
-                  size="lg"
-                    onClick={() => router.push('/auth')}
-                    className="relative px-8 py-4 text-lg font-semibold text-white bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30"
-                >
-                  {t('cta.button')}
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
-                    className="px-8 py-4 text-lg font-semibold border-white text-white hover:bg-white/10"
-                  >
-                    {t('cta.secondary') || 'See How It Works'}
-                  </Button>
-                </div>
-
-                <p className="mt-6 text-sm text-white/80">
-                  {t('cta.microcopy') || 'No credit card required · Cancel anytime'}
-                </p>
-              </div>
-            </div>
-          </motion.div>
+        {/* Live Demo Section */}
+        <section id="demo" className="py-20 bg-slate-50 dark:bg-slate-800/50">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-12 max-w-3xl mx-auto">
+            <motion.h2 initial={{opacity:0,y:20}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4">
+              {t('hero.badge')}
+            </motion.h2>
+            <motion.p initial={{opacity:0,y:10}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6,delay:0.2}} className="text-xl text-slate-600 dark:text-slate-300">
+              Try chatting with our AI below – no sign-up needed.
+            </motion.p>
+          </div>
+          <DemoChat />
         </div>
       </section>
 

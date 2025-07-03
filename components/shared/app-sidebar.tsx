@@ -30,6 +30,7 @@ import {
 } from "lucide-react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Logo } from "@/components/ui/logo"
+import { cn } from "@/lib/utils"
 
 interface AppSidebarProps {
   collapsed?: boolean
@@ -127,12 +128,21 @@ export function AppSidebar({
   ]
 
   // For chat page, use mobile behavior, for others use standard sidebar
-  const sidebarClass = isOnChatPage
-    ? `fixed md:relative inset-y-0 left-0 z-50 md:z-0 w-[20%] flex flex-col h-full bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`
-    : `w-[20%] bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col h-full transition-all duration-300`
+  const sidebarClasses = cn(
+    "flex flex-col h-full bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transition-all duration-300",
+    isOnChatPage
+      ? [
+          "fixed md:relative inset-y-0 left-0 z-50 md:z-0 transform ease-in-out",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+          "w-64 md:w-[20%]",
+        ]
+      : collapsed
+        ? "w-16"
+        : "w-64 lg:w-[20%]"
+  )
 
   return (
-    <div className={sidebarClass}>
+    <div className={sidebarClasses}>
       {/* Sidebar Header */}
       <div className={`${collapsed ? 'p-2' : 'p-3 md:p-4'} border-b border-slate-200 dark:border-slate-700`}>
         {/* Mobile Header - For chat page */}
