@@ -509,21 +509,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Live Demo Section */}
-      <section id="demo" className="py-20 bg-slate-50 dark:bg-slate-800/50">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-12 max-w-3xl mx-auto">
-            <motion.h2 initial={{opacity:0,y:20}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4">
-              {t('hero.badge')}
-            </motion.h2>
-            <motion.p initial={{opacity:0,y:10}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6,delay:0.2}} className="text-xl text-slate-600 dark:text-slate-300">
-              Try chatting with our AI below – no sign-up needed.
-            </motion.p>
-          </div>
-          <DemoChat />
-        </div>
-      </section>
-
       {/* Stats Section */}
       <section className="py-16 bg-slate-50 dark:bg-slate-800/50">
         <div className="container mx-auto px-6">
@@ -859,6 +844,21 @@ export default function LandingPage() {
               </div>
             </div>
           </motion.div>
+        </div>
+      </section>
+
+        {/* Live Demo Section */}
+        <section id="demo" className="py-20 bg-slate-50 dark:bg-slate-800/50">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-12 max-w-3xl mx-auto">
+            <motion.h2 initial={{opacity:0,y:20}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4">
+              {t('hero.badge')}
+            </motion.h2>
+            <motion.p initial={{opacity:0,y:10}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6,delay:0.2}} className="text-xl text-slate-600 dark:text-slate-300">
+              Try chatting with our AI below – no sign-up needed.
+            </motion.p>
+          </div>
+          <DemoChat />
         </div>
       </section>
 
