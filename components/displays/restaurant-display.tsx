@@ -360,7 +360,7 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
         className="space-y-4"
       >
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900 dark:to-red-900 rounded-lg">
               <Utensils className="h-6 w-6 text-orange-600 dark:text-orange-400" />
@@ -386,7 +386,7 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="text-sm border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 bg-white dark:bg-slate-800"
+              className="text-sm border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 bg-white dark:bg-slate-800 max-w-full"
             >
               <option value="rating">{t('common.rating')}</option>
               <option value="name">{t('common.name')}</option>
