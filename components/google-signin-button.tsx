@@ -50,12 +50,12 @@ export function GoogleSignInButton({
             cancel_on_tap_outside: true,
           })
 
-          // Render the button
+          // Render neutral (non-personalized) button for consistent look across environments
           window.google.accounts.id.renderButton(buttonRef.current, {
             theme: "outline",
-            size: "large",
-            width: "100%",
-            text: "continue_with",
+            // medium size disables Google "Continue as <user>" personalization
+            size: "medium",
+            text: "signin_with",
             shape: "rectangular",
             logo_alignment: "left",
           })
