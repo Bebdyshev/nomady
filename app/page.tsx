@@ -34,6 +34,7 @@ import { Globe as GlobeComponent } from "@/components/magicui/globe"
 import { AnimatedGradientText } from "@/components/magicui/animated-gradient-text"
 import { cn } from "@/lib/utils"
 import { Logo } from "@/components/ui/logo"
+import { DemoChat } from "@/components/landing/demo-chat"
 
 export default function LandingPage() {
   const [tripPrompt, setTripPrompt] = useState("")
@@ -508,6 +509,21 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Live Demo Section */}
+      <section id="demo" className="py-20 bg-slate-50 dark:bg-slate-800/50">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-12 max-w-3xl mx-auto">
+            <motion.h2 initial={{opacity:0,y:20}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4">
+              {t('hero.badge')}
+            </motion.h2>
+            <motion.p initial={{opacity:0,y:10}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6,delay:0.2}} className="text-xl text-slate-600 dark:text-slate-300">
+              Try chatting with our AI below – no sign-up needed.
+            </motion.p>
+          </div>
+          <DemoChat />
+        </div>
+      </section>
+
       {/* Stats Section */}
       <section className="py-16 bg-slate-50 dark:bg-slate-800/50">
         <div className="container mx-auto px-6">
@@ -531,8 +547,9 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Demo Section */}
       {/* Features Section */}
-      <section id="features" className="py-20">
+      {/* <section id="features" className="py-20">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <motion.div
@@ -572,7 +589,7 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* How It Works Section */}
       <section id="how-it-works" className="py-20 bg-slate-50 dark:bg-slate-800/50">
@@ -744,7 +761,6 @@ export default function LandingPage() {
                     </div>
                     <p className="text-slate-600 dark:text-slate-300">{plan.description}</p>
                   </div>
-
                   <ul className="space-y-4 mb-8">
                     {Array.isArray(plan.features) && plan.features.map((feature: string, featureIndex: number) => (
                       <li key={featureIndex} className="flex items-center">
@@ -815,18 +831,18 @@ export default function LandingPage() {
                   </span>
                 </h2>
                 <p className="text-lg md:text-xl text-white/90 mb-8">
-                  {t('cta.subtitle')}
-                </p>
+                {t('cta.subtitle')}
+              </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-                  <Button
-                    size="lg"
+                <Button
+                  size="lg"
                     onClick={() => router.push('/auth')}
                     className="relative px-8 py-4 text-lg font-semibold text-white bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30"
-                  >
-                    {t('cta.button')}
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
+                >
+                  {t('cta.button')}
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
                   <Button
                     size="lg"
                     variant="outline"

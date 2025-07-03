@@ -9,12 +9,12 @@ import { useTranslations } from "@/lib/i18n-client"
 import { apiClient } from "@/lib/api"
 import { InteractiveMap } from "@/components/interactive-map"
 import { 
-  ChatSidebar, 
   MobileMapOverlay, 
   ChatHeader, 
   MessagesList, 
   ChatInput 
 } from "@/components/chat"
+import { AppSidebar } from "@/components/shared/app-sidebar"
 import { Message, Conversation, IpGeolocation } from "@/types/chat"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -44,7 +44,9 @@ export default function ChatPage() {
   const [bookedIds, setBookedIds] = useState<Set<string>>(new Set())
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mapWidth, setMapWidth] = useState(35) // Map width as percentage
-  const [isResizing, setIsResizing] = useState(false)
+  const resizingRef = useRef(false)
+  const startXRef = useRef(0)
+  const startWidthRef = useRef(35)
   const [streamingMessage, setStreamingMessage] = useState<string>("")
   const [isStreaming, setIsStreaming] = useState(false)
   const [streamingToolOutput, setStreamingToolOutput] = useState<any>(null)
@@ -62,6 +64,9 @@ export default function ChatPage() {
   const { user, logout, isAuthenticated } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  const MIN_MAP_WIDTH = 30 // percent
+  const MAX_MAP_WIDTH = 50 // percent
 
   // Auto-focus input on mount and after sending
   useEffect(() => {
@@ -642,25 +647,26 @@ export default function ChatPage() {
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
-    setIsResizing(true)
+    resizingRef.current = true
+    startXRef.current = e.clientX
+    startWidthRef.current = mapWidth
 
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isResizing) return
-      const newWidth = Math.max(20, Math.min(60, (1 - e.clientX / window.innerWidth) * 100))
+    const handleMouseMove = (ev: MouseEvent) => {
+      if (!resizingRef.current) return
+      const deltaPx = startXRef.current - ev.clientX
+      const deltaPercent = (deltaPx / window.innerWidth) * 100
+      const newWidth = Math.max(MIN_MAP_WIDTH, Math.min(MAX_MAP_WIDTH, startWidthRef.current + deltaPercent))
       setMapWidth(newWidth)
     }
 
     const handleMouseUp = () => {
-      setIsResizing(false)
+      resizingRef.current = false
+      document.removeEventListener("mousemove", handleMouseMove)
+      document.removeEventListener("mouseup", handleMouseUp)
     }
 
     document.addEventListener("mousemove", handleMouseMove)
     document.addEventListener("mouseup", handleMouseUp)
-
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove)
-      document.removeEventListener("mouseup", handleMouseUp)
-    }
   }
 
   console.log(messages)
@@ -682,15 +688,13 @@ export default function ChatPage() {
       />
 
       {/* Sidebar */}
-      <ChatSidebar
+      <AppSidebar
         conversations={conversations}
         currentConversationId={currentConversationId}
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
         onConversationSelect={loadConversation}
-        onNewConversation={startNewConversation}
-        user={user}
-        logout={logout}
+        onNewChat={startNewConversation}
       />
 
       {/* Main Content Area with Chat and Map */}

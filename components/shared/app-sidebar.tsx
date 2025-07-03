@@ -6,6 +6,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { useAuth } from "@/contexts/auth-context"
 import { useTheme } from "@/components/shared/theme-provider"
+import { useTranslations, useI18n } from "@/lib/i18n-client"
+import { type Locale } from "@/i18n"
 import {
   MessageCircle,
   Search,
@@ -21,6 +23,10 @@ import {
   Bookmark,
   ChevronLeft,
   ChevronRight,
+  X,
+  Globe,
+  MapPin,
+  CheckCircle2,
 } from "lucide-react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Logo } from "@/components/ui/logo"
@@ -28,11 +34,13 @@ import { Logo } from "@/components/ui/logo"
 interface AppSidebarProps {
   collapsed?: boolean
   onToggleCollapsed?: () => void
+  // Chat-specific props (optional)
   conversations?: Array<{
     id: string
     user_id: number
     created_at: string
     last_updated: string
+    title?: string
     messages: Array<{
       id: number
       role: string
@@ -43,6 +51,9 @@ interface AppSidebarProps {
   currentConversationId?: string | null
   onConversationSelect?: (conversationId: string) => void
   onNewChat?: () => void
+  // Mobile sidebar control (for chat page)
+  sidebarOpen?: boolean
+  setSidebarOpen?: (open: boolean) => void
 }
 
 export function AppSidebar({
@@ -52,17 +63,38 @@ export function AppSidebar({
   currentConversationId,
   onConversationSelect,
   onNewChat,
+  sidebarOpen = true,
+  setSidebarOpen,
 }: AppSidebarProps) {
   const { user, logout } = useAuth()
   const { theme, setTheme } = useTheme()
   const router = useRouter()
   const pathname = usePathname()
+  const t = useTranslations('chat.sidebar')
+  const tCommon = useTranslations('common')
+  const { locale, setLocale } = useI18n()
 
-  // Update the sidebar items to use minimal colors
+  const languages = [
+    { code: 'en' as Locale, name: 'EN' },
+    { code: 'ru' as Locale, name: 'RU' }
+  ]
+
+  const currentLanguage = languages.find(lang => lang.code === locale)
+  const otherLanguage = languages.find(lang => lang.code !== locale)
+
+  const handleLanguageChange = () => {
+    if (otherLanguage) {
+      setLocale(otherLanguage.code)
+    }
+  }
+
+  const isOnChatPage = pathname === "/chat"
+
+  // Sidebar items with proper navigation
   const sidebarItems = [
     {
       icon: MessageCircle,
-      label: "Chats",
+      label: t('chats'),
       href: "/chat",
       active: pathname === "/chat",
       color: "text-blue-600 dark:text-blue-400",
@@ -70,7 +102,7 @@ export function AppSidebar({
     },
     {
       icon: Search,
-      label: "Explore",
+      label: t('explore'),
       href: "/explore",
       active: pathname === "/explore",
       color: "text-slate-600 dark:text-slate-400",
@@ -78,7 +110,7 @@ export function AppSidebar({
     },
     {
       icon: Bookmark,
-      label: "Bookings",
+      label: t('bookings'),
       href: "/bookings",
       active: pathname === "/bookings",
       color: "text-slate-600 dark:text-slate-400",
@@ -86,134 +118,175 @@ export function AppSidebar({
     },
     {
       icon: Heart,
-      label: "Saved",
+      label: t('saved'),
       href: "/favorites",
       active: pathname === "/favorites",
       color: "text-slate-600 dark:text-slate-400",
       activeColor: "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300",
     },
-    {
-      icon: Bell,
-      label: "Updates",
-      href: "/chat",
-      color: "text-slate-600 dark:text-slate-400",
-      activeColor: "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300",
-    },
-    {
-      icon: Plus,
-      label: "Create",
-      href: "/chat",
-      color: "text-slate-600 dark:text-slate-400",
-      activeColor: "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300",
-    },
   ]
 
+  // For chat page, use mobile behavior, for others use standard sidebar
+  const sidebarClass = isOnChatPage
+    ? `fixed md:relative inset-y-0 left-0 z-50 md:z-0 w-[20%] flex flex-col h-full bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`
+    : `w-[20%] bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col h-full transition-all duration-300`
+
   return (
-    // Update sidebar background
-    <div className={`${collapsed ? 'w-16' : 'w-64'} bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col h-full transition-all duration-300`}>
+    <div className={sidebarClass}>
       {/* Sidebar Header */}
-      <div className={`${collapsed ? 'p-2' : 'p-4'} border-b border-slate-200 dark:border-slate-700`}>
-        <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'} mb-4`}>
-          {!collapsed && (
-          <div className="flex items-center space-x-2">
-            {/* Update logo colors */}
-            <Logo width={32} height={32} className="rounded-lg" />
-            <span className="text-lg font-bold text-blue-600 dark:text-blue-400">Nomady</span>
+      <div className={`${collapsed ? 'p-2' : 'p-3 md:p-4'} border-b border-slate-200 dark:border-slate-700`}>
+        {/* Mobile Header - For chat page */}
+        {isOnChatPage && (
+          <div className="md:hidden">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex-1 min-w-0 flex items-center space-x-2">
+                <Logo width={32} height={32} className="rounded-lg" />
+                <span className="hidden sm:inline text-lg font-bold text-blue-600 dark:text-blue-400 truncate">Nomady</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleLanguageChange}
+                  className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
+                  title={t('switchLanguage')}
+                >
+                  <div className="flex items-center space-x-1">
+                    <Globe className="h-3 w-3" />
+                    <span className="text-xs font-medium">{currentLanguage?.name}</span>
+                  </div>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700"
+                >
+                  {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </Button>
+                <button
+                  onClick={() => setSidebarOpen?.(false)}
+                  className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
           </div>
-          )}
-          {collapsed && (
-            <Logo width={32} height={32} className="rounded-lg" />
-          )}
-          {!collapsed && (
-          <div className="flex items-center space-x-2">
+        )}
+
+        {/* Desktop Header */}
+        <div className={`${isOnChatPage ? 'hidden md:block' : ''} ${collapsed ? 'flex justify-center' : ''}`}>
+          <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'} mb-4`}>
+            {!collapsed && (
+              <div className="flex items-center space-x-2">
+                <Logo width={32} height={32} className="rounded-lg" />
+                <span className="text-lg font-bold text-blue-600 dark:text-blue-400">Nomady</span>
+              </div>
+            )}
+            {collapsed && (
+              <Logo width={32} height={32} className="rounded-lg" />
+            )}
+            {!collapsed && (
+              <div className="flex items-center space-x-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleLanguageChange}
+                  className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
+                  title={t('switchLanguage')}
+                >
+                  <div className="flex items-center space-x-1">
+                    <Globe className="h-3 w-3" />
+                    <span className="text-xs font-medium">{currentLanguage?.name}</span>
+                  </div>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700"
+                >
+                  {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </Button>
+                {onToggleCollapsed && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onToggleCollapsed}
+                    className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {collapsed && !isOnChatPage && (
+          <div className="flex flex-col items-center space-y-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleLanguageChange}
+              className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
+              title={t('switchLanguage')}
+            >
+              <div className="flex items-center justify-center">
+                <Globe className="h-3 w-3" />
+              </div>
+            </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              // Update theme button hover
               className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700"
             >
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={logout}
-              // Update logout button hover
-              className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
+            {onToggleCollapsed && (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={onToggleCollapsed}
                 className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4" />
               </Button>
-          </div>
-          )}
-        </div>
-        
-        {collapsed && (
-          <div className="flex flex-col items-center space-y-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700"
-            >
-              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={logout}
-              className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onToggleCollapsed}
-              className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+            )}
           </div>
         )}
 
         {/* Navigation */}
         {!collapsed && (
-        <nav className="space-y-1">
-          {sidebarItems.map((item, index) => (
-            <Button
-              key={index}
-              variant="ghost"
-              className={`w-full justify-start h-10 text-sm transition-all duration-200 ${
-                item.active ? item.activeColor : `hover:bg-slate-100 dark:hover:bg-slate-700 ${item.color}`
-              }`}
-              onClick={() => {
-                if (item.href && item.href !== pathname) {
-                  router.push(item.href)
-                }
-              }}
-            >
-              <item.icon className="h-4 w-4 mr-3" />
-              {item.label}
-              {item.label === "Chats" && conversations.length > 0 && (
-                <span className="ml-auto text-xs bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 px-2 py-1 rounded-full">
-                  {conversations.length}
-                </span>
-              )}
-            </Button>
-          ))}
-        </nav>
+          <nav className="space-y-1 mb-4">
+            {sidebarItems.map((item, index) => (
+              <Button
+                key={index}
+                variant="ghost"
+                className={`w-full justify-start h-10 text-sm transition-all duration-200 ${
+                  item.active ? item.activeColor : `hover:bg-slate-100 dark:hover:bg-slate-700 ${item.color}`
+                }`}
+                onClick={() => {
+                  if (item.href && item.href !== pathname) {
+                    router.push(item.href)
+                  }
+                }}
+              >
+                <item.icon className="h-4 w-4 mr-3" />
+                {item.label}
+                {item.label === t('chats') && conversations.length > 0 && (
+                  <span className="ml-auto text-xs bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 px-2 py-1 rounded-full">
+                    {conversations.length}
+                  </span>
+                )}
+              </Button>
+            ))}
+          </nav>
         )}
         
-        {collapsed && (
+        {collapsed && !isOnChatPage && (
           <nav className="space-y-1 mt-4">
             {sidebarItems.map((item, index) => (
               <Button
@@ -235,75 +308,96 @@ export function AppSidebar({
             ))}
           </nav>
         )}
+
+        {/* Chat-specific header for conversations */}
+        {isOnChatPage && !collapsed && (
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-slate-900 dark:text-white text-sm">{t('recentChats')}</h3>
+            <Button
+              onClick={onNewChat}
+              variant="ghost"
+              size="sm"
+              className="text-blue-600 dark:text-blue-400 h-8 text-xs hover:bg-blue-100 dark:hover:bg-blue-900/30"
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              {t('new')}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Conversations - Only show on chat page */}
-      {pathname === "/chat" && !collapsed && (
+      {isOnChatPage && !collapsed && (
         <div className="flex-1 flex flex-col min-h-0">
-          <div className="p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-slate-900 dark:text-white text-sm">Recent Chats</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onNewChat}
-                // Update new chat button
-                className="text-blue-600 dark:text-blue-400 h-8 text-xs hover:bg-blue-100 dark:hover:bg-blue-900/30"
-              >
-                <Plus className="h-3 w-3 mr-1" />
-                New
-              </Button>
+          <div className="flex-1 overflow-y-auto p-2 md:p-3">
+            <div className="space-y-2">
+              {conversations.map((conversation) => (
+                <Card
+                  key={conversation.id}
+                  className={`p-3 cursor-pointer transition-all duration-200 hover:shadow-md ${
+                    currentConversationId === conversation.id
+                      ? "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800"
+                      : "hover:bg-slate-50 dark:hover:bg-slate-700"
+                  }`}
+                  onClick={() => {
+                    onConversationSelect?.(conversation.id)
+                    if (window.innerWidth < 768) setSidebarOpen?.(false)
+                  }}
+                >
+                  <div className="text-sm font-medium text-slate-900 dark:text-white mb-1 line-clamp-2">
+                    {conversation.title || 
+                     (conversation.messages.length > 0
+                       ? conversation.messages[0].content.slice(0, 40) + "..."
+                       : t('newConversation'))}
+                  </div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                    {new Date(conversation.created_at).toLocaleDateString()}
+                  </div>
+                </Card>
+              ))}
+              {conversations.length === 0 && (
+                <div className="text-center py-8">
+                  <MessageCircle className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{t('noConversations')}</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{t('startChat')}</p>
+                </div>
+              )}
             </div>
-          </div>
-          <div className="flex-1 px-4 pb-4 overflow-hidden">
-            <ScrollArea className="h-full">
-              <div className="space-y-2">
-                {conversations.map((conversation) => (
-                  <Card
-                    key={conversation.id}
-                    // Update conversation card active state
-                    className={`p-3 cursor-pointer transition-all duration-200 hover:shadow-md ${
-                      currentConversationId === conversation.id
-                        ? "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800"
-                        : "hover:bg-slate-50 dark:hover:bg-slate-700"
-                    }`}
-                    onClick={() => onConversationSelect?.(conversation.id)}
-                  >
-                    <div className="text-sm font-medium text-slate-900 dark:text-white mb-1 line-clamp-2">
-                      {conversation.messages.length > 0
-                        ? conversation.messages[0].content.slice(0, 40) + "..."
-                        : "New conversation"}
-                    </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">
-                      {new Date(conversation.last_updated).toLocaleDateString()}
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </ScrollArea>
           </div>
         </div>
       )}
 
+      {/* For non-chat pages, add spacer */}
+      {!isOnChatPage && !collapsed && <div className="flex-1" />}
+
       {/* User Profile */}
-      <div className={`${collapsed ? 'p-2' : 'p-4'} border-t border-slate-200 dark:border-slate-700 mt-auto`}>
+      <div className={`${collapsed ? 'p-2' : 'p-3 md:p-4'} border-t border-slate-200 dark:border-slate-700 mt-auto`}>
         {!collapsed && (
-        <div className="flex items-center space-x-3">
-          {/* User profile avatar with Google picture when available */}
-          <Avatar>
-            {user?.picture ? (
-              <AvatarImage src={user.picture} alt={user.name || "User"} />
-            ) : (
-              <AvatarFallback className="bg-blue-600 text-white">
-                {user?.name ? user.name.charAt(0).toUpperCase() : <User className="h-5 w-5" />}
-              </AvatarFallback>
-            )}
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium text-slate-900 dark:text-white truncate">{user?.name || "User"}</div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{user?.email}</div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Avatar>
+                {user?.picture ? (
+                  <AvatarImage src={user.picture} alt={user.name || "User"} />
+                ) : (
+                  <AvatarFallback className="bg-blue-600 text-white">
+                    {user?.name ? user.name.charAt(0).toUpperCase() : <User className="h-5 w-5" />}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-slate-900 dark:text-white truncate">{user?.name || "User"}</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 max-w-[140px] truncate">{user?.email}</div>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={logout}
+              className="h-8 w-8 flex-shrink-0 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
-        </div>
         )}
         {collapsed && (
           <div className="flex justify-center">

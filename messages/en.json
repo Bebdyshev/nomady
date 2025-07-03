@@ -148,6 +148,9 @@
     "cta": {
       "title": "Ready to Plan Your Next Adventure?",
       "subtitle": "Join thousands of travelers who trust Nomady to create their perfect trips.",
+      "highlight": "Start Planning Free",
+      "secondary": "See How It Works",
+      "microcopy": "No credit card required · Cancel anytime",
       "button": "Start Planning for Free"
     },
     "footer": {
@@ -176,7 +179,7 @@
   "auth": {
     "welcome": "Welcome back",
     "subtitle": "Sign in to continue planning your perfect trip",
-    "getStarted": "Get Started",
+    "getStarted": "Plan Your Trip",
     "chooseMethod": "Choose your preferred sign-in method",
     "signIn": "Sign In",
     "signUp": "Sign Up",
@@ -449,7 +452,7 @@
     "pricing": "Pricing",
     "reviews": "Reviews",
     "signIn": "Sign In",
-    "getStarted": "Get Started"
+    "getStarted": "Plan Your Trip"
   },
   "common": {
     "loading": "Loading...",
