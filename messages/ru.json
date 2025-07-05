@@ -442,7 +442,9 @@
         "wifi": "WiFi",
         "bookFlight": "Забронировать рейс",
         "bookingSuccess": "Бронирование успешно! ✈️",
-        "bookingSuccessDesc": "Ваш {type} успешно забронирован."
+        "bookingSuccessDesc": "Ваш {type} успешно забронирован.",
+        "redirectingToAviasales": "Перенаправление на Aviasales! ✈️",
+        "aviasalesRedirectDesc": "Открываем Aviasales в новой вкладке для завершения бронирования."
       }
     }
   },

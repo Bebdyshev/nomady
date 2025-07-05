@@ -253,7 +253,8 @@ function transformAviasalesData(aviasalesData: AviasalesData): SearchResult[] {
       passengers: 1, // Default value, could be passed as parameter
       duration: calculateDuration(ticket.flights_to || []),
       route_en: ticket.route_en,
-      route_ru: ticket.route_ru
+      route_ru: ticket.route_ru,
+      aviasales_url: (ticket as any).aviasales_url // Add the Aviasales URL for redirection
     }
   })
 }
@@ -693,6 +694,24 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
     setBookingStates((prev) => ({ ...prev, [itemId]: true }))
 
     try {
+      // Check if this is an Aviasales flight with URL
+      const isAviasalesFlight = type === "flights" && item.aviasales_url
+      
+      if (isAviasalesFlight) {
+        // Open Aviasales URL in new tab
+        window.open(item.aviasales_url, '_blank')
+        
+        // Show success message for Aviasales redirect
+        toast({
+          title: t('flights.redirectingToAviasales'),
+          description: t('flights.aviasalesRedirectDesc'),
+        })
+        
+        // Still record the booking attempt in backend for tracking
+        onBooked?.(item, itemId, type)
+        return
+      }
+
       // Debug: Log the item data to understand what's missing
       console.log("Booking item:", {
         item,

@@ -442,7 +442,9 @@
         "wifi": "WiFi",
         "bookFlight": "Book Flight",
         "bookingSuccess": "Booking Successful! ✈️",
-        "bookingSuccessDesc": "Your {type} has been booked successfully."
+        "bookingSuccessDesc": "Your {type} has been booked successfully.",
+        "redirectingToAviasales": "Redirecting to Aviasales! ✈️",
+        "aviasalesRedirectDesc": "Opening Aviasales in a new tab to complete your booking."
       }
     }
   },
