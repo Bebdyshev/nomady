@@ -25,15 +25,86 @@ import {
 } from "lucide-react"
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 
+// Aviasales data interfaces
+interface AviasalesPrice {
+  currency_code: string
+  value: number
+}
+
+interface AviasalesFlightSegment {
+  origin: string
+  destination: string
+  local_departure_date_time: string
+  local_arrival_date_time: string
+  departure_unix_timestamp: number
+  arrival_unix_timestamp: number
+  operating_carrier_designator: {
+    carrier: string
+    airline_id: string
+    number: string
+  }
+  equipment: {
+    code: string
+    type: string
+    name: string
+  }
+  technical_stops: any[]
+  signature: string
+  tags: any[]
+  origin_city_ru: string
+  destination_city_ru: string
+  origin_city_en: string
+  destination_city_en: string
+  airline_name?: string
+}
+
+interface AviasalesTicket {
+  id: string
+  price: AviasalesPrice
+  flights_to: AviasalesFlightSegment[]
+  flights_return?: AviasalesFlightSegment[]
+  route_ru: string
+  route_en: string
+}
+
+interface AviasalesCity {
+  code: string
+  name: {
+    en: { default: string }
+    ru: { default: string }
+  }
+  country: string
+  timezone: string
+  airports: string[]
+}
+
+interface AviasalesCountry {
+  code: string
+  name: {
+    en: { default: string }
+    ru: { default: string }
+  }
+  unified_visa: string
+}
+
+interface AviasalesData {
+  tickets: AviasalesTicket[]
+  cities: Record<string, AviasalesCity>
+  countries: Record<string, AviasalesCountry>
+}
+
 interface FlightSegment {
   from: string
   to: string
+  from_city?: string
+  to_city?: string
   departure_date?: string
   departure_time?: string
   arrival_date?: string
   arrival_time?: string
   flight_number?: string
   airline?: string
+  airline_name?: string
   airplane?: string
   duration?: string
   seats?: string
@@ -46,6 +117,7 @@ interface SearchResult {
   name?: string
   description?: string
   price?: string | number
+  currency?: string
   rating?: number
   location?: string | {
     address?: string
@@ -69,13 +141,121 @@ interface SearchResult {
   hotels?: any[]
   restaurants?: any[]
   items?: any[]
+  passengers?: number
   [key: string]: any
 }
 
 interface TicketDisplayProps {
-  toolOutput: SearchResult | SearchResult[]
+  toolOutput: SearchResult | SearchResult[] | AviasalesData
   bookedIds?: Set<string>
   onBooked?: (item: any, id: string, type: string) => void
+}
+
+// Function to detect if data is in Aviasales format
+function isAviasalesData(data: any): data is AviasalesData {
+  return data && 
+         typeof data === 'object' && 
+         Array.isArray(data.tickets) && 
+         typeof data.cities === 'object' && 
+         typeof data.countries === 'object' &&
+         data.tickets.length > 0 &&
+         data.tickets[0].price &&
+         typeof data.tickets[0].price.value === 'number' &&
+         typeof data.tickets[0].price.currency_code === 'string'
+}
+
+// Function to transform Aviasales data to SearchResult format
+function transformAviasalesData(aviasalesData: AviasalesData): SearchResult[] {
+  return aviasalesData.tickets.map(ticket => {
+    // Calculate total duration for outbound flights
+    const calculateDuration = (segments: AviasalesFlightSegment[]): string => {
+      if (!segments || segments.length === 0) return "0h 0m"
+      
+      const firstDeparture = segments[0].departure_unix_timestamp
+      const lastArrival = segments[segments.length - 1].arrival_unix_timestamp
+      const totalMinutes = Math.floor((lastArrival - firstDeparture) / 60)
+      
+      const hours = Math.floor(totalMinutes / 60)
+      const minutes = totalMinutes % 60
+      return `${hours}h ${minutes}m`
+    }
+
+    // Transform flight segments
+    const transformSegments = (segments: AviasalesFlightSegment[]): FlightSegment[] => {
+      return segments.map(segment => {
+        // Parse datetime strings
+        const depDateTime = new Date(segment.local_departure_date_time)
+        const arrDateTime = new Date(segment.local_arrival_date_time)
+        
+        // Calculate segment duration
+        const segmentMinutes = Math.floor((segment.arrival_unix_timestamp - segment.departure_unix_timestamp) / 60)
+        const segHours = Math.floor(segmentMinutes / 60)
+        const segMins = segmentMinutes % 60
+        const segmentDuration = `${segHours}h ${segMins}m`
+
+        return {
+          from: segment.origin,
+          to: segment.destination,
+          from_city: segment.origin_city_en || segment.origin,
+          to_city: segment.destination_city_en || segment.destination,
+          departure_date: depDateTime.toISOString().split('T')[0],
+          departure_time: depDateTime.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+          }),
+          arrival_date: arrDateTime.toISOString().split('T')[0],
+          arrival_time: arrDateTime.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+          }),
+          flight_number: `${segment.operating_carrier_designator.carrier}${segment.operating_carrier_designator.number}`,
+          airline: segment.operating_carrier_designator.carrier,
+          airline_name: segment.airline_name || segment.operating_carrier_designator.carrier,
+          airplane: segment.equipment.name,
+          duration: segmentDuration,
+          seats: "Available" // Default value as not provided in Aviasales data
+        }
+      })
+    }
+
+    // Get airline name from first segment with fallback to multiple segments
+    const getMainAirline = (ticket: AviasalesTicket): string => {
+      if (!ticket.flights_to || ticket.flights_to.length === 0) return "Unknown Airline"
+      
+      // Используем airline_name если доступно, иначе fallback к коду
+      const firstSegment = ticket.flights_to[0]
+      if (firstSegment.airline_name) {
+        return firstSegment.airline_name
+      }
+      
+      const carriers = ticket.flights_to.map(segment => segment.operating_carrier_designator.carrier)
+      const uniqueCarriers = [...new Set(carriers)]
+      
+      if (uniqueCarriers.length === 1) {
+        return uniqueCarriers[0]
+      } else {
+        return uniqueCarriers.join(' + ')
+      }
+    }
+
+    return {
+      type: "flights" as const,
+      id: ticket.id,
+      combination_id: ticket.id,
+      price: ticket.price.value,
+      currency: ticket.price.currency_code,
+      validating_airline: getMainAirline(ticket),
+      flights_to: transformSegments(ticket.flights_to || []),
+      flights_return: ticket.flights_return ? transformSegments(ticket.flights_return) : undefined,
+      refundable: false, // Default value as not provided in Aviasales data
+      passengers: 1, // Default value, could be passed as parameter
+      duration: calculateDuration(ticket.flights_to || []),
+      route_en: ticket.route_en,
+      route_ru: ticket.route_ru
+    }
+  })
 }
 
 // Animated Flight Path Component
@@ -204,7 +384,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice }: any) => 
                       {item.validating_airline}
                     </CardTitle>
                     <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 text-horizontal text-wrap-normal truncate">
-                      {item.flights_to?.[0]?.from} → {item.flights_to?.[item.flights_to.length - 1]?.to}
+                      {item.flights_to?.[0]?.from_city || item.flights_to?.[0]?.from} → {item.flights_to?.[item.flights_to.length - 1]?.to_city || item.flights_to?.[item.flights_to.length - 1]?.to}
                     </p>
                   </div>
                 </div>
@@ -335,8 +515,21 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice }: any) => 
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                       className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 md:p-4 border border-slate-200 dark:border-slate-700 text-xs md:text-sm shadow-sm"
                     >
-                      <div className="flex justify-between"><span>{segment.from} → {segment.to}</span><span>{segment.duration}</span></div>
-                      <div className="flex justify-between text-slate-500"><span>{segment.departure_time}</span><span>{segment.arrival_time}</span></div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-semibold">
+                          {segment.from_city || segment.from} → {segment.to_city || segment.to}
+                        </span>
+                        <span className="text-slate-500">{segment.duration}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-slate-500">
+                        <span>{segment.departure_time} → {segment.arrival_time}</span>
+                        <span className="text-xs">
+                          {segment.airline_name || segment.airline} {segment.flight_number}
+                        </span>
+                      </div>
+                      <div className="text-xs text-slate-400 mt-1">
+                        {segment.airplane}
+                      </div>
                     </motion.div>
                   ))}
                 </div>
@@ -360,8 +553,21 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice }: any) => 
                         transition={{ duration: 0.3, delay: index * 0.05 }}
                         className="bg-orange-50 dark:bg-orange-950/20 rounded-lg p-3 md:p-4 border border-orange-200 dark:border-orange-700 text-xs md:text-sm shadow-sm"
                       >
-                        <div className="flex justify-between"><span>{segment.from} → {segment.to}</span><span>{segment.duration}</span></div>
-                        <div className="flex justify-between text-slate-500"><span>{segment.departure_time}</span><span>{segment.arrival_time}</span></div>
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="font-semibold">
+                            {segment.from_city || segment.from} → {segment.to_city || segment.to}
+                          </span>
+                          <span className="text-slate-500">{segment.duration}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-slate-500">
+                          <span>{segment.departure_time} → {segment.arrival_time}</span>
+                          <span className="text-xs">
+                            {segment.airline_name || segment.airline} {segment.flight_number}
+                          </span>
+                        </div>
+                        <div className="text-xs text-slate-400 mt-1">
+                          {segment.airplane}
+                        </div>
                       </motion.div>
                     ))}
                   </div>
@@ -416,32 +622,47 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
   const { toast } = useToast()
   const t = useTranslations('chat.displays')
 
+  // Transform Aviasales data if needed
+  const processedOutput = React.useMemo(() => {
+    if (isAviasalesData(toolOutput)) {
+      const transformedResults = transformAviasalesData(toolOutput)
+      // Return as flights group
+      return [{
+        type: "flights" as const,
+        flights: transformedResults
+      }]
+    }
+    return Array.isArray(toolOutput) ? toolOutput : [toolOutput]
+  }, [toolOutput])
+
   // Global price formatting function
-  const formatPrice = (price: number, currency: string = "USD") => {
+  const formatPrice = (price: number | string, currency: string = "USD") => {
+    const numPrice = typeof price === 'string' ? parseFloat(price) : price
+    
     // Handle different currencies
     if (currency === "USD") {
       return new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
         minimumFractionDigits: 0,
-      }).format(price)
+      }).format(numPrice)
     } else if (currency === "KZT") {
       return new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "KZT",
         minimumFractionDigits: 0,
-      }).format(price)
+      }).format(numPrice)
     } else {
       // Fallback for other currencies
       return new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: currency,
         minimumFractionDigits: 0,
-      }).format(price)
+      }).format(numPrice)
     }
   }
 
-  const outputArray: SearchResult[] = Array.isArray(toolOutput) ? toolOutput : [toolOutput]
+  const outputArray: SearchResult[] = processedOutput
   
   const isFromLoadedConversation = outputArray.length > 0 && outputArray[0]?.search_result_id
 
