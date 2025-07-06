@@ -67,30 +67,11 @@ interface AviasalesTicket {
   route_en: string
 }
 
-interface AviasalesCity {
-  code: string
-  name: {
-    en: { default: string }
-    ru: { default: string }
-  }
-  country: string
-  timezone: string
-  airports: string[]
-}
-
-interface AviasalesCountry {
-  code: string
-  name: {
-    en: { default: string }
-    ru: { default: string }
-  }
-  unified_visa: string
-}
-
 interface AviasalesData {
+  cheapest_ticket: AviasalesTicket
   tickets: AviasalesTicket[]
-  cities: Record<string, AviasalesCity>
-  countries: Record<string, AviasalesCountry>
+  type: string
+  search_id: number
 }
 
 interface FlightSegment {
@@ -146,7 +127,7 @@ interface SearchResult {
 }
 
 interface TicketDisplayProps {
-  toolOutput: SearchResult | SearchResult[] | AviasalesData
+  toolOutput: AviasalesData
   bookedIds?: Set<string>
   onBooked?: (item: any, id: string, type: string) => void
 }
@@ -156,8 +137,6 @@ function isAviasalesData(data: any): data is AviasalesData {
   return data && 
          typeof data === 'object' && 
          Array.isArray(data.tickets) && 
-         typeof data.cities === 'object' && 
-         typeof data.countries === 'object' &&
          data.tickets.length > 0 &&
          data.tickets[0].price &&
          typeof data.tickets[0].price.value === 'number' &&

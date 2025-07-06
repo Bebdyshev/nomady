@@ -144,20 +144,8 @@ const findHotelData = (toolOutput: any) => {
   
   const isHotelObj = (obj: any) =>
     obj && 
-    (obj.hotels || obj.properties || obj.destination) && // Check for hotel-specific keys
-    obj.type !== "tickets" && // Explicitly exclude tickets
-    obj.type !== "restaurants" && // Explicitly exclude restaurants
-    obj.type !== "activities" // Explicitly exclude activities
+    obj.type === "hotels"
 
-  // If it's an array, find the hotel data object
-  if (Array.isArray(toolOutput)) {
-    // Prioritize by 'type' property if available
-    const typedHotelData = toolOutput.find((item) => item.type === "hotels")
-    if (typedHotelData) return typedHotelData
-
-    // Fallback to checking other hotel-specific properties, while excluding other types
-    return toolOutput.find((item) => isHotelObj(item)) || null
-  }
   
   // If it's a single object, return it if it contains hotel data and is not another type
   return isHotelObj(toolOutput) ? toolOutput : null
@@ -169,21 +157,8 @@ const findRestaurantData = (toolOutput: any) => {
   
   const isRestaurantObj = (obj: any) =>
     obj && 
-    (obj.restaurants || obj.source === "tripadvisor") &&
-    obj.type !== "tickets" && // Explicitly exclude tickets
-    obj.type !== "hotels" && // Explicitly exclude hotels
-    obj.type !== "activities" // Explicitly exclude activities
+    obj.type === "restaurants"
 
-  // If it's an array, find the restaurant data object
-  if (Array.isArray(toolOutput)) {
-    // Prioritize by 'type' property if available
-    const typedRestaurantData = toolOutput.find((item) => item.type === "restaurants")
-    if (typedRestaurantData) return typedRestaurantData
-
-    // Fallback to checking other restaurant-specific properties, while excluding other types
-    return toolOutput.find((item) => isRestaurantObj(item)) || null
-  }
-  
   // If it's a single object, return it if it contains restaurant data and is not another type
   return isRestaurantObj(toolOutput) ? toolOutput : null
 }
@@ -194,20 +169,8 @@ const findActivityData = (toolOutput: any) => {
   
   const isActivityObj = (obj: any) =>
     obj && 
-    (obj.activities || (obj.items && Array.isArray(obj.items))) &&
-    obj.type !== "tickets" && // Explicitly exclude tickets
-    obj.type !== "hotels" && // Explicitly exclude hotels
-    obj.type !== "restaurants" // Explicitly exclude restaurants
+    obj.type === "activities"
 
-  // If it's an array, find the activity data object
-  if (Array.isArray(toolOutput)) {
-    // Prioritize by 'type' property if available
-    const typedActivityData = toolOutput.find((item) => item.type === "activities")
-    if (typedActivityData) return typedActivityData
-
-    // Fallback to checking other activity-specific properties, while excluding other types
-    return toolOutput.find((item) => isActivityObj(item)) || null
-  }
   
   // If it's a single object, return it if it contains activity data and is not another type
   return isActivityObj(toolOutput) ? toolOutput : null
@@ -216,25 +179,16 @@ const findActivityData = (toolOutput: any) => {
 // Helper function to find ticket data in toolOutput  
 const findTicketData = (toolOutput: any) => {
   if (!toolOutput) return null
-  
-  const isTicketObj = (obj: any) =>
-    obj && 
-    (obj.flights || obj.type === "tickets" || obj.type === "flights" || obj.type === "search") &&
-    obj.type !== "hotels" && // Explicitly exclude hotels
-    obj.type !== "restaurants" && // Explicitly exclude restaurants
-    obj.type !== "activities" // Explicitly exclude activities
-  
-  // If it's an array, find the ticket data object that actually has flights
-  if (Array.isArray(toolOutput)) {
-    // Prioritize by 'type' property if available
-    const typedTicketData = toolOutput.find((item) => item.type === "tickets" || item.type === "flights" || item.type === "search")
-    if (typedTicketData) return typedTicketData
 
-    // Fallback to checking other ticket-specific properties, while excluding other types
-    return toolOutput.find((item) => isTicketObj(item)) || null
+  // Always return the summary object for tickets
+  if (toolOutput.type === "tickets" && Array.isArray(toolOutput.tickets)) {
+    return toolOutput
   }
-  
-  // If it's a single object, return it only if it contains flights and is not another type
+
+  const isTicketObj = (obj: any) =>
+    obj && obj.type === "tickets"
+
+  // If it's a single object, return it if it contains ticket data
   return isTicketObj(toolOutput) ? toolOutput : null
 }
 
@@ -305,7 +259,7 @@ export function MessageBubble({
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3, delay: 0.1 }}
           >
-            {message.content.includes("<hotels>") || message.content.includes("Hotels in") ? (
+            {message.toolOutput.type === "hotels" ? (
               (() => {
                 const hotelData = findHotelData(message.toolOutput)
                 return hotelData ? (
@@ -320,7 +274,7 @@ export function MessageBubble({
                   </div>
                 )
               })()
-            ) : message.content.includes("<restaurants>") || message.content.includes("Restaurants in") ? (
+            ) : message.toolOutput.type === "restaurants" ? (
               (() => {
                 const restaurantData = findRestaurantData(message.toolOutput)
                 return restaurantData ? (
@@ -335,7 +289,7 @@ export function MessageBubble({
                   </div>
                 )
               })()
-            ) : message.content.includes("<activities>") || message.content.includes("Activities in") ? (
+            ) : message.toolOutput.type === "activities" ? (
               (() => {
                 const activityData = findActivityData(message.toolOutput)
                 return activityData ? (
@@ -353,6 +307,7 @@ export function MessageBubble({
             ) : (
               (() => {
                 const ticketData = findTicketData(message.toolOutput)
+                console.log("tickets should be here")
                 return ticketData ? (
                   <TicketDisplay
                     toolOutput={ticketData}
