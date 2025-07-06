@@ -376,43 +376,39 @@ export default function ChatPage() {
           const searchResults = chunk.search_results
           if (searchResults && Array.isArray(searchResults) && searchResults.length > 0) {
             const mapped = searchResults.map((sr: any) => {
-            const resultData = { ...sr.data }
-            resultData.search_result_id = sr.id
-            resultData.type = sr.search_type
-            
+              const resultData = { ...sr.data }
+              resultData.search_result_id = sr.id
+              resultData.type = sr.search_type
               // Propagate search_result_id to nested items
-            if (resultData.flights && Array.isArray(resultData.flights)) {
-              resultData.flights = resultData.flights.map((flight: any) => ({
-                ...flight,
+              if (resultData.flights && Array.isArray(resultData.flights)) {
+                resultData.flights = resultData.flights.map((flight: any) => ({
+                  ...flight,
                   search_result_id: sr.id,
-              }))
-            }
-            
-            if (resultData.hotels && Array.isArray(resultData.hotels)) {
-              resultData.hotels = resultData.hotels.map((hotel: any) => ({
-                ...hotel,
+                }))
+              }
+              if (resultData.hotels && Array.isArray(resultData.hotels)) {
+                resultData.hotels = resultData.hotels.map((hotel: any) => ({
+                  ...hotel,
                   search_result_id: sr.id,
-              }))
-            }
-            
-            if (resultData.restaurants && Array.isArray(resultData.restaurants)) {
-              resultData.restaurants = resultData.restaurants.map((restaurant: any) => ({
-                ...restaurant,
+                }))
+              }
+              if (resultData.restaurants && Array.isArray(resultData.restaurants)) {
+                resultData.restaurants = resultData.restaurants.map((restaurant: any) => ({
+                  ...restaurant,
                   search_result_id: sr.id,
-              }))
-            }
-            
-            if (resultData.items && Array.isArray(resultData.items)) {
-              resultData.items = resultData.items.map((item: any) => ({
-                ...item,
+                }))
+              }
+              if (resultData.items && Array.isArray(resultData.items)) {
+                resultData.items = resultData.items.map((item: any) => ({
+                  ...item,
                   search_result_id: sr.id,
-              }))
-            }
-            
-            return resultData
-          })
-          combinedOutput = mapped.length === 1 ? mapped[0] : mapped
-        }
+                }))
+              }
+              return resultData
+            })
+            // Only set a single object or fallback to finalToolOutput if ambiguous
+            combinedOutput = mapped.length === 1 ? mapped[0] : finalToolOutput
+          }
 
           // Update final message with tool output
           setMessages((prev) =>
