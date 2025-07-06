@@ -50,11 +50,14 @@ export function GoogleSignInButton({
             cancel_on_tap_outside: true,
           })
 
-          // Render neutral (non-personalized) button for consistent look across environments
+          // Compute the container width so the rendered button stretches to 100%
+          const containerWidth = buttonRef.current.offsetWidth || 320
+
+          // Render neutral (non-personalized) button that fills the available width
           window.google.accounts.id.renderButton(buttonRef.current, {
             theme: "outline",
-            // medium size disables Google "Continue as <user>" personalization
-            size: "medium",
+            size: "large", // 44 px height full button
+            width: containerWidth,
             text: "signin_with",
             shape: "rectangular",
             logo_alignment: "left",
@@ -124,7 +127,6 @@ export function GoogleSignInButton({
       <div
         ref={buttonRef}
         className={`w-full ${disabled ? "opacity-50 pointer-events-none" : ""}`}
-        style={{ minHeight: "44px" }}
       />
       {!isGoogleLoaded && (
         <div className="w-full h-11 border-2 border-slate-200 dark:border-slate-700 rounded-lg flex items-center justify-center">

@@ -161,10 +161,9 @@ export function AppSidebar({
                   className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
                   title={t('switchLanguage')}
                 >
-                  <div className="flex items-center space-x-1">
-                    <Globe className="h-3 w-3" />
-                    <span className="text-xs font-medium">{currentLanguage?.name}</span>
-                  </div>
+                  <span className="text-lg select-none">
+                    {locale === 'en' ? '🇺🇸' : '🇷🇺'}
+                  </span>
                 </Button>
                 <Button
                   variant="ghost"
@@ -206,10 +205,9 @@ export function AppSidebar({
                   className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
                   title={t('switchLanguage')}
                 >
-                  <div className="flex items-center space-x-1">
-                    <Globe className="h-3 w-3" />
-                    <span className="text-xs font-medium">{currentLanguage?.name}</span>
-                  </div>
+                  <span className="text-lg select-none">
+                    {locale === 'en' ? '🇺🇸' : '🇷🇺'}
+                  </span>
                 </Button>
                 <Button
                   variant="ghost"
@@ -243,9 +241,9 @@ export function AppSidebar({
               className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
               title={t('switchLanguage')}
             >
-              <div className="flex items-center justify-center">
-                <Globe className="h-3 w-3" />
-              </div>
+              <span className="text-lg select-none">
+                {locale === 'en' ? '🇺🇸' : '🇷🇺'}
+              </span>
             </Button>
             <Button
               variant="ghost"

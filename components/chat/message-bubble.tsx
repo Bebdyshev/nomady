@@ -142,90 +142,100 @@ const parseMessageContent = (content: string, toolOutput?: any) => {
 const findHotelData = (toolOutput: any) => {
   if (!toolOutput) return null
   
+  const isHotelObj = (obj: any) =>
+    obj && 
+    (obj.hotels || obj.properties || obj.destination) && // Check for hotel-specific keys
+    obj.type !== "tickets" && // Explicitly exclude tickets
+    obj.type !== "restaurants" && // Explicitly exclude restaurants
+    obj.type !== "activities" // Explicitly exclude activities
+
   // If it's an array, find the hotel data object
   if (Array.isArray(toolOutput)) {
-    const hotelData = toolOutput.find(
-      (item) =>
-      item.hotels || 
-      item.properties || 
-      item.destination || 
-        (item.type !== "tickets" && (item.total_found > 0 || item.success)),
-    )
-    return hotelData || null
+    // Prioritize by 'type' property if available
+    const typedHotelData = toolOutput.find((item) => item.type === "hotels")
+    if (typedHotelData) return typedHotelData
+
+    // Fallback to checking other hotel-specific properties, while excluding other types
+    return toolOutput.find((item) => isHotelObj(item)) || null
   }
   
-  // If it's a single object, return it if it contains hotel data
-  if (toolOutput.hotels || toolOutput.properties || toolOutput.destination) {
-    return toolOutput
-  }
-  
-  return null
+  // If it's a single object, return it if it contains hotel data and is not another type
+  return isHotelObj(toolOutput) ? toolOutput : null
 }
 
 // Helper function to find restaurant data in toolOutput
 const findRestaurantData = (toolOutput: any) => {
   if (!toolOutput) return null
   
+  const isRestaurantObj = (obj: any) =>
+    obj && 
+    (obj.restaurants || obj.source === "tripadvisor") &&
+    obj.type !== "tickets" && // Explicitly exclude tickets
+    obj.type !== "hotels" && // Explicitly exclude hotels
+    obj.type !== "activities" // Explicitly exclude activities
+
   // If it's an array, find the restaurant data object
   if (Array.isArray(toolOutput)) {
-    const restaurantData = toolOutput.find(
-      (item) =>
-      item.restaurants || 
-      item.type === "restaurants" ||
-        (item.source === "tripadvisor" && item.restaurants && Array.isArray(item.restaurants)),
-    )
-    return restaurantData || null
+    // Prioritize by 'type' property if available
+    const typedRestaurantData = toolOutput.find((item) => item.type === "restaurants")
+    if (typedRestaurantData) return typedRestaurantData
+
+    // Fallback to checking other restaurant-specific properties, while excluding other types
+    return toolOutput.find((item) => isRestaurantObj(item)) || null
   }
   
-  // If it's a single object, return it if it contains restaurant data
-  if (toolOutput.restaurants || toolOutput.type === "restaurants") {
-    return toolOutput
-  }
-  
-  return null
+  // If it's a single object, return it if it contains restaurant data and is not another type
+  return isRestaurantObj(toolOutput) ? toolOutput : null
 }
 
 // Helper function to find activity data in toolOutput
 const findActivityData = (toolOutput: any) => {
   if (!toolOutput) return null
   
+  const isActivityObj = (obj: any) =>
+    obj && 
+    (obj.activities || (obj.items && Array.isArray(obj.items))) &&
+    obj.type !== "tickets" && // Explicitly exclude tickets
+    obj.type !== "hotels" && // Explicitly exclude hotels
+    obj.type !== "restaurants" // Explicitly exclude restaurants
+
   // If it's an array, find the activity data object
   if (Array.isArray(toolOutput)) {
-    const activityData = toolOutput.find(
-      (item) =>
-      item.activities || 
-      item.type === "activities" ||
-        (item.items && Array.isArray(item.items)),
-    )
-    return activityData || null
+    // Prioritize by 'type' property if available
+    const typedActivityData = toolOutput.find((item) => item.type === "activities")
+    if (typedActivityData) return typedActivityData
+
+    // Fallback to checking other activity-specific properties, while excluding other types
+    return toolOutput.find((item) => isActivityObj(item)) || null
   }
   
-  // If it's a single object, return it if it contains activity data
-  if (toolOutput.activities || toolOutput.type === "activities") {
-    return toolOutput
-  }
-  
-  return null
+  // If it's a single object, return it if it contains activity data and is not another type
+  return isActivityObj(toolOutput) ? toolOutput : null
 }
 
 // Helper function to find ticket data in toolOutput  
 const findTicketData = (toolOutput: any) => {
   if (!toolOutput) return null
   
-  // If it's an array, find the ticket data object
+  const isTicketObj = (obj: any) =>
+    obj && 
+    (obj.flights || obj.type === "tickets" || obj.type === "flights" || obj.type === "search") &&
+    obj.type !== "hotels" && // Explicitly exclude hotels
+    obj.type !== "restaurants" && // Explicitly exclude restaurants
+    obj.type !== "activities" // Explicitly exclude activities
+  
+  // If it's an array, find the ticket data object that actually has flights
   if (Array.isArray(toolOutput)) {
-    const ticketData = toolOutput.find(
-      (item) =>
-      item.flights || 
-      item.type === "tickets" ||
-      item.type === "flights" ||
-        (item.items && Array.isArray(item.items)),
-    )
-    return ticketData || toolOutput[0] // fallback to first item if no specific ticket data found
+    // Prioritize by 'type' property if available
+    const typedTicketData = toolOutput.find((item) => item.type === "tickets" || item.type === "flights" || item.type === "search")
+    if (typedTicketData) return typedTicketData
+
+    // Fallback to checking other ticket-specific properties, while excluding other types
+    return toolOutput.find((item) => isTicketObj(item)) || null
   }
   
-  // If it's a single object, return it
-  return toolOutput
+  // If it's a single object, return it only if it contains flights and is not another type
+  return isTicketObj(toolOutput) ? toolOutput : null
 }
 
 export function MessageBubble({
