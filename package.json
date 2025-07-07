@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@21st-extension/react": "^0.5.12",
+    "@21st-extension/toolbar-next": "^0.5.12",
     "@emotion/is-prop-valid": "latest",
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-accordion": "1.2.2",
