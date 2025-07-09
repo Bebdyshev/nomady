@@ -318,11 +318,18 @@ export function AppSidebar({
         )}
 
         {/* Chat-specific header for conversations */}
-        {isOnChatPage && !collapsed && (
+        {conversations.length > 0 && !collapsed && (
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-slate-900 dark:text-white text-sm">{t('recentChats')}</h3>
             <Button
-              onClick={onNewChat}
+              onClick={() => {
+                // Navigate to chat page if not already there, then start new chat
+                if (pathname !== "/chat") {
+                  router.push("/chat")
+                } else {
+                  onNewChat?.()
+                }
+              }}
               variant="ghost"
               size="sm"
               className="text-blue-600 dark:text-blue-400 h-8 text-xs hover:bg-blue-100 dark:hover:bg-blue-900/30"
@@ -334,8 +341,8 @@ export function AppSidebar({
         )}
       </div>
 
-      {/* Conversations - Only show on chat page */}
-      {isOnChatPage && !collapsed && (
+      {/* Conversations - Show when conversations exist */}
+      {conversations.length > 0 && !collapsed && (
         <div className="flex-1 flex flex-col min-h-0">
           <div className="flex-1 overflow-y-auto p-2 md:p-3">
             <div className="space-y-2">
@@ -348,7 +355,12 @@ export function AppSidebar({
                       : "hover:bg-slate-50 dark:hover:bg-slate-700"
                   }`}
                   onClick={() => {
-                    onConversationSelect?.(conversation.id)
+                    // Navigate to chat page if not already there
+                    if (pathname !== "/chat") {
+                      router.push(`/chat?conversation=${conversation.id}`)
+                    } else {
+                      onConversationSelect?.(conversation.id)
+                    }
                     if (window.innerWidth < 768) setSidebarOpen?.(false)
                   }}
                 >
@@ -363,20 +375,28 @@ export function AppSidebar({
                   </div>
                 </Card>
               ))}
-              {conversations.length === 0 && (
-                <div className="text-center py-8">
-                  <MessageCircle className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-                  <p className="text-sm text-slate-500 dark:text-slate-400">{t('noConversations')}</p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{t('startChat')}</p>
-                </div>
-              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* For non-chat pages, add spacer */}
-      {!isOnChatPage && !collapsed && <div className="flex-1" />}
+      {/* Empty state for no conversations - only show on chat page */}
+      {isOnChatPage && conversations.length === 0 && !collapsed && (
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 overflow-y-auto p-2 md:p-3">
+            <div className="space-y-2">
+              <div className="text-center py-8">
+                <MessageCircle className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+                <p className="text-sm text-slate-500 dark:text-slate-400">{t('noConversations')}</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{t('startChat')}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* For non-chat pages without conversations, add spacer */}
+      {(!isOnChatPage || conversations.length === 0) && !collapsed && <div className="flex-1" />}
 
       {/* User Profile */}
       <div className={`${collapsed ? 'p-2' : 'p-3 md:p-4'} border-t border-slate-200 dark:border-slate-700 mt-auto`}>

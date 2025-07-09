@@ -229,21 +229,18 @@ export default function LandingPage() {
         <div className="container mx-auto px-6 py-4">
           {/* Mobile Header - Two rows layout */}
           <div className="md:hidden">
-            {/* First row: Logo только */}
-            <div className="flex items-center justify-center mb-3">
+            {/* Single row: Logo, language toggle, and get started button */}
+            <div className="flex items-center justify-center space-x-4">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, type: "spring", bounce: 0.3 }}
                 className="flex items-center justify-center group"
               >
-                <Logo width={40} height={40} className="rounded-xl" />
+                <Logo width={48} height={48} className="rounded-xl" />
               </motion.div>
-            </div>
             
-            {/* Second row: Action buttons */}
-            <div className="flex items-center justify-center space-x-3">
-              {/* Заменить LanguageSwitcher на кнопку-флаг */}
+              {/* Language toggle button */}
               <button
                 onClick={() => setLocale(otherLang.code as 'en' | 'ru')}
                 className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-xl"
@@ -251,32 +248,6 @@ export default function LandingPage() {
               >
                 <span>{otherLang.flag}</span>
               </button>
-              
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-              >
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                  className="relative rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-300 hover:scale-110 group"
-                >
-                  <motion.div
-                    initial={false}
-                    animate={{ rotate: theme === "dark" ? 180 : 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {theme === "dark" ? (
-                      <Sun className="h-5 w-5 text-amber-500" />
-                    ) : (
-                      <Moon className="h-5 w-5 text-slate-600" />
-                    )}
-                  </motion.div>
-                  <span className="absolute -inset-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
-                </Button>
-              </motion.div>
               
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
