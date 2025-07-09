@@ -35,6 +35,7 @@ import Image from "next/image"
 import { AnimatedGradientText } from "@/components/magicui/animated-gradient-text"
 import { cn } from "@/lib/utils"
 import { Logo } from "@/components/ui/logo"
+import { useI18n } from "@/lib/i18n-client"
 
 // Lazy-load heavy client-only components to cut initial JS
 const GlobeComponent = dynamic(() => import("@/components/magicui/globe").then(m => m.Globe), { ssr: false })
@@ -48,6 +49,13 @@ export default function LandingPage() {
   const { theme, setTheme } = useTheme()
   const t = useTranslations('landing')
   const tNav = useTranslations('navigation')
+  const { locale, setLocale } = useI18n()
+  const languages = [
+    { code: 'en', flag: '🇷🇺' },
+    { code: 'ru', flag: '🇺🇸' }
+  ]
+  const currentLang = languages.find(l => l.code === locale) || languages[0]
+  const otherLang = languages.find(l => l.code !== locale) || languages[1]
 
   // Dynamic placeholders that cycle every few seconds
   const placeholders = [
@@ -221,24 +229,28 @@ export default function LandingPage() {
         <div className="container mx-auto px-6 py-4">
           {/* Mobile Header - Two rows layout */}
           <div className="md:hidden">
-            {/* First row: Logo + Name */}
+            {/* First row: Logo только */}
             <div className="flex items-center justify-center mb-3">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, type: "spring", bounce: 0.3 }}
-                className="flex items-center space-x-3 group"
+                className="flex items-center justify-center group"
               >
                 <Logo width={40} height={40} className="rounded-xl" />
-                <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent">
-                  Nomady
-                </span>
               </motion.div>
             </div>
             
             {/* Second row: Action buttons */}
             <div className="flex items-center justify-center space-x-3">
-              <LanguageSwitcher />
+              {/* Заменить LanguageSwitcher на кнопку-флаг */}
+              <button
+                onClick={() => setLocale(otherLang.code as 'en' | 'ru')}
+                className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-xl"
+                title="Switch language"
+              >
+                <span>{otherLang.flag}</span>
+              </button>
               
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
@@ -318,7 +330,14 @@ export default function LandingPage() {
             </nav>
 
             <div className="flex items-center space-x-3">
-              <LanguageSwitcher />
+              {/* Заменить LanguageSwitcher на кнопку-флаг */}
+              <button
+                onClick={() => setLocale(otherLang.code as 'en' | 'ru')}
+                className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-xl"
+                title="Switch language"
+              >
+                <span>{otherLang.flag}</span>
+              </button>
               
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}

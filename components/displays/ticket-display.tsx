@@ -24,6 +24,7 @@ import {
   CheckCircle2,
 } from "lucide-react"
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+// Добавить импорт useMediaQuery для мобильной адаптации
 
 // Aviasales data interfaces
 interface AviasalesPrice {
@@ -820,7 +821,42 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
     }
   }
 
-    return (
+  // Пример фильтров (можно расширить по необходимости)
+  const [selectedAirline, setSelectedAirline] = useState<string>("")
+  const [maxPrice, setMaxPrice] = useState<number | null>(null)
+  const [directOnly, setDirectOnly] = useState<boolean>(false)
+
+  // Мобильная адаптация
+  function useIsMobile() {
+    const [isMobile, setIsMobile] = useState(false)
+    useEffect(() => {
+      const check = () => setIsMobile(window.matchMedia("(max-width: 640px)").matches)
+      check()
+      window.addEventListener("resize", check)
+      return () => window.removeEventListener("resize", check)
+    }, [])
+    return isMobile
+  }
+
+  // Получить список авиакомпаний для фильтра
+  const airlineOptions = React.useMemo(() => {
+    const all = (outputArray || []).flatMap(f => f.flights || []).flatMap((t: any) => t.validating_airline ? [t.validating_airline] : [])
+    return Array.from(new Set(all))
+  }, [outputArray])
+
+  // Фильтрация билетов
+  const filteredFlights = React.useMemo(() => {
+    let flights = (groupedResults.flights || [])
+    if (selectedAirline) flights = flights.filter((f: any) => f.validating_airline === selectedAirline)
+    if (maxPrice) flights = flights.filter((f: any) => Number(f.price) <= maxPrice)
+    if (directOnly) flights = flights.filter((f: any) => (f.flights_to?.length || 0) <= 1)
+    return flights
+  }, [groupedResults.flights, selectedAirline, maxPrice, directOnly])
+
+  // --- UI фильтров ---
+  const isMobile = useIsMobile()
+
+  return (
     <div className="mt-6 space-y-8">
       {Object.entries(groupedResults).map(([type, items]) => (
         <motion.div
