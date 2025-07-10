@@ -89,11 +89,6 @@ export default function FavoritesPage() {
     { id: "recommendations", label: t('collections.recommendations'), count: 6, color: "bg-orange-500" },
   ]
 
-  const stats = [
-    { number: "12", label: "Saved Places", icon: Heart },
-    { number: "4", label: "Collections", icon: Bookmark },
-    { number: "2", label: "Shared Lists", icon: Share2 },
-  ]
 
   const savedPlaces = [
     {
@@ -179,25 +174,6 @@ export default function FavoritesPage() {
   return (
     <MainLayout header={<FavoritesHeader />}>
       <div className="container mx-auto px-6 py-8">
-        {/* Stats Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="grid grid-cols-3 gap-4 mb-8"
-        >
-          {stats.map((stat, index) => (
-            <Card key={index} className="p-6 text-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 hover:scale-105 transition-transform duration-300">
-              <div className="flex justify-center mb-2">
-                <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
-                  <stat.icon className="h-6 w-6 text-red-600 dark:text-red-400" />
-                </div>
-              </div>
-              <div className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{stat.number}</div>
-              <div className="text-sm text-slate-600 dark:text-slate-400">{stat.label}</div>
-            </Card>
-          ))}
-        </motion.div>
 
         {/* Coming Soon Banner */}
         <motion.div
@@ -214,153 +190,6 @@ export default function FavoritesPage() {
             <p className="text-lg mb-2">{t('underDevelopment')}</p>
             <p className="text-red-100 max-w-2xl mx-auto">{t('description')}</p>
           </Card>
-        </motion.div>
-
-        {/* Collection Filters */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="mb-8"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Your Collections</h2>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant={viewMode === "grid" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setViewMode("grid")}
-                className="p-2"
-              >
-                <Grid3x3 className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setViewMode("list")}
-                className="p-2"
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          
-          <div className="flex flex-wrap gap-3">
-            {collections.map((collection, index) => (
-              <motion.button
-                key={collection.id}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
-                onClick={() => setActiveCollection(collection.id)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-all duration-300 ${
-                  activeCollection === collection.id
-                    ? 'bg-red-600 text-white shadow-lg scale-105'
-                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-red-50 dark:hover:bg-red-950/30 border border-slate-200 dark:border-slate-700'
-                }`}
-              >
-                <div className={`w-3 h-3 rounded-full ${activeCollection === collection.id ? 'bg-white/30' : collection.color}`} />
-                <span className="text-sm font-medium">{collection.label}</span>
-                <Badge variant="secondary" className="text-xs">
-                  {collection.count}
-                </Badge>
-              </motion.button>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Saved Places Preview */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="mb-12"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Saved Places Preview</h3>
-            <div className="flex items-center space-x-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search favorites..."
-                  className="pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-sm"
-                />
-              </div>
-              <Button size="sm" variant="outline">
-                <Filter className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          
-          <div className={`grid gap-6 ${viewMode === "grid" ? "md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"}`}>
-            {savedPlaces.map((place, index) => {
-              const CategoryIcon = getCategoryIcon(place.category)
-              
-              return (
-                <motion.div
-                  key={place.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className="group cursor-pointer"
-                >
-                  <Card className={`overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105 ${
-                    viewMode === "list" ? "flex" : ""
-                  }`}>
-                    <div className={`relative overflow-hidden ${viewMode === "list" ? "w-48 h-32" : "h-48"}`}>
-                      <img 
-                        src={place.image} 
-                        alt={place.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      <div className="absolute top-3 right-3">
-                        <Badge className="bg-white/90 text-slate-900 border-0">
-                          <Star className="h-3 w-3 mr-1 fill-yellow-400 text-yellow-400" />
-                          {place.rating}
-                        </Badge>
-                      </div>
-                      <div className="absolute top-3 left-3">
-                        <div className={`p-1 rounded-full ${getCategoryColor(place.category)}`}>
-                          <CategoryIcon className="h-3 w-3 text-white" />
-                        </div>
-                      </div>
-                      <div className="absolute bottom-3 right-3">
-                        <Button size="sm" variant="ghost" className="bg-white/20 hover:bg-white/30 text-white p-1">
-                          <Heart className="h-4 w-4 fill-red-500 text-red-500" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="p-4 flex-1">
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-bold text-slate-900 dark:text-white">{place.name}</h3>
-                        <div className="flex items-center space-x-1">
-                          <Clock className="h-3 w-3 text-slate-400" />
-                          <span className="text-xs text-slate-500">{place.savedDate}</span>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-1 mb-3">
-                        {place.tags.map((tag, tagIndex) => (
-                          <Badge key={tagIndex} variant="secondary" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 border-0 text-xs">
-                          {place.collection}
-                        </Badge>
-                        <Button size="sm" variant="ghost" className="p-1">
-                          <Share2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                </motion.div>
-              )
-            })}
-          </div>
         </motion.div>
 
         {/* Features Preview */}
