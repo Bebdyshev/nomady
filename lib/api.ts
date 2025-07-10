@@ -63,14 +63,18 @@ class ApiClient {
     }
   }
 
-  setToken(token: string) {
-    this.token = token
-    setCookie("access_token", token, 7) // Store for 7 days
+  setToken(accessToken: string, refreshToken?: string) {
+    this.token = accessToken
+    setCookie("access_token", accessToken, 1) // Store for 1 day
+    if (refreshToken) {
+      setCookie("refresh_token", refreshToken, 30) // Store for 30 days
+    }
   }
 
   clearToken() {
     this.token = null
     deleteCookie("access_token")
+    deleteCookie("refresh_token")
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
@@ -91,6 +95,24 @@ class ApiClient {
       })
 
       if (!response.ok) {
+        if (response.status === 401 && !headers["X-No-Retry"]) {
+          const refreshTokenValue = getCookie("refresh_token")
+          if (refreshTokenValue) {
+            const { data: refreshData, error: refreshError } = await this.refreshToken(refreshTokenValue)
+            if (refreshData && !refreshError) {
+              this.setToken(refreshData.access_token, refreshData.refresh_token)
+              // Retry original request
+              headers.Authorization = `Bearer ${refreshData.access_token}`
+              return this.request<T>(endpoint, { ...options, headers })
+            }
+          }
+          // If refresh fails or no refresh token, logout
+          this.clearToken()
+          // Reload to redirect to login page if not already there
+          if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+            window.location.reload()
+          }
+        }
         const errorData = await response.json().catch(() => ({}))
         throw new Error(errorData.detail || `HTTP error! status: ${response.status}`)
       }
@@ -104,7 +126,7 @@ class ApiClient {
 
   // Auth methods
   async login(email: string, password: string) {
-    return this.request<{ access_token: string; type: string }>("/auth/login", {
+    return this.request<{ access_token: string; refresh_token: string; type: string }>("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     })
@@ -132,13 +154,14 @@ class ApiClient {
   }
 
   async googleLogin(token: string) {
-    return this.request<{ access_token: string; type: string }>("/auth/google-login", {
+    return this.request<{ access_token: string; refresh_token: string; type: string }>("/auth/google-login", {
       method: "POST",
       body: JSON.stringify({ token }),
     })
   }
 
   async logout() {
+    // We send the access token, backend will invalidate the refresh token.
     const result = await this.request("/auth/logout", { method: "POST" })
     this.clearToken()
     return result
@@ -146,6 +169,17 @@ class ApiClient {
 
   async getMe() {
     return this.request("/auth/users/me")
+  }
+
+  async refreshToken(refreshToken: string) {
+    return this.request<{ access_token: string; refresh_token: string; type: string }>(
+      "/auth/token/refresh",
+      {
+        method: "POST",
+        body: JSON.stringify({ refresh_token: refreshToken }),
+        headers: { "X-No-Retry": "true" },
+      }
+    )
   }
 
   // Chat methods

@@ -26,20 +26,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Cookie utilities for SSR compatibility
-const getCookie = (name: string): string | null => {
-  if (typeof document !== "undefined") {
-    const nameEQ = name + "="
-    const ca = document.cookie.split(";")
-    for (let i = 0; i < ca.length; i++) {
-      let c = ca[i]
-      while (c.charAt(0) === " ") c = c.substring(1, c.length)
-      if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length)
-    }
-  }
-  return null
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
@@ -49,18 +35,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const checkAuth = async () => {
+    setLoading(true)
     try {
-      const token = getCookie("access_token")
-      if (token) {
-        apiClient.setToken(token)
-        const { data, error } = await apiClient.getMe()
-        if (data && !error) {
-          setUser(data as User)
-        } else {
-          apiClient.clearToken()
-        }
+      const { data, error } = await apiClient.getMe()
+      if (data && !error) {
+        setUser(data as User)
+      } else {
+        setUser(null)
+        apiClient.clearToken() // Ensure tokens are cleared if getMe fails
       }
     } catch (error) {
+      setUser(null)
       console.error("Auth check failed:", error)
     } finally {
       setLoading(false)
@@ -71,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { data, error } = await apiClient.login(email, password)
       if (data && !error) {
-        apiClient.setToken(data.access_token)
+        apiClient.setToken(data.access_token, data.refresh_token)
         await checkAuth()
         return { success: true }
       }
@@ -127,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { data, error } = await apiClient.googleLogin(credential)
       if (data && !error) {
-        apiClient.setToken(data.access_token)
+        apiClient.setToken(data.access_token, data.refresh_token)
         await checkAuth()
         return { success: true }
       }
@@ -139,12 +124,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await apiClient.logout()
+      await apiClient.logout() // apiClient handles token removal
     } catch (error) {
       console.error("Logout error:", error)
     } finally {
       setUser(null)
-      apiClient.clearToken()
     }
   }
 
