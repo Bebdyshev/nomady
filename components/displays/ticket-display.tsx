@@ -138,13 +138,26 @@ interface TicketDisplayProps {
 
 // Function to detect if data is in Aviasales format
 function isAviasalesData(data: any): data is AviasalesData {
-  return data && 
-         typeof data === 'object' && 
-         Array.isArray(data.tickets) && 
-         data.tickets.length > 0 &&
-         data.tickets[0].price &&
-         typeof data.tickets[0].price.value === 'number' &&
-         typeof data.tickets[0].price.currency_code === 'string'
+  console.log("isAviasalesData check received:", data)
+  
+  const hasTicketsArray = Array.isArray(data?.tickets)
+  const hasTickets = hasTicketsArray && data.tickets.length > 0
+  const hasPrice = hasTickets && data.tickets[0]?.price
+  const hasPriceValue = hasPrice && typeof data.tickets[0].price.value === 'number'
+  const hasCurrency = hasPrice && typeof data.tickets[0].price.currency_code === 'string'
+  
+  const result = data && typeof data === 'object' && hasTicketsArray && hasTickets && hasPrice && hasPriceValue && hasCurrency
+  
+  console.log({
+    hasTicketsArray,
+    hasTickets,
+    hasPrice,
+    hasPriceValue,
+    hasCurrency,
+    result
+  })
+  
+  return result
 }
 
 // Function to transform Aviasales data to SearchResult format
@@ -706,18 +719,26 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
   const { toast } = useToast()
   const t = useTranslations('chat.displays')
 
+  console.log("TicketDisplay received toolOutput:", toolOutput)
+
   // Transform Aviasales data if needed
   const processedOutput = React.useMemo(() => {
+    console.log("Running processedOutput memo...")
     if (isAviasalesData(toolOutput)) {
+      console.log("Data is Aviasales format, transforming...")
       const transformedResults = transformAviasalesData(toolOutput)
+      console.log("Transformed results:", transformedResults)
       // Return as flights group
       return [{
         type: "flights" as const,
         flights: transformedResults
       }]
     }
+    console.log("Data is NOT Aviasales format, using as is.")
     return Array.isArray(toolOutput) ? toolOutput : [toolOutput]
   }, [toolOutput])
+
+  console.log("Final processedOutput:", processedOutput)
 
   // Global price formatting function
   const formatPrice = (price: number | string, currency: string = "USD") => {
