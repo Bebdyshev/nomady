@@ -61,18 +61,21 @@ interface AviasalesFlightSegment {
 
 interface AviasalesTicket {
   id: string
+  ticket_id?: string
   price: AviasalesPrice
   flights_to: AviasalesFlightSegment[]
   flights_return?: AviasalesFlightSegment[]
   route_ru: string
   route_en: string
+  aviasales_url?: string
+  refundable?: boolean
+  passengers?: number
 }
 
 interface AviasalesData {
   cheapest_ticket: AviasalesTicket
   tickets: AviasalesTicket[]
-  type: string
-  search_id: number
+  search_params?: any
 }
 
 interface FlightSegment {
@@ -146,96 +149,196 @@ function isAviasalesData(data: any): data is AviasalesData {
 
 // Function to transform Aviasales data to SearchResult format
 function transformAviasalesData(aviasalesData: AviasalesData): SearchResult[] {
-  return aviasalesData.tickets.map(ticket => {
+  console.log('transformAviasalesData called with:', aviasalesData)
+  
+  return aviasalesData.tickets.map((ticket, ticketIndex) => {
+    console.log(`Processing ticket ${ticketIndex}:`, ticket)
+    
     // Calculate total duration for outbound flights
-    const calculateDuration = (segments: AviasalesFlightSegment[]): string => {
+    const calculateDuration = (segments: any[]): string => {
       if (!segments || segments.length === 0) return "0h 0m"
       
-      const firstDeparture = segments[0].departure_unix_timestamp
-      const lastArrival = segments[segments.length - 1].arrival_unix_timestamp
-      const totalMinutes = Math.floor((lastArrival - firstDeparture) / 60)
+      // Handle both unix timestamps and string timestamps
+      const firstSegment = segments[0]
+      const lastSegment = segments[segments.length - 1]
       
+      let firstDeparture: number
+      let lastArrival: number
+      
+      if (firstSegment.departure_unix_timestamp) {
+        firstDeparture = firstSegment.departure_unix_timestamp
+      } else if (firstSegment.local_departure_date_time) {
+        firstDeparture = new Date(firstSegment.local_departure_date_time).getTime() / 1000
+      } else {
+        return "0h 0m"
+      }
+      
+      if (lastSegment.arrival_unix_timestamp) {
+        lastArrival = lastSegment.arrival_unix_timestamp
+      } else if (lastSegment.local_arrival_date_time) {
+        lastArrival = new Date(lastSegment.local_arrival_date_time).getTime() / 1000
+      } else {
+        return "0h 0m"
+      }
+      
+      const totalMinutes = Math.floor((lastArrival - firstDeparture) / 60)
       const hours = Math.floor(totalMinutes / 60)
       const minutes = totalMinutes % 60
       return `${hours}h ${minutes}m`
     }
 
-    // Transform flight segments
-    const transformSegments = (segments: AviasalesFlightSegment[]): FlightSegment[] => {
-      return segments.map(segment => {
-        // Parse datetime strings
-        const depDateTime = new Date(segment.local_departure_date_time)
-        const arrDateTime = new Date(segment.local_arrival_date_time)
+    // Transform flight segments with robust property handling
+    const transformSegments = (segments: any[]): FlightSegment[] => {
+      if (!segments || !Array.isArray(segments)) {
+        console.log('No segments or invalid segments:', segments)
+        return []
+      }
+      
+      return segments.map((segment, segmentIndex) => {
+        console.log(`Processing segment ${segmentIndex}:`, segment)
         
-        // Calculate segment duration
-        const segmentMinutes = Math.floor((segment.arrival_unix_timestamp - segment.departure_unix_timestamp) / 60)
-        const segHours = Math.floor(segmentMinutes / 60)
-        const segMins = segmentMinutes % 60
-        const segmentDuration = `${segHours}h ${segMins}m`
-
-        return {
-          from: segment.origin,
-          to: segment.destination,
-          from_city: segment.origin_city_en || segment.origin,
-          to_city: segment.destination_city_en || segment.destination,
-          departure_date: depDateTime.toISOString().split('T')[0],
-          departure_time: depDateTime.toLocaleTimeString('en-US', { 
-            hour: '2-digit', 
-            minute: '2-digit',
-            hour12: false 
-          }),
-          arrival_date: arrDateTime.toISOString().split('T')[0],
-          arrival_time: arrDateTime.toLocaleTimeString('en-US', { 
-            hour: '2-digit', 
-            minute: '2-digit',
-            hour12: false 
-          }),
-          flight_number: `${segment.operating_carrier_designator.carrier}${segment.operating_carrier_designator.number}`,
-          airline: segment.operating_carrier_designator.carrier,
-          airline_name: segment.airline_name || segment.operating_carrier_designator.carrier,
-          airplane: segment.equipment.name,
-          duration: segmentDuration,
-          seats: "Available" // Default value as not provided in Aviasales data
+        // Handle datetime parsing with fallbacks
+        let depDateTime: Date
+        let arrDateTime: Date
+        
+        try {
+          depDateTime = new Date(segment.local_departure_date_time || segment.departure_date_time || '')
+          arrDateTime = new Date(segment.local_arrival_date_time || segment.arrival_date_time || '')
+        } catch (error) {
+          console.error('Error parsing dates for segment:', segment, error)
+          depDateTime = new Date()
+          arrDateTime = new Date()
         }
+        
+        // Calculate segment duration with fallbacks
+        let segmentDuration = "0h 0m"
+        try {
+          if (segment.arrival_unix_timestamp && segment.departure_unix_timestamp) {
+            const segmentMinutes = Math.floor((segment.arrival_unix_timestamp - segment.departure_unix_timestamp) / 60)
+            const segHours = Math.floor(segmentMinutes / 60)
+            const segMins = segmentMinutes % 60
+            segmentDuration = `${segHours}h ${segMins}m`
+          } else if (segment.duration) {
+            segmentDuration = segment.duration
+          }
+        } catch (error) {
+          console.error('Error calculating duration for segment:', segment, error)
+        }
+
+        // Extract carrier and flight number with fallbacks
+        let flightNumber = "N/A"
+        let airline = "Unknown"
+        let airlineName = "Unknown Airline"
+        
+        try {
+          if (segment.operating_carrier_designator?.carrier && segment.operating_carrier_designator?.number) {
+            airline = segment.operating_carrier_designator.carrier
+            flightNumber = `${segment.operating_carrier_designator.carrier}${segment.operating_carrier_designator.number}`
+            airlineName = segment.airline_name || segment.operating_carrier_designator.carrier
+          } else if (segment.carrier && segment.flight_number) {
+            airline = segment.carrier
+            flightNumber = segment.flight_number
+            airlineName = segment.airline_name || segment.carrier
+          } else if (segment.airline) {
+            airline = segment.airline
+            airlineName = segment.airline
+            flightNumber = segment.flight_number || "N/A"
+          }
+        } catch (error) {
+          console.error('Error extracting carrier info for segment:', segment, error)
+        }
+
+        // Extract airplane with fallback
+        let airplane = "N/A"
+        try {
+          airplane = segment.equipment?.name || segment.aircraft || segment.airplane || "N/A"
+        } catch (error) {
+          console.error('Error extracting airplane for segment:', segment, error)
+        }
+
+        const result = {
+          from: segment.origin || segment.from || "N/A",
+          to: segment.destination || segment.to || "N/A",
+          from_city: segment.origin_city_en || segment.origin_city || segment.from_city || segment.origin || segment.from || "N/A",
+          to_city: segment.destination_city_en || segment.destination_city || segment.to_city || segment.destination || segment.to || "N/A",
+          departure_date: isNaN(depDateTime.getTime()) ? "N/A" : depDateTime.toISOString().split('T')[0],
+          departure_time: isNaN(depDateTime.getTime()) ? "N/A" : depDateTime.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+          }),
+          arrival_date: isNaN(arrDateTime.getTime()) ? "N/A" : arrDateTime.toISOString().split('T')[0],
+          arrival_time: isNaN(arrDateTime.getTime()) ? "N/A" : arrDateTime.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+          }),
+          flight_number: flightNumber,
+          airline: airline,
+          airline_name: airlineName,
+          airplane: airplane,
+          duration: segmentDuration,
+          seats: segment.seats || "Available"
+        }
+        
+        console.log(`Transformed segment ${segmentIndex}:`, result)
+        return result
       })
     }
 
     // Get airline name from first segment with fallback to multiple segments
-    const getMainAirline = (ticket: AviasalesTicket): string => {
-      if (!ticket.flights_to || ticket.flights_to.length === 0) return "Unknown Airline"
-      
-      // Используем airline_name если доступно, иначе fallback к коду
-      const firstSegment = ticket.flights_to[0]
-      if (firstSegment.airline_name) {
-        return firstSegment.airline_name
-      }
-      
-      const carriers = ticket.flights_to.map(segment => segment.operating_carrier_designator.carrier)
-      const uniqueCarriers = [...new Set(carriers)]
-      
-      if (uniqueCarriers.length === 1) {
-        return uniqueCarriers[0]
-      } else {
-        return uniqueCarriers.join(' + ')
+    const getMainAirline = (ticket: any): string => {
+      try {
+        if (!ticket.flights_to || ticket.flights_to.length === 0) return "Unknown Airline"
+        
+        const firstSegment = ticket.flights_to[0]
+        if (firstSegment.airline_name) {
+          return firstSegment.airline_name
+        }
+        
+        if (firstSegment.operating_carrier_designator?.carrier) {
+          const carriers = ticket.flights_to.map((segment: any) => 
+            segment.operating_carrier_designator?.carrier || segment.carrier || segment.airline || "Unknown"
+          )
+          const uniqueCarriers = [...new Set(carriers)]
+          
+          if (uniqueCarriers.length === 1) {
+            return uniqueCarriers[0] as string
+          } else {
+            return uniqueCarriers.join(' + ')
+          }
+        }
+        
+        // Fallback to any available carrier info
+        return firstSegment.carrier || firstSegment.airline || "Unknown Airline"
+      } catch (error) {
+        console.error('Error getting main airline:', error)
+        return "Unknown Airline"
       }
     }
 
-    return {
+    const transformedFlightsTo = transformSegments(ticket.flights_to || [])
+    const transformedFlightsReturn = ticket.flights_return ? transformSegments(ticket.flights_return) : undefined
+    
+    const result = {
       type: "flights" as const,
-      id: ticket.id,
-      combination_id: ticket.id,
-      price: ticket.price.value,
-      currency: ticket.price.currency_code,
+      id: ticket.id || ticket.ticket_id || `ticket-${ticketIndex}`,
+      combination_id: ticket.id || ticket.ticket_id || `ticket-${ticketIndex}`,
+      price: ticket.price?.value || 0,
+      currency: ticket.price?.currency_code || "USD",
       validating_airline: getMainAirline(ticket),
-      flights_to: transformSegments(ticket.flights_to || []),
-      flights_return: ticket.flights_return ? transformSegments(ticket.flights_return) : undefined,
-      refundable: false, // Default value as not provided in Aviasales data
-      passengers: 1, // Default value, could be passed as parameter
+      flights_to: transformedFlightsTo,
+      flights_return: transformedFlightsReturn,
+      refundable: ticket.refundable || false,
+      passengers: ticket.passengers || 1,
       duration: calculateDuration(ticket.flights_to || []),
-      route_en: ticket.route_en,
-      route_ru: ticket.route_ru,
-      aviasales_url: (ticket as any).aviasales_url // Add the Aviasales URL for redirection
+      route_en: ticket.route_en || "N/A",
+      route_ru: ticket.route_ru || "N/A",
+      aviasales_url: ticket.aviasales_url
     }
+    
+    console.log(`Transformed ticket ${ticketIndex}:`, result)
+    return result
   })
 }
 
