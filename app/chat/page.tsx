@@ -30,6 +30,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useConversations } from "@/contexts/conversations-context"
 
 // Disable static generation for this page
 export const dynamic = "force-dynamic"
@@ -38,7 +39,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [conversations, setConversations] = useState<Conversation[]>([])
+  const { conversations, loadConversations } = useConversations()
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
   const [bookedItems, setBookedItems] = useState<Record<string, any>>({})
   const [bookedIds, setBookedIds] = useState<Set<string>>(new Set())
@@ -249,13 +250,6 @@ export default function ChatPage() {
     }
     
     setIsLoadingLocation(false)
-  }
-
-  const loadConversations = async () => {
-    const { data } = await apiClient.getConversations()
-    if (data) {
-      setConversations(data)
-    }
   }
 
   const loadBookings = async () => {
@@ -606,7 +600,6 @@ export default function ChatPage() {
 
       {/* Sidebar */}
       <AppSidebar
-        conversations={conversations}
         currentConversationId={currentConversationId}
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}

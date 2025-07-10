@@ -31,24 +31,12 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Logo } from "@/components/ui/logo"
 import { cn } from "@/lib/utils"
+import { useConversations } from "@/contexts/conversations-context"
 
 interface AppSidebarProps {
   collapsed?: boolean
   onToggleCollapsed?: () => void
   // Chat-specific props (optional)
-  conversations?: Array<{
-    id: string
-    user_id: number
-    created_at: string
-    last_updated: string
-    title?: string
-    messages: Array<{
-      id: number
-      role: string
-      content: string
-      timestamp: string
-    }>
-  }>
   currentConversationId?: string | null
   onConversationSelect?: (conversationId: string) => void
   onNewChat?: () => void
@@ -60,7 +48,6 @@ interface AppSidebarProps {
 export function AppSidebar({
   collapsed = false,
   onToggleCollapsed,
-  conversations = [],
   currentConversationId,
   onConversationSelect,
   onNewChat,
@@ -69,6 +56,7 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const { user, logout } = useAuth()
   const { theme, setTheme } = useTheme()
+  const { conversations } = useConversations()
   const router = useRouter()
   const pathname = usePathname()
   const t = useTranslations('chat.sidebar')
@@ -396,7 +384,7 @@ export function AppSidebar({
       )}
 
       {/* For non-chat pages without conversations, add spacer */}
-      {(!isOnChatPage || conversations.length === 0) && !collapsed && <div className="flex-1" />}
+      {(!isOnChatPage && conversations.length === 0) && !collapsed && <div className="flex-1" />}
 
       {/* User Profile */}
       <div className={`${collapsed ? 'p-2' : 'p-3 md:p-4'} border-t border-slate-200 dark:border-slate-700 mt-auto`}>

@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { AppSidebar } from "@/components/shared/app-sidebar"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { 
   Search, 
   ArrowLeft, 
@@ -28,6 +28,8 @@ import {
 import { motion } from "framer-motion"
 import { useTranslations } from "@/lib/i18n-client"
 import { Logo } from "@/components/ui/logo"
+import { apiClient } from "@/lib/api"
+import { Conversation } from "@/types/chat"
 
 export default function ExplorePage() {
   const router = useRouter()
