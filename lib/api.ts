@@ -33,6 +33,25 @@ const deleteCookie = (name: string) => {
   }
 }
 
+interface City {
+  name: string
+  slug: string
+  country: string
+  image?: string
+  overall_score: number
+  cost_for_nomad_in_usd?: number
+  internet_speed?: number
+  safety_level?: number
+}
+
+interface ExploreResponse {
+  success: boolean
+  total_cities: number
+  filtered_cities: number
+  cities: City[]
+  timestamp: string
+}
+
 class ApiClient {
   private baseURL: string
   private token: string | null = null
@@ -378,6 +397,14 @@ class ApiClient {
     }>("/book/activity", {
       method: "POST",
       body: JSON.stringify(selection),
+    })
+  }
+
+  // Explore methods
+  async exploreCities(limit: number = 50) {
+    return this.request<ExploreResponse>("/explore/cities", {
+      method: "POST",
+      body: JSON.stringify({ limit }),
     })
   }
 
