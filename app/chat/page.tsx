@@ -279,169 +279,107 @@ export default function ChatPage() {
     setInput("")
     setIsLoading(true)
     setIsStreaming(true)
-    setShowTypingIndicator(true)
-    setStreamingMessage("")
-    setStreamingToolOutput(null)
 
-    // Show typing indicator for a brief moment before streaming starts
-    setTimeout(() => {
-      setShowTypingIndicator(false)
-    }, 1000)
-
-    // Add temporary streaming message
-    const streamingMessageId = (Date.now() + 1).toString()
-    const tempMessage: Message = {
-      id: streamingMessageId,
+    // Add a placeholder for the assistant's response
+    const assistantMessageId = (Date.now() + 1).toString()
+    const assistantMessagePlaceholder: Message = {
+      id: assistantMessageId,
       role: "assistant",
       content: "",
       timestamp: new Date(),
+      toolOutput: null,
     }
+    setMessages((prev) => [...prev, assistantMessagePlaceholder])
 
-    setTimeout(() => {
-      setMessages((prev) => [...prev, tempMessage])
-    }, 1000)
-
-    const messagesToSend = [{ role: "user", content: input }]
     let fullResponse = ""
     let finalToolOutput: any = null
-    let finalConversationId: string | null = null
-    let wasNewConversation = !currentConversationId // Track if this was a new conversation
+    let finalConversationId: string | null = currentConversationId
+    const wasNewConversation = !currentConversationId
 
     try {
-      for await (const chunk of apiClient.sendMessageStream(
+      const messagesToSend = [{ role: "user", content: input }]
+      const stream = apiClient.sendMessageStream(
         messagesToSend,
         currentConversationId || undefined,
-        () => {
-          // onToolStart - show tool is starting
-          console.log("Tool started")
-        },
-        (output) => {
-          // onToolOutput - handle tool output
-          setStreamingToolOutput(output)
-        },
-        ipGeolocation || undefined // Pass IP geolocation if available
-      )) {
-        if (chunk.type === "text_chunk") {
-          fullResponse += chunk.data
-          setStreamingMessage(fullResponse)
-          finalConversationId = chunk.conversation_id || finalConversationId
+        ipGeolocation || undefined,
+      )
 
-          // Check for search tags in the new chunk
-          const searchStartTags = chunk.data.match(
-            /<(searching_tickets|searching_hotels|searching_restaurants|searching_activities)>/g,
-          )
-          const searchEndTags = chunk.data.match(
-            /<\/(searching_tickets|searching_hotels|searching_restaurants|searching_activities)>/g,
-          )
-
-          if (searchStartTags || searchEndTags) {
-            setActiveSearches((prev) => {
-              const newSearches = new Set(prev)
-
-              // Add new searches
-              searchStartTags?.forEach((tag: string) => {
-                const searchType = tag.replace(/<searching_|>/g, "")
-                newSearches.add(searchType)
-              })
-
-              // Remove completed searches
-              searchEndTags?.forEach((tag: string) => {
-                const searchType = tag.replace(/<\/searching_|>/g, "")
-                newSearches.delete(searchType)
-              })
-
-              return newSearches
-            })
-          }
-
-          // Update the streaming message in real-time
-          setMessages((prev) =>
-            prev.map((msg) => (msg.id === streamingMessageId ? { ...msg, content: fullResponse } : msg)),
-          )
-        } else if (chunk.type === "tool_output") {
-          finalToolOutput = chunk.data
-          setStreamingToolOutput(chunk.data)
-        } else if (chunk.type === "complete") {
-          finalConversationId = chunk.conversation_id || finalConversationId
-          finalToolOutput = chunk.tool_output || finalToolOutput
-
-          // Process search results like in the original code
-          let combinedOutput: any = finalToolOutput
-          const searchResults = chunk.search_results
-          if (searchResults && Array.isArray(searchResults) && searchResults.length > 0) {
-            const mapped = searchResults.map((sr: any) => {
-              const resultData = { ...sr.data }
-              resultData.search_result_id = sr.id
-              resultData.type = sr.search_type
-              // Propagate search_result_id to nested items
-              if (resultData.flights && Array.isArray(resultData.flights)) {
-                resultData.flights = resultData.flights.map((flight: any) => ({
-                  ...flight,
-                  search_result_id: sr.id,
-                }))
-              }
-              if (resultData.hotels && Array.isArray(resultData.hotels)) {
-                resultData.hotels = resultData.hotels.map((hotel: any) => ({
-                  ...hotel,
-                  search_result_id: sr.id,
-                }))
-              }
-              if (resultData.restaurants && Array.isArray(resultData.restaurants)) {
-                resultData.restaurants = resultData.restaurants.map((restaurant: any) => ({
-                  ...restaurant,
-                  search_result_id: sr.id,
-                }))
-              }
-              if (resultData.items && Array.isArray(resultData.items)) {
-                resultData.items = resultData.items.map((item: any) => ({
-                  ...item,
-                  search_result_id: sr.id,
-                }))
-              }
-              return resultData
-            })
-            // Only set a single object or fallback to finalToolOutput if ambiguous
-            combinedOutput = mapped.length === 1 ? mapped[0] : finalToolOutput
-          }
-
-          // Update final message with tool output
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === streamingMessageId ? { ...msg, content: fullResponse, toolOutput: combinedOutput } : msg,
-            ),
-          )
-
-        if (!currentConversationId) {
-            setCurrentConversationId(finalConversationId)
+      for await (const chunk of stream) {
+        if (!finalConversationId && chunk.conversation_id) {
+            finalConversationId = chunk.conversation_id
+            setCurrentConversationId(chunk.conversation_id)
         }
-        } else if (chunk.type === "error") {
-          throw new Error(chunk.data || "Streaming error")
+
+        switch (chunk.type) {
+          case "tool_start":
+            setActiveSearches((prev) => new Set(prev).add(chunk.tool_name || "unknown"))
+            break
+          
+          case "tool_end":
+            setActiveSearches((prev) => {
+                const newSearches = new Set(prev)
+                newSearches.delete(chunk.tool_name || "unknown")
+                return newSearches
+            })
+            break
+
+          case "text_chunk":
+            if (typeof chunk.data === 'string') {
+              fullResponse += chunk.data
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === assistantMessageId ? { ...msg, content: fullResponse } : msg,
+                ),
+              )
+            }
+            break
+
+          case "tool_output":
+            finalToolOutput = chunk.data
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === assistantMessageId ? { ...msg, toolOutput: finalToolOutput } : msg,
+              ),
+            )
+            break
+          
+          case "complete":
+             // The 'complete' chunk might contain the final search_results
+             // We update the message one last time to ensure it has the search_results-enhanced toolOutput
+            if (chunk.search_results && chunk.search_results.length > 0) {
+              const combinedOutput = {
+                ...finalToolOutput,
+                search_results: chunk.search_results
+              }
+               setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === assistantMessageId ? { ...msg, toolOutput: combinedOutput } : msg,
+                ),
+              )
+            }
+            break
+
+          case "error":
+            throw new Error(chunk.data || "Streaming error")
         }
       }
     } catch (error) {
       console.error("Error sending message:", error)
-
-      // Replace streaming message with error message
       setMessages((prev) =>
         prev.map((msg) =>
-          msg.id === streamingMessageId
+          msg.id === assistantMessageId
             ? {
                 ...msg,
-        content: "Sorry, I encountered an error. Please try again.",
-                toolOutput: null,
-      }
+                content: "Sorry, I encountered an error. Please try again.",
+                isError: true,
+              }
             : msg,
         ),
       )
     } finally {
       setIsLoading(false)
       setIsStreaming(false)
-      setShowTypingIndicator(false)
-      setStreamingMessage("")
-      setStreamingToolOutput(null)
       setActiveSearches(new Set())
-      
-      // Reload conversations if this was a new conversation
       if (wasNewConversation && finalConversationId) {
         loadConversations()
       }

@@ -217,12 +217,11 @@ class ApiClient {
   async *sendMessageStream(
     messages: Array<{ role: string; content: string }>, 
     conversationId?: string,
-    onToolStart?: () => void,
-    onToolOutput?: (output: any) => void,
     ipGeolocation?: { ip: string; country: string; country_name: string; city: string; region?: string }
   ): AsyncGenerator<{
-    type: 'text_chunk' | 'tool_output' | 'complete' | 'error'
+    type: 'tool_start' | 'tool_end' | 'text_chunk' | 'tool_output' | 'complete' | 'error'
     data?: any
+    tool_name?: string
     conversation_id?: string
     tool_output?: any
     search_results?: any[]
@@ -289,28 +288,9 @@ class ApiClient {
               try {
                 const data = JSON.parse(line.slice(6))
                 
-                if (data.type === 'tool_start') {
-                  onToolStart?.()
-                } else if (data.type === 'tool_output') {
-                  onToolOutput?.(data.data)
-                  yield { type: 'tool_output', data: data.data }
-                } else if (data.type === 'text_chunk') {
-                  yield {
-                    type: 'text_chunk',
-                    data: data.data,
-                    conversation_id: data.conversation_id,
-                    is_complete: data.is_complete
-                  }
-                } else if (data.type === 'complete') {
-                  yield {
-                    type: 'complete',
-                    conversation_id: data.conversation_id,
-                    tool_output: data.tool_output,
-                    search_results: data.search_results
-                  }
-                } else if (data.type === 'error') {
-                  yield { type: 'error', data: data.data || data.error }
-                }
+                // Yield whatever data event comes from the backend
+                yield data
+
               } catch (e) {
                 console.error('Error parsing SSE data:', e)
               }
