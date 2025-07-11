@@ -119,7 +119,7 @@ export function AppSidebar({
   const sidebarClasses = cn(
     "flex flex-col h-full bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transition-all duration-300",
     "fixed md:relative inset-y-0 left-0 z-50 md:z-0 transform ease-in-out",
-    sidebarOpen ? "translate-x-0" : "-translate-x-full",
+    sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
     collapsed ? "w-16" : "w-64 md:w-[20%]"
   )
 

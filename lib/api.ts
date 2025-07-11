@@ -109,9 +109,9 @@ class ApiClient {
           // If refresh fails or no refresh token, logout
           this.clearToken()
           // Reload to redirect to login page if not already there
-          if (typeof window !== "undefined" && window.location.pathname !== "/login") {
-            window.location.reload()
-          }
+          // if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+          //   window.location.reload()
+          // }
         }
         const errorData = await response.json().catch(() => ({}))
         throw new Error(errorData.detail || `HTTP error! status: ${response.status}`)
