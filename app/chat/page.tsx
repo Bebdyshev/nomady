@@ -68,6 +68,18 @@ export default function ChatPage() {
 
   const MIN_MAP_WIDTH = 30 // percent
   const MAX_MAP_WIDTH = 50 // percent
+  
+  // Функция для проверки, находится ли пользователь внизу чата
+  const isUserAtBottom = () => {
+    if (!messagesEndRef.current) return true
+    
+    const container = messagesEndRef.current.parentElement
+    if (!container) return true
+    
+    const threshold = 100 // пикселей от низа
+    const isAtBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - threshold
+    return isAtBottom
+  }
 
   // Auto-focus input on mount and after sending
   useEffect(() => {
@@ -90,8 +102,21 @@ export default function ChatPage() {
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
+    // Во время стриминга прокручиваем только если пользователь внизу чата
+    if (isStreaming && !isUserAtBottom()) return
+    
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages, showTypingIndicator, activeSearches])
+  }, [messages, showTypingIndicator, activeSearches, isStreaming])
+
+  // Auto-scroll when streaming ends
+  useEffect(() => {
+    if (!isStreaming && messages.length > 0) {
+      // Small delay to ensure DOM is updated
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+      }, 100)
+    }
+  }, [isStreaming, messages.length])
 
   // Load conversations on mount
   useEffect(() => {
@@ -202,7 +227,6 @@ export default function ChatPage() {
 
     for (const service of geoServices) {
       try {
-        console.log(`Trying ${service.name}...`)
         const response = await fetch(service.url)
         
         if (!response.ok) {
@@ -211,7 +235,6 @@ export default function ChatPage() {
         }
         
         const data = await response.json()
-        console.log(`${service.name} response:`, data)
         
         // Check if we got valid data
         if (data && (data.ip || data.query)) {
@@ -220,7 +243,6 @@ export default function ChatPage() {
           // Validate we got useful location data
           if (locationData.country && locationData.country !== 'Unknown' && locationData.city && locationData.city !== 'Unknown') {
             setIpGeolocation(locationData)
-            console.log("IP Geolocation obtained from", service.name, ":", locationData)
             setIsLoadingLocation(false)
             return
           } else {
@@ -277,6 +299,12 @@ export default function ChatPage() {
 
     setMessages((prev) => [...prev, userMessage])
     setInput("")
+    
+    // Прокрутка к новому сообщению пользователя
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    }, 50)
+    
     setIsLoading(true)
     setIsStreaming(true)
 
@@ -290,6 +318,11 @@ export default function ChatPage() {
       toolOutput: null,
     }
     setMessages((prev) => [...prev, assistantMessagePlaceholder])
+    
+    // Прокрутка к placeholder сообщению ассистента
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    }, 100)
 
     let fullResponse = ""
     let finalToolOutput: any = null
@@ -380,6 +413,14 @@ export default function ChatPage() {
       setIsLoading(false)
       setIsStreaming(false)
       setActiveSearches(new Set())
+      // Сбросить toolOutput если не было tool_output в этом сообщении
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMessageId && !finalToolOutput
+            ? { ...msg, toolOutput: null }
+            : msg
+        )
+      )
       if (wasNewConversation && finalConversationId) {
         loadConversations()
       }
@@ -517,8 +558,6 @@ export default function ChatPage() {
     document.addEventListener("mousemove", handleMouseMove)
     document.addEventListener("mouseup", handleMouseUp)
   }
-
-  console.log(messages)
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900">

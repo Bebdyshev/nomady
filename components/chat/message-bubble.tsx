@@ -221,8 +221,7 @@ export function MessageBubble({
           {/* Show search animations for assistant messages during streaming when searches are active */}
           {message.role === "assistant" && 
            isStreaming && 
-           activeSearches.size > 0 && 
-           (message.content === streamingMessage || message.content === "") ? (
+           activeSearches.size > 0 ? ( // Убрал условие message.content.length < 50
             <div className="space-y-2">
               <AnimatePresence>
                 {Array.from(activeSearches).map((searchType) => (
@@ -307,7 +306,6 @@ export function MessageBubble({
             ) : (
               (() => {
                 const ticketData = findTicketData(message.toolOutput)
-                console.log("tickets should be here")
                 return ticketData ? (
                   <TicketDisplay
                     toolOutput={ticketData}
