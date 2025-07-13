@@ -1,5 +1,6 @@
 "use client"
 
+import React, { useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { SearchAnimation } from "@/components/search-animations"
 import { TicketDisplay } from "@/components/displays/ticket-display"
@@ -16,6 +17,7 @@ interface MessageBubbleProps {
   isStreaming: boolean
   streamingMessage: string
   activeSearches: Set<string>
+  currentlyStreamingMessageId: string | null
   bookedIds: Set<string>
   onBooked: (bookedItem: any, id: string, type: string) => void
 }
@@ -192,15 +194,96 @@ const findTicketData = (toolOutput: any) => {
   return isTicketObj(toolOutput) ? toolOutput : null
 }
 
-export function MessageBubble({
+export const MessageBubble = React.memo(function MessageBubble({
   message,
   isStreaming,
   streamingMessage,
   activeSearches,
+  currentlyStreamingMessageId,
   bookedIds,
   onBooked
 }: MessageBubbleProps) {
   const t = useTranslations('chat.messages')
+
+  // Memoize parsed content to avoid recalculating on every render
+  const parsedContent = useMemo(() => {
+    return parseMessageContent(message.content)
+  }, [message.content])
+
+  // Memoize search animation condition
+  const shouldShowSearchAnimation = useMemo(() => {
+    return message.role === "assistant" && 
+           isStreaming && 
+           message.id === currentlyStreamingMessageId &&
+           activeSearches.size > 0
+  }, [message.role, isStreaming, message.id, currentlyStreamingMessageId, activeSearches.size])
+
+  // Memoize streaming cursor condition
+  const shouldShowStreamingCursor = useMemo(() => {
+    return message.role === "assistant" && 
+           isStreaming && 
+           message.content === streamingMessage && 
+           activeSearches.size === 0
+  }, [message.role, isStreaming, message.content, streamingMessage, activeSearches.size])
+
+  // Memoize tool output display
+  const toolOutputDisplay = useMemo(() => {
+    if (!message.toolOutput) return null
+
+    if (message.toolOutput.type === "hotels") {
+      const hotelData = findHotelData(message.toolOutput)
+      return hotelData ? (
+        <HotelDisplay
+          toolOutput={hotelData}
+          bookedIds={bookedIds}
+          onBooked={onBooked}
+        />
+      ) : (
+        <div className="text-sm text-slate-500 dark:text-slate-400 italic">
+          {t('error')}
+        </div>
+      )
+    } else if (message.toolOutput.type === "restaurants") {
+      const restaurantData = findRestaurantData(message.toolOutput)
+      return restaurantData ? (
+        <RestaurantDisplay
+          toolOutput={restaurantData}
+          bookedIds={bookedIds}
+          onBooked={onBooked}
+        />
+      ) : (
+        <div className="text-sm text-slate-500 dark:text-slate-400 italic">
+          {t('error')}
+        </div>
+      )
+    } else if (message.toolOutput.type === "activities") {
+      const activityData = findActivityData(message.toolOutput)
+      return activityData ? (
+        <ActivityDisplay
+          toolOutput={activityData}
+          bookedIds={bookedIds}
+          onBooked={onBooked}
+        />
+      ) : (
+        <div className="text-sm text-slate-500 dark:text-slate-400 italic">
+          {t('error')}
+        </div>
+      )
+    } else {
+      const ticketData = findTicketData(message.toolOutput)
+      return ticketData ? (
+        <TicketDisplay
+          toolOutput={ticketData}
+          bookedIds={bookedIds}
+          onBooked={onBooked}
+        />
+      ) : (
+        <div className="text-sm text-slate-500 dark:text-slate-400 italic">
+          {t('error')}
+        </div>
+      )
+    }
+  }, [message.toolOutput, bookedIds, onBooked, t])
 
   return (
     <motion.div
@@ -219,9 +302,7 @@ export function MessageBubble({
       >
         <div className="text-sm md:text-base">
           {/* Show search animations for assistant messages during streaming when searches are active */}
-          {message.role === "assistant" && 
-           isStreaming && 
-           activeSearches.size > 0 ? ( // Убрал условие message.content.length < 50
+          {shouldShowSearchAnimation ? (
             <div className="space-y-2">
               <AnimatePresence>
                 {Array.from(activeSearches).map((searchType) => (
@@ -232,15 +313,12 @@ export function MessageBubble({
           ) : (
             <>
               {message.role === "assistant" ? (
-                <MarkdownMessage content={parseMessageContent(message.content).text} />
+                <MarkdownMessage content={parsedContent.text} />
               ) : (
-                parseMessageContent(message.content).text
+                parsedContent.text
               )}
               {/* Show streaming cursor for assistant messages during streaming */}
-              {message.role === "assistant" && 
-               isStreaming && 
-               message.content === streamingMessage && 
-               activeSearches.size === 0 && (
+              {shouldShowStreamingCursor && (
                 <motion.span
                   className="inline-block w-1 h-4 bg-slate-600 dark:bg-slate-300 ml-1"
                   animate={{ opacity: [1, 0] }}
@@ -258,70 +336,10 @@ export function MessageBubble({
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3, delay: 0.1 }}
           >
-            {message.toolOutput.type === "hotels" ? (
-              (() => {
-                const hotelData = findHotelData(message.toolOutput)
-                return hotelData ? (
-                  <HotelDisplay
-                    toolOutput={hotelData}
-                    bookedIds={bookedIds}
-                    onBooked={onBooked}
-                  />
-                ) : (
-                  <div className="text-sm text-slate-500 dark:text-slate-400 italic">
-                    {t('error')}
-                  </div>
-                )
-              })()
-            ) : message.toolOutput.type === "restaurants" ? (
-              (() => {
-                const restaurantData = findRestaurantData(message.toolOutput)
-                return restaurantData ? (
-                  <RestaurantDisplay
-                    toolOutput={restaurantData}
-                    bookedIds={bookedIds}
-                    onBooked={onBooked}
-                  />
-                ) : (
-                  <div className="text-sm text-slate-500 dark:text-slate-400 italic">
-                    {t('error')}
-                  </div>
-                )
-              })()
-            ) : message.toolOutput.type === "activities" ? (
-              (() => {
-                const activityData = findActivityData(message.toolOutput)
-                return activityData ? (
-                  <ActivityDisplay
-                    toolOutput={activityData}
-                    bookedIds={bookedIds}
-                    onBooked={onBooked}
-                  />
-                ) : (
-                  <div className="text-sm text-slate-500 dark:text-slate-400 italic">
-                    {t('error')}
-                  </div>
-                )
-              })()
-            ) : (
-              (() => {
-                const ticketData = findTicketData(message.toolOutput)
-                return ticketData ? (
-                  <TicketDisplay
-                    toolOutput={ticketData}
-                    bookedIds={bookedIds}
-                    onBooked={onBooked}
-                  />
-                ) : (
-                  <div className="text-sm text-slate-500 dark:text-slate-400 italic">
-                    {t('error')}
-                  </div>
-                )
-              })()
-            )}
+            {toolOutputDisplay}
           </motion.div>
         )}
       </div>
     </motion.div>
   )
-} 
+}) 

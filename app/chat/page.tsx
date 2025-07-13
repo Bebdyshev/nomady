@@ -52,11 +52,16 @@ export default function ChatPage() {
   const [isStreaming, setIsStreaming] = useState(false)
   const [streamingToolOutput, setStreamingToolOutput] = useState<any>(null)
   const [activeSearches, setActiveSearches] = useState<Set<string>>(new Set())
+  const [currentlyStreamingMessageId, setCurrentlyStreamingMessageId] = useState<string | null>(null)
   const [showTypingIndicator, setShowTypingIndicator] = useState(false)
   const [ipGeolocation, setIpGeolocation] = useState<IpGeolocation | null>(null)
   const [isLoadingLocation, setIsLoadingLocation] = useState(false)
   const [showMobileMap, setShowMobileMap] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  
+  // Debouncing for streaming updates to reduce DOM thrashing
+  const [pendingStreamingUpdate, setPendingStreamingUpdate] = useState<string>("")
+  const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const t = useTranslations('chat')
   const tCommon = useTranslations('common')
 
@@ -79,6 +84,36 @@ export default function ChatPage() {
     const threshold = 100 // пикселей от низа
     const isAtBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - threshold
     return isAtBottom
+  }
+
+  // Debounced update function for streaming to reduce DOM updates
+  const updateStreamingMessage = (assistantMessageId: string, newContent: string) => {
+    // Update pending content for debouncing
+    setPendingStreamingUpdate(newContent)
+    
+    // Clear existing timeout
+    if (streamingTimeoutRef.current) {
+      clearTimeout(streamingTimeoutRef.current)
+    }
+    
+    // Set new timeout for batched update
+    streamingTimeoutRef.current = setTimeout(() => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMessageId ? { ...msg, content: newContent } : msg,
+        ),
+      )
+      setPendingStreamingUpdate("")
+    }, 50) // Update every 50ms instead of every character
+    
+    // Also update immediately if this is the first content or if there's significant new content
+    if (newContent.length === 1 || newContent.length % 20 === 0) {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMessageId ? { ...msg, content: newContent } : msg,
+        ),
+      )
+    }
   }
 
   // Auto-focus input on mount and after sending
@@ -310,6 +345,7 @@ export default function ChatPage() {
 
     // Add a placeholder for the assistant's response
     const assistantMessageId = (Date.now() + 1).toString()
+    setCurrentlyStreamingMessageId(assistantMessageId)
     const assistantMessagePlaceholder: Message = {
       id: assistantMessageId,
       role: "assistant",
@@ -359,11 +395,7 @@ export default function ChatPage() {
           case "text_chunk":
             if (typeof chunk.data === 'string') {
               fullResponse += chunk.data
-              setMessages((prev) =>
-                prev.map((msg) =>
-                  msg.id === assistantMessageId ? { ...msg, content: fullResponse } : msg,
-                ),
-              )
+              updateStreamingMessage(assistantMessageId, fullResponse)
             }
             break
 
@@ -413,6 +445,31 @@ export default function ChatPage() {
       setIsLoading(false)
       setIsStreaming(false)
       setActiveSearches(new Set())
+      setCurrentlyStreamingMessageId(null)
+      
+      // Clear any pending streaming updates and ensure final content is set
+      if (streamingTimeoutRef.current) {
+        clearTimeout(streamingTimeoutRef.current)
+        streamingTimeoutRef.current = null
+      }
+      
+      // Ensure final content is set - use fullResponse instead of pendingStreamingUpdate
+      if (fullResponse) {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMessageId ? { ...msg, content: fullResponse } : msg,
+          ),
+        )
+      } else {
+        // Fallback: if fullResponse is empty, set a default message to avoid empty response
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMessageId && !msg.content ? { ...msg, content: "I'm here to help with your travel planning. How can I assist you?" } : msg,
+          ),
+        )
+      }
+      setPendingStreamingUpdate("")
+      
       // Сбросить toolOutput если не было tool_output в этом сообщении
       setMessages((prev) =>
         prev.map((msg) =>
@@ -605,6 +662,7 @@ export default function ChatPage() {
             isStreaming={isStreaming}
             streamingMessage={streamingMessage}
             activeSearches={activeSearches}
+            currentlyStreamingMessageId={currentlyStreamingMessageId}
             showTypingIndicator={showTypingIndicator}
             bookedIds={bookedIds}
             onBooked={handleBooked}
