@@ -124,25 +124,6 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll }: Inte
 
   return (
     <div className="h-full flex flex-col">
-      <div className="p-4 border-b border-slate-200 dark:border-slate-700">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('title')}</h3>
-          {selectedItems.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onClearAll}
-              className="text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-950"
-            >
-              {t('clearAll')}
-            </Button>
-          )}
-        </div>
-        <p className="text-sm text-slate-600 dark:text-slate-300">
-          {selectedItems.length} {selectedItems.length === 1 ? t('itemSelected') : t('itemsSelected')}
-        </p>
-      </div>
-
       <div
         className={`flex-1 transition-colors duration-200 ${
           isDragOver
