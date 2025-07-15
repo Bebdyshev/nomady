@@ -367,67 +367,28 @@ export default function ChatPage() {
 
     try {
       const messagesToSend = [{ role: "user", content: input }]
-      const stream = apiClient.sendMessageStream(
+      const response = await apiClient.sendMessage(
         messagesToSend,
         currentConversationId || undefined,
         ipGeolocation || undefined,
       )
 
-      for await (const chunk of stream) {
-        if (!finalConversationId && chunk.conversation_id) {
-            finalConversationId = chunk.conversation_id
-            setCurrentConversationId(chunk.conversation_id)
-        }
-
-        switch (chunk.type) {
-          case "tool_start":
-            setActiveSearches((prev) => new Set(prev).add(chunk.tool_name || "unknown"))
-            break
-          
-          case "tool_end":
-            setActiveSearches((prev) => {
-                const newSearches = new Set(prev)
-                newSearches.delete(chunk.tool_name || "unknown")
-                return newSearches
-            })
-            break
-
-          case "text_chunk":
-            if (typeof chunk.data === 'string') {
-              fullResponse += chunk.data
-              updateStreamingMessage(assistantMessageId, fullResponse)
-            }
-            break
-
-          case "tool_output":
-            finalToolOutput = chunk.data
-            setMessages((prev) =>
-              prev.map((msg) =>
-                msg.id === assistantMessageId ? { ...msg, toolOutput: finalToolOutput } : msg,
-              ),
-            )
-            break
-          
-          case "complete":
-             // The 'complete' chunk might contain the final search_results
-             // We update the message one last time to ensure it has the search_results-enhanced toolOutput
-            if (chunk.search_results && chunk.search_results.length > 0) {
-              const combinedOutput = {
-                ...finalToolOutput,
-                search_results: chunk.search_results
+      // Обновить ассистентское сообщение корректно
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMessageId
+            ? {
+                ...msg,
+                content: response.data?.response || "",
+                toolOutput: response.data?.tool_output || null,
               }
-               setMessages((prev) =>
-                prev.map((msg) =>
-                  msg.id === assistantMessageId ? { ...msg, toolOutput: combinedOutput } : msg,
-                ),
-              )
-            }
-            break
+            : msg,
+        ),
+      )
 
-          case "error":
-            throw new Error(chunk.data || "Streaming error")
-        }
-      }
+      // Имитация стриминга (по желанию, можно оставить или убрать)
+      // Если нужен эффект набора текста, можно реализовать через setInterval по response.data?.response
+
     } catch (error) {
       console.error("Error sending message:", error)
       setMessages((prev) =>
@@ -452,23 +413,6 @@ export default function ChatPage() {
         clearTimeout(streamingTimeoutRef.current)
         streamingTimeoutRef.current = null
       }
-      
-      // Ensure final content is set - use fullResponse instead of pendingStreamingUpdate
-      if (fullResponse) {
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === assistantMessageId ? { ...msg, content: fullResponse } : msg,
-          ),
-        )
-      } else {
-        // Fallback: if fullResponse is empty, set a default message to avoid empty response
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === assistantMessageId && !msg.content ? { ...msg, content: "I'm here to help with your travel planning. How can I assist you?" } : msg,
-          ),
-        )
-      }
-      setPendingStreamingUpdate("")
       
       // Сбросить toolOutput если не было tool_output в этом сообщении
       setMessages((prev) =>

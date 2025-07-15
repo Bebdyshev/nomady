@@ -35,14 +35,7 @@ interface ActivitiesAPIResponse {
   total_found?: number
   search_result_id?: number
   type?: string
-  recommended_attractions?: {
-    count: number
-    items: ActivityItem[]
-  }
-  top_attractions?: {
-    count: number
-    items: ActivityItem[]
-  }
+  activities: ActivityItem[]
   // Legacy support
   search_parameters?: {
     query?: string
@@ -51,7 +44,6 @@ interface ActivitiesAPIResponse {
     date?: string
   }
   total_results?: number
-  activities?: ActivityItem[]
 }
 
 interface ActivityDisplayProps {
@@ -269,24 +261,8 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked }:
 
   // Get all activities from both recommended_attractions and top_attractions
   const getAllActivities = () => {
-    const activities: ActivityItem[] = []
-    
-    // Add recommended attractions (tours)
-    if (toolOutput.recommended_attractions?.items) {
-      activities.push(...toolOutput.recommended_attractions.items)
-    }
-    
-    // Add top attractions
-    if (toolOutput.top_attractions?.items) {
-      activities.push(...toolOutput.top_attractions.items)
-    }
-    
-    // Legacy support
-    if (toolOutput.activities) {
-      activities.push(...toolOutput.activities)
-    }
-    
-    return activities
+    // Теперь activities всегда массив
+    return Array.isArray(toolOutput.activities) ? toolOutput.activities : []
   }
 
   // Sort activities
