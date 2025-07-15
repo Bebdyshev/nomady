@@ -422,7 +422,8 @@
         "propertiesFound": "{count} properties found",
         "hotelBooked": "Hotel Booked Successfully! 🏨",
         "hotelBookedDesc": "{name} has been reserved for your stay.",
-        "reviews": "Reviews"
+        "reviews": "Reviews",
+        "recommendedByAI": "Recommended for you"
       },
       "flights": {
         "refundable": "Refundable",

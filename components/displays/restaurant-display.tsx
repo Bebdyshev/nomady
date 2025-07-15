@@ -58,6 +58,7 @@ interface RestaurantsAPIResponse {
     price_range?: string
   }
   total_results?: number
+  ai_recommended_indexes?: number[] // Added for AI recommendation
 }
 
 interface RestaurantDisplayProps {
@@ -90,7 +91,7 @@ const getPriceRangeDisplay = (priceRange: string) => {
 }
 
 // Enhanced Restaurant Card Component (Hotel-style)
-const RestaurantCard = ({ restaurant, onBook, isBooked, isBooking }: any) => {
+const RestaurantCard = ({ restaurant, onBook, isBooked, isBooking, isAIRecommended }: any) => {
   const t = useTranslations('chat.displays')
   const priceDisplay = getPriceRangeDisplay(restaurant.price_range)
   
@@ -155,12 +156,16 @@ const RestaurantCard = ({ restaurant, onBook, isBooked, isBooking }: any) => {
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
       <Card
-        className={`relative overflow-hidden cursor-pointer border-2 transition-all duration-300 aspect-square ${
-          isBooked
-            ? "border-green-500 bg-green-50 dark:bg-green-950/20"
-            : "border-slate-200 dark:border-slate-700 hover:border-orange-300 hover:shadow-xl"
-        }`}
+        className={`relative overflow-hidden border-2 border-yellow-400 shadow-yellow-200/40 transition-all duration-300 aspect-[4/3] w-full max-w-[260px] min-w-[200px] h-[220px] p-0 ${isAIRecommended ? 'border-yellow-400' : ''}`}
       >
+        {/* Always show badge */}
+        <div className="absolute top-2 left-2 z-10">
+          {isAIRecommended && (
+            <Badge className="bg-yellow-400 text-yellow-900 border-none text-[10px] px-2 py-0.5 shadow-md">
+              {t('restaurants.aiRecommended')}
+            </Badge>
+          )}
+        </div>
         {/* Background with gradient */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -322,6 +327,7 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
   }
 
   const allRestaurants = toolOutput.restaurants || []
+  const aiRecommendedIndexes = toolOutput.ai_recommended_indexes || []
 
   // Sort restaurants
   const sortedRestaurants = [...allRestaurants].sort((a, b) => {
@@ -401,6 +407,7 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
               const itemId = restaurant.url || restaurant.search_result_id || `${restaurant.name}-${index}`
               const isBooked = bookedIds.has(itemId.toString())
               const isBooking = bookingStates[itemId] || false
+              const isAIRecommended = aiRecommendedIndexes.includes(index)
 
               return (
                 <motion.div
@@ -415,6 +422,7 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
                     onBook={handleBooking}
                     isBooked={isBooked}
                     isBooking={isBooking}
+                    isAIRecommended={isAIRecommended}
                   />
                 </motion.div>
               )

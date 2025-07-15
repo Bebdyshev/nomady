@@ -109,22 +109,17 @@ const ActivityCard = ({ activity, onBook, isBooked, isBooking, isAIRecommended }
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
       <Card
-        className={`relative overflow-hidden cursor-pointer border-2 transition-all duration-300 aspect-[4/3] w-full max-w-[260px] min-w-[200px] h-[220px] sm:h-[240px] md:h-[260px] lg:h-[280px] p-0 ${
-          isAIRecommended
-            ? "border-yellow-400 shadow-yellow-200/40"
-            : isBooked
-            ? "border-green-500 bg-green-50 dark:bg-green-950/20"
-            : "border-slate-200 dark:border-slate-700 hover:border-green-300 hover:shadow-xl"
-        }`}
+        className={`relative overflow-hidden cursor-pointer border-2 border-yellow-400 shadow-yellow-200/40 transition-all duration-300 aspect-[4/3] w-full max-w-[260px] min-w-[200px] h-[220px] sm:h-[240px] md:h-[260px] lg:h-[280px] p-0`}
       >
+        {/* Always show badge */}
+        <div className="absolute top-2 left-2 z-10">
+          <Badge className="bg-yellow-400 text-yellow-900 border-none text-[10px] px-2 py-0.5 shadow-md">
+            {t('activities.recommendedForYou')}
+          </Badge>
+        </div>
         {/* Top overlay: badge and rating, spaced apart */}
         <div className="absolute top-0 left-0 w-full flex flex-col gap-1 px-2 pt-2 z-10 pointer-events-none">
           <div className="flex items-start justify-between w-full">
-            {isAIRecommended && (
-              <Badge className="bg-yellow-400 text-yellow-900 border-none text-[10px] px-2 py-0.5 shadow-md pointer-events-auto">
-                {t('activities.recommendedForYou')}
-              </Badge>
-            )}
             {activity.rating && (
               <div className="flex items-center bg-black/60 rounded-full px-2 py-0.5 ml-auto pointer-events-auto">
                 <Star className="h-3 w-3 text-yellow-400 mr-1" />
