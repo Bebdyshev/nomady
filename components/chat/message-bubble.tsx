@@ -207,8 +207,8 @@ export const MessageBubble = React.memo(function MessageBubble({
 
   // Memoize parsed content to avoid recalculating on every render
   const parsedContent = useMemo(() => {
-    return parseMessageContent(message.content)
-  }, [message.content])
+    return parseMessageContent(message.content, message.toolOutput)
+  }, [message])
 
   // Memoize search animation condition
   const shouldShowSearchAnimation = useMemo(() => {
@@ -226,7 +226,7 @@ export const MessageBubble = React.memo(function MessageBubble({
            activeSearches.size === 0
   }, [message.role, isStreaming, message.content, streamingMessage, activeSearches.size])
 
-  // Remove useMemo for toolOutputDisplay and render directly
+  console.log("message ", message)
   const toolOutputDisplay = (
     message.toolOutput && (
       message.toolOutput.type === "hotels" ? (

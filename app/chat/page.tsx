@@ -373,9 +373,11 @@ export default function ChatPage() {
         ipGeolocation || undefined,
       )
 
+      console.log('Backend response:', response.data)
+
       // Обновить ассистентское сообщение корректно
-      setMessages((prev) =>
-        prev.map((msg) =>
+      setMessages((prev) => {
+        const updated = prev.map((msg) =>
           msg.id === assistantMessageId
             ? {
                 ...msg,
@@ -383,8 +385,10 @@ export default function ChatPage() {
                 toolOutput: response.data?.tool_output || null,
               }
             : msg,
-        ),
-      )
+        )
+        console.log('Updated messages after setMessages:', updated)
+        return updated
+      })
 
       // Имитация стриминга (по желанию, можно оставить или убрать)
       // Если нужен эффект набора текста, можно реализовать через setInterval по response.data?.response
@@ -414,14 +418,14 @@ export default function ChatPage() {
         streamingTimeoutRef.current = null
       }
       
-      // Сбросить toolOutput если не было tool_output в этом сообщении
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === assistantMessageId && !finalToolOutput
-            ? { ...msg, toolOutput: null }
-            : msg
-        )
-      )
+      // REMOVE this block to prevent overwriting toolOutput with null
+      // setMessages((prev) =>
+      //   prev.map((msg) =>
+      //     msg.id === assistantMessageId && !finalToolOutput
+      //       ? { ...msg, toolOutput: null }
+      //       : msg
+      //   )
+      // )
       if (wasNewConversation && finalConversationId) {
         loadConversations()
       }
