@@ -846,7 +846,15 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
   const totalResults = toolOutput.total_results ?? toolOutput.total_found ?? 0
   const destination = searchParams ? ('query' in searchParams ? searchParams.query : searchParams.destination) : ''
 
+  // --- Сортировка отелей: AI-рекомендованные всегда в топе ---
   const aiRecommendedIndexes = toolOutput.ai_recommended_indexes || []
+  const sortHotelsAIOnTop = (hotels: any[]) => {
+    if (!aiRecommendedIndexes.length) return hotels
+    return [
+      ...aiRecommendedIndexes.map(idx => hotels[idx]).filter(Boolean),
+      ...hotels.filter((_, idx) => !aiRecommendedIndexes.includes(idx))
+    ]
+  }
 
   const handleBooking = async (hotel: any, type: string) => {
     // Определяем идентификатор выбранного элемента (индекс или link / detail_url)
@@ -895,7 +903,7 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
   }
 
   // Sort hotels
-  const sortedHotels = [...hotels].sort((a, b) => {
+  const sortedHotels = sortHotelsAIOnTop([...hotels].sort((a, b) => {
     switch (sortBy) {
       case "price":
         const priceA = a.rate_per_night ?? (typeof a.price === 'number' ? a.price : Infinity)
@@ -910,7 +918,7 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
       default:
         return 0
     }
-  })
+  }))
 
   const getHotelId = (hotel: any, idx: number) => {
     return (hotel.id ? hotel.id.toString() : undefined) || hotel.link || hotel.detail_url || `${hotel.name}-${idx}`
@@ -918,12 +926,12 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
 
   const hasBookedHotel = hotels.some((hotel, idx) => {
     const id = getHotelId(hotel, idx)
-    return bookedIds.has(id) || hotel.is_selected
+    return bookedIds.has(id)
   })
 
   const displayHotels = hasBookedHotel ? hotels.filter((hotel, idx) => {
     const id = getHotelId(hotel, idx)
-    return bookedIds.has(id) || hotel.is_selected
+    return bookedIds.has(id)
   }) : sortedHotels
 
   return (

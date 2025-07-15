@@ -327,10 +327,17 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
   }
 
   const allRestaurants = toolOutput.restaurants || []
+  // --- Сортировка ресторанов: AI-рекомендованные всегда в топе ---
   const aiRecommendedIndexes = toolOutput.ai_recommended_indexes || []
-
-  // Sort restaurants
-  const sortedRestaurants = [...allRestaurants].sort((a, b) => {
+  const sortRestaurantsAIOnTop = (restaurants: any[]) => {
+    if (!aiRecommendedIndexes.length) return restaurants
+    return [
+      ...aiRecommendedIndexes.map(idx => restaurants[idx]).filter(Boolean),
+      ...restaurants.filter((_, idx) => !aiRecommendedIndexes.includes(idx))
+    ]
+  }
+  // --- Сортировка ресторанов: AI-рекомендованные всегда в топе ---
+  const sortedRestaurants = sortRestaurantsAIOnTop([...allRestaurants].sort((a, b) => {
     switch (sortBy) {
       case "rating":
         return (b.rating || 0) - (a.rating || 0)
@@ -339,7 +346,7 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
       default:
         return 0
     }
-  })
+  }))
 
   // Always display all restaurants (multiple bookings allowed)
   const displayRestaurants = sortedRestaurants

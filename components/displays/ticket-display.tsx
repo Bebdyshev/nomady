@@ -971,13 +971,23 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
     return Array.from(new Set(all))
   }, [outputArray])
 
+  // --- Сортировка билетов: AI-рекомендованные всегда в топе ---
+  const aiRecommendedIndexes = toolOutput.ai_recommended_indexes || []
+  const sortFlightsAIOnTop = (flights: any[]) => {
+    if (!aiRecommendedIndexes.length) return flights
+    return [
+      ...aiRecommendedIndexes.map(idx => flights[idx]).filter(Boolean),
+      ...flights.filter((_, idx) => !aiRecommendedIndexes.includes(idx))
+    ]
+  }
+
   // Фильтрация билетов
   const filteredFlights = React.useMemo(() => {
     let flights = (groupedResults.flights || [])
     if (selectedAirline) flights = flights.filter((f: any) => f.validating_airline === selectedAirline)
     if (maxPrice) flights = flights.filter((f: any) => Number(f.price) <= maxPrice)
     if (directOnly) flights = flights.filter((f: any) => (f.flights_to?.length || 0) <= 1)
-    return flights
+    return sortFlightsAIOnTop(flights)
   }, [groupedResults.flights, selectedAirline, maxPrice, directOnly])
 
   // --- UI фильтров ---
