@@ -30,12 +30,20 @@ interface ActivityItem {
 }
 
 interface ActivitiesAPIResponse {
+  activities: ActivityItem[]
   destination?: string
   attractions_url?: string
   total_found?: number
   search_result_id?: number
   type?: string
-  activities: ActivityItem[]
+  ai_recommended_indexes?: number[]
+  recommendation_reasoning?: string
+  confidence_score?: number
+  criteria?: {
+    activity_type?: string
+    duration?: string
+    price_range?: string
+  }
   // Legacy support
   search_parameters?: {
     query?: string
@@ -63,7 +71,7 @@ const getCategoryIcon = (category: string) => {
 }
 
 // Enhanced Activity Card Component (Restaurant-style)
-const ActivityCard = ({ activity, onBook, isBooked, isBooking }: any) => {
+const ActivityCard = ({ activity, onBook, isBooked, isBooking, isAIRecommended }: any) => {
   const t = useTranslations('chat.displays')
   
   const renderStars = (rating: string | number) => {
@@ -101,12 +109,30 @@ const ActivityCard = ({ activity, onBook, isBooked, isBooking }: any) => {
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
       <Card
-        className={`relative overflow-hidden cursor-pointer border-2 transition-all duration-300 aspect-square ${
-          isBooked
+        className={`relative overflow-hidden cursor-pointer border-2 transition-all duration-300 aspect-[4/3] w-full max-w-[260px] min-w-[200px] h-[220px] sm:h-[240px] md:h-[260px] lg:h-[280px] p-0 ${
+          isAIRecommended
+            ? "border-yellow-400 shadow-yellow-200/40"
+            : isBooked
             ? "border-green-500 bg-green-50 dark:bg-green-950/20"
             : "border-slate-200 dark:border-slate-700 hover:border-green-300 hover:shadow-xl"
         }`}
       >
+        {/* Top overlay: badge and rating, spaced apart */}
+        <div className="absolute top-0 left-0 w-full flex flex-col gap-1 px-2 pt-2 z-10 pointer-events-none">
+          <div className="flex items-start justify-between w-full">
+            {isAIRecommended && (
+              <Badge className="bg-yellow-400 text-yellow-900 border-none text-[10px] px-2 py-0.5 shadow-md pointer-events-auto">
+                {t('activities.recommendedForYou')}
+              </Badge>
+            )}
+            {activity.rating && (
+              <div className="flex items-center bg-black/60 rounded-full px-2 py-0.5 ml-auto pointer-events-auto">
+                <Star className="h-3 w-3 text-yellow-400 mr-1" />
+                <span className="text-xs text-white font-medium">{parseFloat(activity.rating).toFixed(1)}</span>
+              </div>
+            )}
+          </div>
+        </div>
         {/* Background with gradient */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -119,107 +145,47 @@ const ActivityCard = ({ activity, onBook, isBooked, isBooking }: any) => {
           {/* Dark overlay for better text readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/40" />
         </div>
-
-        {/* Content overlay */}
-        <div className="relative h-full flex flex-col justify-between p-3">
-          {/* Top section - Rating and category */}
-          <div className="flex items-start justify-between">
-            <div className="space-y-2">
-              {activity.rating && renderStars(activity.rating)}
-              {activity.type === 'tour_activity' && (
-                <Badge className="bg-blue-500/90 text-white border-none text-xs">
-                  <Camera className="h-3 w-3 mr-1" />
-                  {t('activities.tour')}
-                </Badge>
-              )}
+        {/* Bottom overlay: title and key info, with spacing */}
+        <div className="absolute bottom-0 left-0 w-full bg-black/70 backdrop-blur-sm px-2 py-2 flex flex-col gap-1 z-10" style={{minHeight:'64px'}}>
+          <h3 className="text-white font-bold text-sm leading-tight mb-0.5 line-clamp-2 max-h-[2.6em] overflow-hidden">
+            {activity.title}
+          </h3>
+          <div className="flex items-center justify-between text-xs text-white/80 mt-0.5">
+            <div className="flex items-center gap-1">
+              {getCategoryIcon(activity.category || "")}
+              <span>{activity.type === 'tour_activity' ? t('activities.tour') : t('activities.attraction')}</span>
             </div>
-            <div className="flex flex-col items-end space-y-1">
-              {isBooked && (
-                <Badge className="bg-green-500/90 text-white border-none text-xs">
-                  <CheckCircle2 className="h-3 w-3 mr-1" />
-                  {t('common.booked')}
-                </Badge>
-              )}
-            </div>
+            {activity.price && (
+              <span className="font-bold text-green-400 ml-2">{activity.price}</span>
+            )}
           </div>
-
-          {/* Bottom section - Activity info and actions */}
-          <div className="space-y-2">
-            {/* Activity Name and Category */}
-            <div>
-              <h3 className="text-white font-bold text-base line-clamp-2 leading-tight">
-                {activity.title}
-              </h3>
-              <p className="text-white/80 text-sm">
-                {activity.category}
-              </p>
-              {activity.review_count && (
-                <p className="text-white/60 text-xs">
-                  {activity.review_count} {t('common.reviews')}
-                </p>
-              )}
-            </div>
-
-            {/* Price and Actions */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                {/* Price */}
-                {activity.price && (
-                  <div className="flex items-center space-x-1">
-                    <span className="font-bold text-sm text-green-400">
-                      {activity.price}
-                    </span>
-                    <span className="text-white/60 text-xs">{t('activities.perPerson')}</span>
-                  </div>
-                )}
-                
-                {/* Category icon */}
-                <div className="flex items-center space-x-1">
-                  {getCategoryIcon(activity.category || "")}
-                  <span className="text-white/60 text-xs">{activity.type === 'tour_activity' ? t('activities.tour') : t('activities.attraction')}</span>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center space-x-1">
-                {activity.url && (
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      window.open(activity.url, '_blank')
-                    }}
-                    size="sm"
-                    variant="outline"
-                    className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white hover:border-white/50 text-xs px-2 py-1"
-                  >
-                    <Globe className="h-3 w-3" />
-                  </Button>
-                )}
-
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onBook?.(activity, "activities")
-                  }}
-                  disabled={isBooking || isBooked}
-                  size="sm"
-                  className={`transition-all duration-200 text-xs px-2 py-1 ${
-                    isBooked
-                      ? "bg-green-500 hover:bg-green-600 text-white"
-                      : "bg-white/90 hover:bg-white text-slate-900 hover:text-slate-900"
-                  }`}
-                >
-                  {isBooking ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : isBooked ? (
-                    <CheckCircle2 className="h-3 w-3" />
-                  ) : (
-                    t('common.book')
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
+          {activity.review_count && (
+            <div className="text-[10px] text-white/60 mt-0.5">{activity.review_count} {t('common.reviews')}</div>
+          )}
+        </div>
+        {/* Book button: bottom right, floating */}
+        <div className="absolute bottom-2 right-2 z-20">
+          <Button
+            onClick={(e) => {
+              e.stopPropagation()
+              onBook?.(activity, "activities")
+            }}
+            disabled={isBooking || isBooked}
+            size="sm"
+            className={`transition-all duration-200 text-[10px] px-2 py-1 shadow-lg ${
+              isBooked
+                ? "bg-green-500 hover:bg-green-600 text-white"
+                : "bg-white/90 hover:bg-white text-slate-900 hover:text-slate-900"
+            }`}
+          >
+            {isBooking ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : isBooked ? (
+              <CheckCircle2 className="h-3 w-3" />
+            ) : (
+              t('common.book')
+            )}
+          </Button>
         </div>
       </Card>
     </motion.div>
@@ -261,8 +227,17 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked }:
 
   // Get all activities from both recommended_attractions and top_attractions
   const getAllActivities = () => {
-    // Теперь activities всегда массив
     return Array.isArray(toolOutput.activities) ? toolOutput.activities : []
+  }
+
+  // Helper to get sorted activities with AI-recommended at the top
+  const getSortedActivities = () => {
+    const aiIndexes = Array.isArray(toolOutput.ai_recommended_indexes) ? toolOutput.ai_recommended_indexes : []
+    const all = getAllActivities()
+    // Separate recommended and others, preserving order
+    const recommended = aiIndexes.map(idx => all[idx]).filter(Boolean)
+    const others = all.filter((_, idx) => !aiIndexes.includes(idx))
+    return [...recommended, ...others]
   }
 
   // Sort activities
@@ -292,7 +267,7 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked }:
   }
 
   // Always display all activities (multiple booking allowed)
-  const displayActivities = sortedActivities
+  const displayActivities = getSortedActivities()
 
   const totalResults = toolOutput.total_found || toolOutput.total_results || displayActivities.length
 
@@ -335,13 +310,15 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked }:
         </div>
 
         {/* Activities Grid */}
-        <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
           <AnimatePresence>
             {displayActivities.slice(0, 12).map((activity: ActivityItem, index: number) => {
               const itemId = activity.url || activity.title || `${activity.title}-${index}`
               const isBooked = bookedIds.has(itemId.toString())
               const isBooking = bookingStates[itemId] || false
-
+              // Determine if this activity is AI-recommended
+              const aiIndexes = Array.isArray(toolOutput.ai_recommended_indexes) ? toolOutput.ai_recommended_indexes : []
+              const isAIRecommended = aiIndexes.includes(getAllActivities().indexOf(activity))
               return (
                 <motion.div
                   key={itemId}
@@ -355,6 +332,7 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked }:
                     onBook={handleBooking}
                     isBooked={isBooked}
                     isBooking={isBooking}
+                    isAIRecommended={isAIRecommended}
                   />
                 </motion.div>
               )

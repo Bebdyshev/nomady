@@ -375,7 +375,8 @@
         "activitiesFound": "найдено {count} мероприятий",
         "bookingSuccess": "Мероприятие успешно забронировано! 🎯",
         "bookingSuccessDesc": "{name} добавлено в ваш маршрут.",
-        "viewAllTripadvisor": "Посмотреть все на TripAdvisor"
+        "viewAllTripadvisor": "Посмотреть все на TripAdvisor",
+        "recommendedForYou": "Рекомендовано для вас"
       },
       "restaurants": {
         "budget": "Бюджетный",

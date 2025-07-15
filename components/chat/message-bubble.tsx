@@ -226,64 +226,36 @@ export const MessageBubble = React.memo(function MessageBubble({
            activeSearches.size === 0
   }, [message.role, isStreaming, message.content, streamingMessage, activeSearches.size])
 
-  // Memoize tool output display
-  const toolOutputDisplay = useMemo(() => {
-    if (!message.toolOutput) return null
-
-    if (message.toolOutput.type === "hotels") {
-      const hotelData = findHotelData(message.toolOutput)
-      return hotelData ? (
+  // Remove useMemo for toolOutputDisplay and render directly
+  const toolOutputDisplay = (
+    message.toolOutput && (
+      message.toolOutput.type === "hotels" ? (
         <HotelDisplay
-          toolOutput={hotelData}
+          toolOutput={findHotelData(message.toolOutput)}
           bookedIds={bookedIds}
           onBooked={onBooked}
         />
-      ) : (
-        <div className="text-sm text-slate-500 dark:text-slate-400 italic">
-          {t('error')}
-        </div>
-      )
-    } else if (message.toolOutput.type === "restaurants") {
-      const restaurantData = findRestaurantData(message.toolOutput)
-      return restaurantData ? (
+      ) : message.toolOutput.type === "restaurants" ? (
         <RestaurantDisplay
-          toolOutput={restaurantData}
+          toolOutput={findRestaurantData(message.toolOutput)}
           bookedIds={bookedIds}
           onBooked={onBooked}
         />
-      ) : (
-        <div className="text-sm text-slate-500 dark:text-slate-400 italic">
-          {t('error')}
-        </div>
-      )
-    } else if (message.toolOutput.type === "activities") {
-      const activityData = findActivityData(message.toolOutput)
-      return activityData ? (
+      ) : message.toolOutput.type === "activities" ? (
         <ActivityDisplay
-          toolOutput={activityData}
+          toolOutput={findActivityData(message.toolOutput)}
           bookedIds={bookedIds}
           onBooked={onBooked}
         />
       ) : (
-        <div className="text-sm text-slate-500 dark:text-slate-400 italic">
-          {t('error')}
-        </div>
-      )
-    } else {
-      const ticketData = findTicketData(message.toolOutput)
-      return ticketData ? (
         <TicketDisplay
-          toolOutput={ticketData}
+          toolOutput={findTicketData(message.toolOutput)}
           bookedIds={bookedIds}
           onBooked={onBooked}
         />
-      ) : (
-        <div className="text-sm text-slate-500 dark:text-slate-400 italic">
-          {t('error')}
-        </div>
       )
-    }
-  }, [message.toolOutput, bookedIds, onBooked, t])
+    )
+  )
 
   return (
     <motion.div
