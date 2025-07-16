@@ -596,36 +596,42 @@ export default function ChatPage() {
           className="flex flex-col min-w-0 w-full md:w-auto" 
           style={{ width: isMobile ? '100%' : `${100 - mapWidth}%` }}
         >
-          {/* Mobile Header */}
-          <ChatHeader
-            setSidebarOpen={setSidebarOpen}
-            setShowMobileMap={setShowMobileMap}
-            bookedItemsCount={Object.keys(bookedItems).length}
-          />
+          {/* Mobile Header - make sticky */}
+          <div className="md:hidden sticky top-0 z-30">
+            <ChatHeader
+              setSidebarOpen={setSidebarOpen}
+              setShowMobileMap={setShowMobileMap}
+              bookedItemsCount={Object.keys(bookedItems).length}
+            />
+          </div>
 
-          {/* Messages Container */}
-          <MessagesList
-            ref={messagesEndRef}
-            messages={messages}
-            isStreaming={isStreaming}
-            streamingMessage={streamingMessage}
-            activeSearches={activeSearches}
-            currentlyStreamingMessageId={currentlyStreamingMessageId}
-            showTypingIndicator={showTypingIndicator}
-            bookedIds={bookedIds}
-            onBooked={handleBooked}
-            onSuggestionClick={setInput}
-          />
+          {/* Messages Container - add extra bottom padding on mobile */}
+          <div className="flex-1 overflow-y-auto" style={{ paddingBottom: isMobile ? 112 : 0 }}>
+            <MessagesList
+              ref={messagesEndRef}
+              messages={messages}
+              isStreaming={isStreaming}
+              streamingMessage={streamingMessage}
+              activeSearches={activeSearches}
+              currentlyStreamingMessageId={currentlyStreamingMessageId}
+              showTypingIndicator={showTypingIndicator}
+              bookedIds={bookedIds}
+              onBooked={handleBooked}
+              onSuggestionClick={setInput}
+            />
+          </div>
 
-          {/* Input Area */}
-          <ChatInput
-            ref={inputRef}
-            input={input}
-            setInput={setInput}
-            onSendMessage={handleSendMessage}
-            isLoading={isLoading}
-            isStreaming={isStreaming}
-          />
+          {/* Input Area - sticky on mobile */}
+          <div className="md:static md:mt-0 sticky bottom-0 z-40">
+            <ChatInput
+              ref={inputRef}
+              input={input}
+              setInput={setInput}
+              onSendMessage={handleSendMessage}
+              isLoading={isLoading}
+              isStreaming={isStreaming}
+            />
+          </div>
         </div>
 
         {/* Resize Handle - Hidden on mobile */}

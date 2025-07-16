@@ -32,6 +32,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Logo } from "@/components/ui/logo"
 import { cn } from "@/lib/utils"
 import { useConversations } from "@/contexts/conversations-context"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface AppSidebarProps {
   collapsed?: boolean
@@ -56,7 +57,7 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const { user, logout } = useAuth()
   const { theme, setTheme } = useTheme()
-  const { conversations } = useConversations()
+  const { conversations, loading } = useConversations()
   const router = useRouter()
   const pathname = usePathname()
   const t = useTranslations('chat.sidebar')
@@ -322,7 +323,18 @@ export function AppSidebar({
       </div>
 
       {/* Conversations - Show when conversations exist */}
-      {conversations.length > 0 && !collapsed && (
+      {!collapsed && loading && (
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 overflow-y-auto p-2 md:p-3">
+            <div className="space-y-2">
+              {[...Array(4)].map((_, idx) => (
+                <Skeleton key={idx} className="h-14 rounded-lg w-full" />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+      {conversations.length > 0 && !collapsed && !loading && (
         <div className="flex-1 flex flex-col min-h-0">
           <div className="flex-1 overflow-y-auto p-2 md:p-3">
             <div className="space-y-2">
