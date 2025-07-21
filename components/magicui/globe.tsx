@@ -15,7 +15,6 @@ const GLOBE_CONFIG: COBEOptions = {
   devicePixelRatio: 2,
   phi: 0,
   theta: 0.3,
-  dark: 0,
   diffuse: 0.4,
   mapSamples: 16000,
   mapBrightness: 1.2,
@@ -34,6 +33,7 @@ const GLOBE_CONFIG: COBEOptions = {
     { location: [34.6937, 135.5022], size: 0.05 },
     { location: [41.0082, 28.9784], size: 0.06 },
   ],
+  dark: 0,
 };
 
 export function Globe({

@@ -88,7 +88,7 @@ export default function RoadmapDetailPage() {
       <h1 className="text-3xl font-bold">{roadmap.title}</h1>
       {roadmap.description && <p className="text-slate-600 mb-4">{roadmap.description}</p>}
 
-      <div className="w-full h-96 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
+      <div className="w-full h-96 rounded-lg overflow-hidden border border-slate-200">
         {/* @ts-ignore */}
         <RoadmapMap coordinates={coords} />
       </div>

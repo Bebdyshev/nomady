@@ -605,15 +605,11 @@ export default function ChatPage() {
 
       {/* Main Content Area with Chat and Map */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Sticky Header (Desktop) */}
-        <header className="hidden md:flex items-center justify-between h-11 px-6 bg-white sticky top-0 z-30 border-b border-slate-200">
-          <span className="font-medium text-base mx-4">{chatTitle}</span>
-        </header>
         {/* Chat and Map Columns */}
         <div className="flex-1 flex min-w-0">
           {/* Chat Area */}
           <div 
-            className="flex flex-col min-w-0 w-full md:w-auto" 
+            className="flex flex-col min-w-0 w-full md:w-auto min-w-0" 
             style={{ width: isMobile ? '100%' : `${100 - mapWidth}%` }}
           >
             {/* Mobile Header - make sticky */}

@@ -54,17 +54,17 @@ const ExploreHeader = () => {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl md:border-b md:border-slate-200/50 md:dark:border-slate-700/50"
+      className="bg-white/95 backdrop-blur-xl md:border-b md:border-slate-200/50"
     >
       <div className="container mx-auto px-6 md:py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-gradient-to-br from-green-100 to-blue-100 dark:from-green-900 dark:to-blue-900 rounded-lg">
-              <Compass className="h-5 w-5 md:h-6 md:w-6 text-green-600 dark:text-green-400" />
+            <div className="p-2 bg-gradient-to-br from-green-100 to-blue-100 rounded-lg">
+              <Compass className="h-5 w-5 md:h-6 md:w-6 text-green-600" />
             </div>
             <div>
-              <h1 className="text-base md:text-xl font-bold text-slate-900 dark:text-white">{t('title')}</h1>
-              <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 hidden md:block">{t('subtitle')}</p>
+              <h1 className="text-base md:text-xl font-bold text-slate-900">{t('title')}</h1>
+              <p className="text-xs md:text-sm text-slate-500 hidden md:block">{t('subtitle')}</p>
             </div>
           </div>
         </div>
@@ -153,7 +153,7 @@ export default function ExplorePage() {
                 placeholder="Search destinations, activities, or experiences..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 pr-12 py-4 text-lg border-2 border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 focus:border-green-500 dark:focus:border-green-400"
+                className="pl-12 pr-12 py-4 text-lg border-2 border-slate-200 rounded-xl bg-white focus:border-green-500"
               />
               <Button
                 size="icon"
@@ -183,7 +183,7 @@ export default function ExplorePage() {
                 className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-all duration-300 ${
                   activeCategory === category.id
                     ? 'bg-green-600 text-white shadow-lg scale-105'
-                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-green-50 dark:hover:bg-green-950/30 border border-slate-200 dark:border-slate-700'
+                    : 'bg-white text-slate-600 hover:bg-green-50 border border-slate-200'
                 }`}
               >
                 <div className={`p-1 rounded-full ${activeCategory === category.id ? 'bg-white/20' : category.color}`}>

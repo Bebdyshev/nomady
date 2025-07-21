@@ -120,17 +120,17 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll }: Inte
   const getTypeColor = (type: string) => {
     switch (type) {
       case "flights":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+        return "bg-blue-100 text-blue-800"
       case "hotels":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+        return "bg-purple-100 text-purple-800"
       case "restaurants":
-        return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+        return "bg-orange-100 text-orange-800"
       case "cars":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+        return "bg-green-100 text-green-800"
       case "activities":
-        return "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200"
+        return "bg-pink-100 text-pink-800"
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+        return "bg-gray-100 text-gray-800"
     }
   }
 
@@ -152,7 +152,7 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll }: Inte
             className={`h-3 w-3 ${i < Math.floor(rating) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
           />
         ))}
-        <span className="text-xs text-slate-600 dark:text-slate-400 ml-1">{rating.toFixed(1)}</span>
+        <span className="text-xs text-slate-600 ml-1">{rating.toFixed(1)}</span>
       </div>
     )
   }
@@ -188,8 +188,8 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll }: Inte
       <div
         className={`flex-1 transition-colors duration-200 ${
           isDragOver
-            ? "bg-blue-50 dark:bg-blue-950/30 border-2 border-dashed border-blue-400"
-            : "bg-slate-50 dark:bg-slate-900"
+            ? "bg-blue-50 border-2 border-dashed border-blue-400"
+            : "bg-slate-50"
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -221,11 +221,11 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll }: Inte
         ) : (
           <div className="h-full flex items-center justify-center p-6">
             <div className="text-center">
-              <div className="h-16 w-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MapPin className="h-8 w-8 text-slate-600 dark:text-slate-400" />
+              <div className="h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MapPin className="h-8 w-8 text-slate-600" />
               </div>
-              <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Google Maps API key missing</h4>
-              <p className="text-slate-600 dark:text-slate-300 max-w-sm">
+              <h4 className="text-lg font-semibold text-slate-900 mb-2">Google Maps API key missing</h4>
+              <p className="text-slate-600 max-w-sm">
                 Please set <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> in your environment variables.
               </p>
             </div>

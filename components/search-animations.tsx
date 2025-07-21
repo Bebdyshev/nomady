@@ -56,7 +56,7 @@ export const SearchAnimation = ({ searchType }: { searchType: string }) => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="flex items-center space-x-3 text-blue-600 dark:text-blue-400 text-sm py-3 px-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800"
+      className="flex items-center space-x-3 text-blue-600 text-sm py-3 px-4 bg-blue-50 rounded-lg border border-blue-200"
     >
       <motion.span
         className="text-lg"
@@ -85,7 +85,7 @@ export const SearchAnimation = ({ searchType }: { searchType: string }) => {
         {[0, 1, 2].map((i) => (
           <motion.div
             key={i}
-            className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full"
+            className="w-2 h-2 bg-blue-600 rounded-full"
             animate={{
               scale: [1, 1.2, 1],
               opacity: [0.5, 1, 0.5],
@@ -113,14 +113,14 @@ export const TypingIndicator = () => {
       exit={{ opacity: 0, y: -10 }}
       className="flex justify-start mb-4"
     >
-      <div className="max-w-[85%] md:max-w-[80%] rounded-lg px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+      <div className="max-w-[85%] md:max-w-[80%] rounded-lg px-4 py-3 bg-white border border-slate-200">
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-slate-600 dark:text-slate-400">{t('thinking')}</span>
+          <span className="text-sm text-slate-600">{t('thinking')}</span>
           <div className="flex space-x-1">
             {[0, 1, 2].map((i) => (
               <motion.div
                 key={i}
-                className="w-2 h-2 bg-slate-400 dark:bg-slate-500 rounded-full"
+                className="w-2 h-2 bg-slate-400 rounded-full"
                 animate={{
                   y: [0, -8, 0],
                   opacity: [0.5, 1, 0.5],

@@ -25,21 +25,21 @@ interface MessageBubbleProps {
 // Markdown Message Component for bot responses
 const MarkdownMessage = ({ content }: { content: string }) => {
   return (
-    <div className="prose prose-sm max-w-none dark:prose-invert">
+    <div className="prose prose-sm max-w-none">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
           // Headings
-          h1: ({ children }) => <h1 className="text-lg font-bold mb-2 text-slate-900 dark:text-white">{children}</h1>,
-          h2: ({ children }) => <h2 className="text-base font-semibold mb-2 text-slate-900 dark:text-white">{children}</h2>,
-          h3: ({ children }) => <h3 className="text-sm font-medium mb-1 text-slate-900 dark:text-white">{children}</h3>,
+          h1: ({ children }) => <h1 className="text-lg font-bold mb-2 text-slate-900">{children}</h1>,
+          h2: ({ children }) => <h2 className="text-base font-semibold mb-2 text-slate-900">{children}</h2>,
+          h3: ({ children }) => <h3 className="text-sm font-medium mb-1 text-slate-900">{children}</h3>,
           
           // Paragraphs
-          p: ({ children }) => <p className="mb-2 last:mb-0 text-slate-700 dark:text-slate-300">{children}</p>,
+          p: ({ children }) => <p className="mb-2 last:mb-0 text-slate-700">{children}</p>,
           
           // Lists
-          ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1 text-slate-700 dark:text-slate-300">{children}</ul>,
-          ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1 text-slate-700 dark:text-slate-300">{children}</ol>,
+          ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1 text-slate-700">{children}</ul>,
+          ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1 text-slate-700">{children}</ol>,
           li: ({ children }) => <li className="text-sm">{children}</li>,
           
           // Links
@@ -48,7 +48,7 @@ const MarkdownMessage = ({ content }: { content: string }) => {
               href={href} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
+              className="text-blue-600 hover:text-blue-800 underline"
             >
               {children}
             </a>
@@ -59,19 +59,19 @@ const MarkdownMessage = ({ content }: { content: string }) => {
             const isInline = !className
             if (isInline) {
               return (
-                <code className="bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded text-sm font-mono text-slate-800 dark:text-slate-200">
+                <code className="bg-slate-100 px-1 py-0.5 rounded text-sm font-mono text-slate-800">
                   {children}
                 </code>
               )
             }
             return (
-              <code className="block bg-slate-100 dark:bg-slate-800 p-3 rounded-lg text-sm font-mono text-slate-800 dark:text-slate-200 overflow-x-auto">
+              <code className="block bg-slate-100 p-3 rounded-lg text-sm font-mono text-slate-800 overflow-x-auto">
                 {children}
               </code>
             )
           },
           pre: ({ children }) => (
-            <pre className="bg-slate-100 dark:bg-slate-800 p-3 rounded-lg text-sm font-mono text-slate-800 dark:text-slate-200 overflow-x-auto mb-2">
+            <pre className="bg-slate-100 p-3 rounded-lg text-sm font-mono text-slate-800 overflow-x-auto mb-2">
               {children}
             </pre>
           ),
@@ -79,35 +79,35 @@ const MarkdownMessage = ({ content }: { content: string }) => {
           // Tables
           table: ({ children }) => (
             <div className="overflow-x-auto mb-2">
-              <table className="min-w-full border border-slate-200 dark:border-slate-700 rounded-lg">
+              <table className="min-w-full border border-slate-200 rounded-lg">
                 {children}
               </table>
             </div>
           ),
           th: ({ children }) => (
-            <th className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-left font-medium text-slate-900 dark:text-white text-sm">
+            <th className="px-3 py-2 bg-slate-50 border-b border-slate-200 text-left font-medium text-slate-900 text-sm">
               {children}
             </th>
           ),
           td: ({ children }) => (
-            <td className="px-3 py-2 border-b border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm">
+            <td className="px-3 py-2 border-b border-slate-200 text-slate-700 text-sm">
               {children}
             </td>
           ),
           
           // Blockquotes
           blockquote: ({ children }) => (
-            <blockquote className="border-l-4 border-blue-500 pl-4 py-2 mb-2 italic text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-r">
+            <blockquote className="border-l-4 border-blue-500 pl-4 py-2 mb-2 italic text-slate-600 bg-slate-50 rounded-r">
               {children}
             </blockquote>
           ),
           
           // Strong and emphasis
-          strong: ({ children }) => <strong className="font-semibold text-slate-900 dark:text-white">{children}</strong>,
-          em: ({ children }) => <em className="italic text-slate-700 dark:text-slate-300">{children}</em>,
+          strong: ({ children }) => <strong className="font-semibold text-slate-900">{children}</strong>,
+          em: ({ children }) => <em className="italic text-slate-700">{children}</em>,
           
           // Horizontal rule
-          hr: () => <hr className="border-slate-200 dark:border-slate-700 my-3" />,
+          hr: () => <hr className="border-slate-200 my-3" />,
         }}
       >
         {content}
@@ -263,13 +263,13 @@ export const MessageBubble = React.memo(function MessageBubble({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
-      className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+      className={`flex min-w-0 ${message.role === "user" ? "justify-end" : "justify-start"}`}
     >
       <div
-        className={`max-w-[90%] md:max-w-[80%] rounded-lg px-3 md:px-4 py-2 md:py-3 ${
+        className={`max-w-[90%] md:max-w-[80%] min-w-0 rounded-lg px-3 md:px-4 py-2 md:py-3 ${
           message.role === "user"
             ? "bg-blue-600 text-white"
-            : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+            : "bg-white border border-slate-200"
         }`}
       >
         <div className="text-sm md:text-base">
@@ -292,7 +292,7 @@ export const MessageBubble = React.memo(function MessageBubble({
               {/* Show streaming cursor for assistant messages during streaming */}
               {shouldShowStreamingCursor && (
                 <motion.span
-                  className="inline-block w-1 h-4 bg-slate-600 dark:bg-slate-300 ml-1"
+                  className="inline-block w-1 h-4 bg-slate-600 ml-1"
                   animate={{ opacity: [1, 0] }}
                   transition={{ duration: 0.8, repeat: Number.POSITIVE_INFINITY }}
                 />

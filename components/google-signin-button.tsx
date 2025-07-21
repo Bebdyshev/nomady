@@ -129,10 +129,10 @@ export function GoogleSignInButton({
         className={`w-full ${disabled ? "opacity-50 pointer-events-none" : ""}`}
       />
       {!isGoogleLoaded && (
-        <div className="w-full h-11 border-2 border-slate-200 dark:border-slate-700 rounded-lg flex items-center justify-center">
+        <div className="w-full h-11 border-2 border-slate-200 rounded-lg flex items-center justify-center">
           <div className="flex items-center space-x-2">
             <div className="h-4 w-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
-            <span className="text-sm text-slate-600 dark:text-slate-400">Loading Google Sign-In...</span>
+            <span className="text-sm text-slate-600">Loading Google Sign-In...</span>
           </div>
         </div>
       )}

@@ -87,20 +87,6 @@ body {
     box-shadow: 0 0 0 2px rgb(59 130 246 / 0.5);
     border-color: rgb(59 130 246);
   }
-
-  /* Dark mode focus styles */
-  .dark input[type="text"]:focus,
-  .dark input[type="email"]:focus,
-  .dark input[type="password"]:focus,
-  .dark input[type="search"]:focus,
-  .dark input[type="url"]:focus,
-  .dark input[type="tel"]:focus,
-  .dark input[type="number"]:focus,
-  .dark input[type="date"]:focus,
-  .dark textarea:focus {
-    box-shadow: 0 0 0 2px rgb(96 165 250 / 0.5);
-    border-color: rgb(96 165 250);
-  }
 }
 
 .line-clamp-2 {

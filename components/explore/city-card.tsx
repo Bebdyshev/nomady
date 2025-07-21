@@ -51,29 +51,29 @@ export const CityCard = ({ city, index }: CityCardProps) => {
         <div className="p-4 flex-1 flex flex-col justify-between">
           <div className="space-y-3">
             <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center text-slate-600 dark:text-slate-300">
+              <div className="flex items-center text-slate-600">
                 <DollarSign className="h-4 w-4 mr-2 text-green-500" />
                 <span>Nomad Cost</span>
               </div>
-              <span className="font-semibold text-slate-900 dark:text-white">
+              <span className="font-semibold text-slate-900">
                 ${city.cost_for_nomad_in_usd?.toLocaleString() || 'N/A'}
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center text-slate-600 dark:text-slate-300">
+              <div className="flex items-center text-slate-600">
                 <Wifi className="h-4 w-4 mr-2 text-blue-500" />
                 <span>Internet Speed</span>
               </div>
-              <span className="font-semibold text-slate-900 dark:text-white">
+              <span className="font-semibold text-slate-900">
                 {city.internet_speed || 'N/A'} Mbps
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center text-slate-600 dark:text-slate-300">
+              <div className="flex items-center text-slate-600">
                 <Shield className="h-4 w-4 mr-2 text-red-500" />
                 <span>Safety Level</span>
               </div>
-              <span className="font-semibold text-slate-900 dark:text-white">
+              <span className="font-semibold text-slate-900">
                 {city.safety_level?.toFixed(1) || 'N/A'} / 5.0
               </span>
             </div>

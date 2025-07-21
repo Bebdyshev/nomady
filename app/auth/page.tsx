@@ -177,7 +177,7 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-900 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-white flex items-center justify-center p-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -187,15 +187,15 @@ export default function AuthPage() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center space-x-2 mb-4">
             <Logo width={40} height={40} className="rounded-lg" />
-            <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">Nomady</span>
+            <span className="text-2xl font-bold text-blue-600">Nomady</span>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{t('welcome')}</h1>
-          <p className="text-slate-600 dark:text-slate-300">{t('subtitle')}</p>
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">{t('welcome')}</h1>
+          <p className="text-slate-600">{t('subtitle')}</p>
         </div>
 
-        <Card className="shadow-xl border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
+        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
           <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-center text-slate-900 dark:text-white">{t('getStarted')}</CardTitle>
+            <CardTitle className="text-center text-slate-900">{t('getStarted')}</CardTitle>
             <CardDescription className="text-center">{t('chooseMethod')}</CardDescription>
           </CardHeader>
           <CardContent>
@@ -205,7 +205,7 @@ export default function AuthPage() {
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4"
+                  className="bg-blue-50 border border-blue-200 rounded-lg p-4"
                 >
                   <div className="flex items-start space-x-3">
                     <div className="flex-shrink-0">
@@ -216,10 +216,10 @@ export default function AuthPage() {
                       </div>
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                      <h3 className="text-sm font-medium text-blue-800">
                         {t('checkEmail')}
                       </h3>
-                      <p className="mt-1 text-sm text-blue-700 dark:text-blue-300">
+                      <p className="mt-1 text-sm text-blue-700">
                         {t('verificationMessage')} {verificationEmail}
                       </p>
                       <div className="mt-3 flex space-x-2">
@@ -228,7 +228,7 @@ export default function AuthPage() {
                           size="sm"
                           onClick={handleResendCode}
                           disabled={resendLoading}
-                          className="text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                          className="text-blue-700 border-blue-300 hover:bg-blue-100"
                         >
                           {resendLoading ? (
                             <>
@@ -243,7 +243,7 @@ export default function AuthPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => setVerificationStep(null)}
-                          className="text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                          className="text-blue-700 hover:bg-blue-100"
                         >
                           {t('back')}
                         </Button>
@@ -271,16 +271,16 @@ export default function AuthPage() {
                       value={formatCodeForDisplay(verificationCode)}
                       onChange={(e) => handleCodeChange(e.target.value)}
                       maxLength={11} // 6 digits + 5 spaces
-                      className="h-12 text-center text-xl tracking-widest font-mono border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400"
+                      className="h-12 text-center text-xl tracking-widest font-mono border-slate-200 focus:border-blue-500"
                       disabled={isLoading}
                       autoComplete="one-time-code"
                     />
-                    <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
+                    <p className="text-xs text-slate-500 text-center">
                       {t('codeInstructions')}
                     </p>
                   </div>
                   {error && (
-                    <div className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-800">
+                    <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
                       {error}
                     </div>
                   )}
@@ -301,7 +301,7 @@ export default function AuthPage() {
                 </motion.form>
               ) : (
               <Tabs defaultValue="login" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6 bg-slate-100 dark:bg-slate-700">
+                <TabsList className="grid w-full grid-cols-2 mb-6 bg-slate-100">
                   <TabsTrigger value="login" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
                     {t('signIn')}
                   </TabsTrigger>
@@ -333,7 +333,7 @@ export default function AuthPage() {
                         onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
                         required
                         disabled={isLoading}
-                        className="h-11 border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400"
+                        className="h-11 border-slate-200 focus:border-blue-500"
                       />
                     </div>
                     <div className="space-y-2">
@@ -347,7 +347,7 @@ export default function AuthPage() {
                           onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
                           required
                           disabled={isLoading}
-                          className="h-11 pr-10 border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400"
+                          className="h-11 pr-10 border-slate-200 focus:border-blue-500"
                         />
                         <Button
                           type="button"
@@ -361,7 +361,7 @@ export default function AuthPage() {
                       </div>
                     </div>
                     {error && (
-                      <div className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-800">
+                      <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
                         {error}
                       </div>
                     )}
@@ -402,7 +402,7 @@ export default function AuthPage() {
                         onChange={(e) => setRegisterData({ ...registerData, name: e.target.value })}
                         required
                         disabled={isLoading}
-                        className="h-11 border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400"
+                        className="h-11 border-slate-200 focus:border-blue-500"
                       />
                     </div>
                     <div className="space-y-2">
@@ -415,7 +415,7 @@ export default function AuthPage() {
                         onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
                         required
                         disabled={isLoading}
-                        className="h-11 border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400"
+                        className="h-11 border-slate-200 focus:border-blue-500"
                       />
                     </div>
                     <div className="space-y-2">
@@ -429,7 +429,7 @@ export default function AuthPage() {
                           onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
                           required
                           disabled={isLoading}
-                          className="h-11 pr-10 border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400"
+                          className="h-11 pr-10 border-slate-200 focus:border-blue-500"
                         />
                         <Button
                           type="button"
@@ -452,11 +452,11 @@ export default function AuthPage() {
                         onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
                         required
                         disabled={isLoading}
-                        className="h-11 border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400"
+                        className="h-11 border-slate-200 focus:border-blue-500"
                       />
                     </div>
                     {error && (
-                      <div className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-800">
+                      <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
                         {error}
                       </div>
                     )}
@@ -484,10 +484,10 @@ export default function AuthPage() {
               <div className="space-y-4">
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-slate-200 dark:border-slate-600" />
+                    <span className="w-full border-t border-slate-200" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white dark:bg-slate-800 px-2 text-slate-500 dark:text-slate-400">
+                    <span className="bg-white px-2 text-slate-500">
                       {t('orContinueWith')}
                     </span>
                   </div>

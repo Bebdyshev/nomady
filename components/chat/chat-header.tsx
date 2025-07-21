@@ -17,17 +17,17 @@ export function ChatHeader({
   const t = useTranslations('chat')
 
   return (
-    <div className="md:hidden flex items-center justify-between p-3 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+    <div className="md:hidden flex items-center justify-between p-3 border-b border-slate-200 bg-white">
       <button
         onClick={() => setSidebarOpen(true)}
-        className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 h-12 w-12 md:h-8 md:w-8 flex items-center justify-center"
+        className="p-2 rounded-lg hover:bg-slate-100 h-12 w-12 md:h-8 md:w-8 flex items-center justify-center"
       >
         <Menu className="h-6 w-6 md:h-5 md:w-5" />
       </button>
-      <h1 className="text-lg font-semibold text-slate-900 dark:text-white">{t('title')}</h1>
+      <h1 className="text-lg font-semibold text-slate-900">{t('title')}</h1>
       <button
         onClick={() => setShowMobileMap(true)}
-        className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 relative h-12 w-12 md:h-8 md:w-8 flex items-center justify-center"
+        className="p-2 rounded-lg hover:bg-slate-100 relative h-12 w-12 md:h-8 md:w-8 flex items-center justify-center"
       >
         <Map className="h-6 w-6 md:h-5 md:w-5" />
         {bookedItemsCount > 0 && (

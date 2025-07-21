@@ -38,11 +38,11 @@ export function MobileMapOverlay({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="absolute inset-x-0 bottom-0 h-[90vh] bg-white dark:bg-slate-900 rounded-t-lg overflow-hidden"
+            className="absolute inset-x-0 bottom-0 h-[90vh] bg-white rounded-t-lg overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('title')}</h3>
+            <div className="flex items-center justify-between p-4 border-b border-slate-200">
+              <h3 className="text-lg font-semibold text-slate-900">{t('title')}</h3>
               <Button
                 variant="ghost"
                 size="icon"
