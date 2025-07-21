@@ -381,6 +381,12 @@ export default function LandingPage() {
         
         <div className="container mx-auto px-6 relative">
           <div className="text-center max-w-4xl mx-auto">
+            {/* SVG Launch Logo */}
+            <div className="flex justify-center mb-8">
+              <a href="https://peerlist.io/bebdyshev/project/nomadylive" target="_blank" rel="noopener noreferrer" className="cursor-pointer transition-opacity hover:opacity-80">
+                <Image src="/Launch_SVG_Light.svg" alt="Launch" width={221} height={60} priority />
+              </a>
+            </div>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
 
               <motion.div 
