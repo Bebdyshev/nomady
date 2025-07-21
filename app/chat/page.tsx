@@ -579,7 +579,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="flex h-screen bg-slate-50">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
@@ -606,7 +606,7 @@ export default function ChatPage() {
       {/* Main Content Area with Chat and Map */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Sticky Header (Desktop) */}
-        <header className="hidden md:flex items-center justify-between h-11 px-6 bg-white sticky top-0 z-30 border-b">
+        <header className="hidden md:flex items-center justify-between h-11 px-6 bg-white sticky top-0 z-30 border-b border-slate-200">
           <span className="font-medium text-base mx-4">{chatTitle}</span>
         </header>
         {/* Chat and Map Columns */}
@@ -656,7 +656,7 @@ export default function ChatPage() {
 
           {/* Resize Handle - Hidden on mobile */}
           <div
-            className="hidden md:block w-1 bg-slate-200 dark:bg-slate-700 hover:bg-blue-500 cursor-col-resize transition-colors relative group"
+            className="hidden md:block w-1 bg-slate-200 hover:bg-blue-500 cursor-col-resize transition-colors relative group"
             onMouseDown={handleMouseDown}
           >
             <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-500/20" />
@@ -664,7 +664,7 @@ export default function ChatPage() {
 
           {/* Map Area - Hidden on mobile, shown on md and up */}
           <div
-            className="hidden md:block bg-slate-50 dark:bg-slate-900 border-l border-slate-200 dark:border-slate-700"
+            className="hidden md:block bg-slate-50 border-l border-slate-200"
             style={{ width: `${mapWidth}%` }}
           >
             <InteractiveMap

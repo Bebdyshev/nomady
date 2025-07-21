@@ -4,7 +4,6 @@ import { Inter } from "next/font/google"
 import Script from "next/script"
 import dynamic from "next/dynamic"
 import "./globals.css"
-import { ThemeProvider } from "@/components/shared/theme-provider"
 import { AuthProvider } from "@/contexts/auth-context"
 import { I18nProvider } from "@/lib/i18n-client"
 import { Toaster } from "@/components/ui/toaster"
@@ -187,15 +186,13 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        <ThemeProvider defaultTheme="system">
-          <I18nProvider>
-            <GoogleAnalyticsProvider />
-            <AuthProvider>
-              <ConversationsProvider>{children}</ConversationsProvider>
-            </AuthProvider>
-            <Toaster />
-          </I18nProvider>
-        </ThemeProvider>
+        <I18nProvider>
+          <GoogleAnalyticsProvider />
+          <AuthProvider>
+            <ConversationsProvider>{children}</ConversationsProvider>
+          </AuthProvider>
+          <Toaster />
+        </I18nProvider>
         <Analytics />
       </body>
     </html>
