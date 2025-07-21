@@ -390,6 +390,12 @@ export default function ChatPage() {
         return updated
       })
 
+      // --- Добавлено: сохраняем conversation_id, если это новый чат ---
+      if (wasNewConversation && response.data?.conversation_id) {
+        setCurrentConversationId(response.data.conversation_id)
+      }
+      // --- конец добавления ---
+
       // Имитация стриминга (по желанию, можно оставить или убрать)
       // Если нужен эффект набора текста, можно реализовать через setInterval по response.data?.response
 
