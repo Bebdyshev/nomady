@@ -237,11 +237,11 @@ export default function ChatPage() {
     const geoServices = [
       {
         name: 'ipapi.co',
-        url: 'http://ipwho.is/',
+        url: 'https://ipapi.co/json/',
         parser: (data: any) => ({
           ip: data.ip,
           country: data.country_code || data.country,
-          country_name: data.country,
+          country_name: data.country_name,
           city: data.city,
           region: data.region,
           lat: data.latitude,
