@@ -65,6 +65,14 @@ export default function ChatPage() {
   const t = useTranslations('chat')
   const tCommon = useTranslations('common')
 
+  // Получить название текущего чата
+  const currentConversation = currentConversationId
+    ? conversations.find((c) => c.id === currentConversationId)
+    : null
+  const chatTitle = currentConversation?.title?.trim()
+    ? currentConversation.title
+    : (!currentConversationId ? t('sidebar.newConversation') : t('sidebar.newConversation'))
+
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { user, logout, isAuthenticated } = useAuth()
@@ -596,68 +604,75 @@ export default function ChatPage() {
       />
 
       {/* Main Content Area with Chat and Map */}
-      <div className="flex-1 flex min-w-0">
-        {/* Chat Area */}
-        <div 
-          className="flex flex-col min-w-0 w-full md:w-auto" 
-          style={{ width: isMobile ? '100%' : `${100 - mapWidth}%` }}
-        >
-          {/* Mobile Header - make sticky */}
-          <div className="md:hidden sticky top-0 z-30">
-            <ChatHeader
-              setSidebarOpen={setSidebarOpen}
-              setShowMobileMap={setShowMobileMap}
-              bookedItemsCount={Object.keys(bookedItems).length}
-            />
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Sticky Header (Desktop) */}
+        <header className="hidden md:flex items-center justify-between h-11 px-6 bg-white sticky top-0 z-30 border-b">
+          <span className="font-medium text-base mx-4">{chatTitle}</span>
+        </header>
+        {/* Chat and Map Columns */}
+        <div className="flex-1 flex min-w-0">
+          {/* Chat Area */}
+          <div 
+            className="flex flex-col min-w-0 w-full md:w-auto" 
+            style={{ width: isMobile ? '100%' : `${100 - mapWidth}%` }}
+          >
+            {/* Mobile Header - make sticky */}
+            <div className="md:hidden sticky top-0 z-30">
+              <ChatHeader
+                setSidebarOpen={setSidebarOpen}
+                setShowMobileMap={setShowMobileMap}
+                bookedItemsCount={Object.keys(bookedItems).length}
+              />
+            </div>
+
+            {/* Messages Container - add extra bottom padding on mobile */}
+            <div className="flex-1 overflow-y-auto" style={{ paddingBottom: isMobile ? 112 : 0 }}>
+              <MessagesList
+                ref={messagesEndRef}
+                messages={messages}
+                isStreaming={isStreaming}
+                streamingMessage={streamingMessage}
+                activeSearches={activeSearches}
+                currentlyStreamingMessageId={currentlyStreamingMessageId}
+                showTypingIndicator={showTypingIndicator}
+                bookedIds={bookedIds}
+                onBooked={handleBooked}
+                onSuggestionClick={setInput}
+              />
+            </div>
+
+            {/* Input Area - sticky on mobile */}
+            <div className="md:static md:mt-0 sticky bottom-0 z-40">
+              <ChatInput
+                ref={inputRef}
+                input={input}
+                setInput={setInput}
+                onSendMessage={handleSendMessage}
+                isLoading={isLoading}
+                isStreaming={isStreaming}
+              />
+            </div>
           </div>
 
-          {/* Messages Container - add extra bottom padding on mobile */}
-          <div className="flex-1 overflow-y-auto" style={{ paddingBottom: isMobile ? 112 : 0 }}>
-            <MessagesList
-              ref={messagesEndRef}
-              messages={messages}
-              isStreaming={isStreaming}
-              streamingMessage={streamingMessage}
-              activeSearches={activeSearches}
-              currentlyStreamingMessageId={currentlyStreamingMessageId}
-              showTypingIndicator={showTypingIndicator}
-              bookedIds={bookedIds}
-              onBooked={handleBooked}
-              onSuggestionClick={setInput}
-            />
+          {/* Resize Handle - Hidden on mobile */}
+          <div
+            className="hidden md:block w-1 bg-slate-200 dark:bg-slate-700 hover:bg-blue-500 cursor-col-resize transition-colors relative group"
+            onMouseDown={handleMouseDown}
+          >
+            <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-500/20" />
           </div>
 
-          {/* Input Area - sticky on mobile */}
-          <div className="md:static md:mt-0 sticky bottom-0 z-40">
-            <ChatInput
-              ref={inputRef}
-              input={input}
-              setInput={setInput}
-              onSendMessage={handleSendMessage}
-              isLoading={isLoading}
-              isStreaming={isStreaming}
+          {/* Map Area - Hidden on mobile, shown on md and up */}
+          <div
+            className="hidden md:block bg-slate-50 dark:bg-slate-900 border-l border-slate-200 dark:border-slate-700"
+            style={{ width: `${mapWidth}%` }}
+          >
+            <InteractiveMap
+              selectedItems={Object.values(bookedItems)}
+              onRemoveItem={handleRemoveItem}
+              onClearAll={handleClearAll}
             />
           </div>
-        </div>
-
-        {/* Resize Handle - Hidden on mobile */}
-        <div
-          className="hidden md:block w-1 bg-slate-200 dark:bg-slate-700 hover:bg-blue-500 cursor-col-resize transition-colors relative group"
-          onMouseDown={handleMouseDown}
-        >
-          <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-500/20" />
-        </div>
-
-        {/* Map Area - Hidden on mobile, shown on md and up */}
-        <div
-          className="hidden md:block bg-slate-50 dark:bg-slate-900 border-l border-slate-200 dark:border-slate-700"
-          style={{ width: `${mapWidth}%` }}
-        >
-          <InteractiveMap
-            selectedItems={Object.values(bookedItems)}
-            onRemoveItem={handleRemoveItem}
-            onClearAll={handleClearAll}
-          />
         </div>
       </div>
     </div>
