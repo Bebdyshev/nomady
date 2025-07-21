@@ -31,6 +31,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useConversations } from "@/contexts/conversations-context"
+import { useI18n } from "@/lib/i18n-client"
 
 // Disable static generation for this page
 export const dynamic = "force-dynamic"
@@ -64,6 +65,7 @@ export default function ChatPage() {
   const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const t = useTranslations('chat')
   const tCommon = useTranslations('common')
+  const { locale } = useI18n()
 
   // Получить название текущего чата
   const currentConversation = currentConversationId
@@ -235,13 +237,15 @@ export default function ChatPage() {
     const geoServices = [
       {
         name: 'ipapi.co',
-        url: 'https://ipapi.co/json/',
+        url: 'http://ip-api.com/json',
         parser: (data: any) => ({
           ip: data.ip,
           country: data.country_code || data.country,
           country_name: data.country_name,
           city: data.city,
-          region: data.region
+          region: data.region,
+          lat: data.lat,
+          lng: data.lon
         })
       },
       {
@@ -252,20 +256,11 @@ export default function ChatPage() {
           country: data.countryCode,
           country_name: data.country,
           city: data.city,
-          region: data.regionName
+          region: data.regionName,
+          lat: data.lat,
+          lng: data.lon
         })
       },
-      {
-        name: 'ipinfo.io',
-        url: 'https://ipinfo.io/json',
-        parser: (data: any) => ({
-          ip: data.ip,
-          country: data.country,
-          country_name: data.country, // ipinfo doesn't provide full country name in free tier
-          city: data.city,
-          region: data.region
-        })
-      }
     ]
 
     for (const service of geoServices) {
@@ -604,12 +599,12 @@ export default function ChatPage() {
       />
 
       {/* Main Content Area with Chat and Map */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0">
         {/* Chat and Map Columns */}
-        <div className="flex-1 flex min-w-0">
+        <div className="flex-1 flex min-w-0 min-h-0">
           {/* Chat Area */}
           <div 
-            className="flex flex-col min-w-0 w-full md:w-auto min-w-0" 
+            className="flex flex-col min-w-0 w-full md:w-auto min-h-0" 
             style={{ width: isMobile ? '100%' : `${100 - mapWidth}%` }}
           >
             {/* Mobile Header - make sticky */}
@@ -667,6 +662,7 @@ export default function ChatPage() {
               selectedItems={Object.values(bookedItems)}
               onRemoveItem={handleRemoveItem}
               onClearAll={handleClearAll}
+              userLocation={ipGeolocation && typeof (ipGeolocation as any).lat === 'number' && typeof (ipGeolocation as any).lng === 'number' ? { lat: Number((ipGeolocation as any).lat), lng: Number((ipGeolocation as any).lng) } : undefined}
             />
           </div>
         </div>

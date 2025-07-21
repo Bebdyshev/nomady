@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -27,6 +27,7 @@ interface InteractiveMapProps {
   selectedItems: SelectedItem[]
   onRemoveItem: (id: string) => void
   onClearAll: () => void
+  userLocation?: { lat: number, lng: number }
 }
 
 const mapContainerStyle = {
@@ -68,13 +69,24 @@ const ultraCleanMapStyle = [
   { featureType: "poi.sports_complex", stylers: [{ visibility: "off" }] }
 ];
 
-export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll }: InteractiveMapProps) {
+// Расширяем глобальный интерфейс Window для поддержки __MAP_LANGUAGE__
+declare global {
+  interface Window {
+    __MAP_LANGUAGE__?: string
+  }
+}
+
+export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll, userLocation }: InteractiveMapProps) {
   const [isDragOver, setIsDragOver] = useState(false)
   const t = useTranslations('chat.map')
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
 
+  // Язык карты всегда английский
+  const mapLanguage = 'en'
+
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: apiKey || '',
+    language: mapLanguage,
   })
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -176,7 +188,7 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll }: Inte
     return null
   }
 
-  const firstCoord = selectedItems.map(item => getCoordinates(item.location)).find(Boolean) || defaultCenter
+  const firstCoord = userLocation || selectedItems.map(item => getCoordinates(item.location)).find(Boolean) || defaultCenter
 
   const mapOptions = {
     mapTypeControl: false,
@@ -185,6 +197,7 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll }: Inte
 
   return (
     <div className="h-full flex flex-col">
+      {/* предупреждение о языке больше не нужно */}
       <div
         className={`flex-1 transition-colors duration-200 ${
           isDragOver
@@ -200,7 +213,8 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll }: Inte
           isLoaded ? (
             <GoogleMap
               mapContainerStyle={mapContainerStyle}
-              center={firstCoord}
+              center={userLocation || firstCoord}
+              key={userLocation ? `${userLocation.lat}-${userLocation.lng}` : undefined}
               zoom={12}
               options={mapOptions}
             >
