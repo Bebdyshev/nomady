@@ -33,6 +33,25 @@ const deleteCookie = (name: string) => {
   }
 }
 
+interface City {
+  name: string
+  slug: string
+  country: string
+  image?: string
+  overall_score: number
+  cost_for_nomad_in_usd?: number
+  internet_speed?: number
+  safety_level?: number
+}
+
+interface ExploreResponse {
+  success: boolean
+  total_cities: number
+  filtered_cities: number
+  cities: City[]
+  timestamp: string
+}
+
 class ApiClient {
   private baseURL: string
   private token: string | null = null
@@ -44,14 +63,18 @@ class ApiClient {
     }
   }
 
-  setToken(token: string) {
-    this.token = token
-    setCookie("access_token", token, 7) // Store for 7 days
+  setToken(accessToken: string, refreshToken?: string) {
+    this.token = accessToken
+    setCookie("access_token", accessToken, 1) // Store for 1 day
+    if (refreshToken) {
+      setCookie("refresh_token", refreshToken, 30) // Store for 30 days
+    }
   }
 
   clearToken() {
     this.token = null
     deleteCookie("access_token")
+    deleteCookie("refresh_token")
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
@@ -72,6 +95,24 @@ class ApiClient {
       })
 
       if (!response.ok) {
+        if (response.status === 401 && !headers["X-No-Retry"]) {
+          const refreshTokenValue = getCookie("refresh_token")
+          if (refreshTokenValue) {
+            const { data: refreshData, error: refreshError } = await this.refreshToken(refreshTokenValue)
+            if (refreshData && !refreshError) {
+              this.setToken(refreshData.access_token, refreshData.refresh_token)
+              // Retry original request
+              headers.Authorization = `Bearer ${refreshData.access_token}`
+              return this.request<T>(endpoint, { ...options, headers })
+            }
+          }
+          // If refresh fails or no refresh token, logout
+          this.clearToken()
+          // Reload to redirect to login page if not already there
+          // if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+          //   window.location.reload()
+          // }
+        }
         const errorData = await response.json().catch(() => ({}))
         throw new Error(errorData.detail || `HTTP error! status: ${response.status}`)
       }
@@ -85,7 +126,7 @@ class ApiClient {
 
   // Auth methods
   async login(email: string, password: string) {
-    return this.request<{ access_token: string; type: string }>("/auth/login", {
+    return this.request<{ access_token: string; refresh_token: string; type: string }>("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     })
@@ -113,13 +154,14 @@ class ApiClient {
   }
 
   async googleLogin(token: string) {
-    return this.request<{ access_token: string; type: string }>("/auth/google-login", {
+    return this.request<{ access_token: string; refresh_token: string; type: string }>("/auth/google-login", {
       method: "POST",
       body: JSON.stringify({ token }),
     })
   }
 
   async logout() {
+    // We send the access token, backend will invalidate the refresh token.
     const result = await this.request("/auth/logout", { method: "POST" })
     this.clearToken()
     return result
@@ -127,6 +169,17 @@ class ApiClient {
 
   async getMe() {
     return this.request("/auth/users/me")
+  }
+
+  async refreshToken(refreshToken: string) {
+    return this.request<{ access_token: string; refresh_token: string; type: string }>(
+      "/auth/token/refresh",
+      {
+        method: "POST",
+        body: JSON.stringify({ refresh_token: refreshToken }),
+        headers: { "X-No-Retry": "true" },
+      }
+    )
   }
 
   // Chat methods
@@ -161,119 +214,8 @@ class ApiClient {
     })
   }
 
-  async *sendMessageStream(
-    messages: Array<{ role: string; content: string }>, 
-    conversationId?: string,
-    onToolStart?: () => void,
-    onToolOutput?: (output: any) => void,
-    ipGeolocation?: { ip: string; country: string; country_name: string; city: string; region?: string }
-  ): AsyncGenerator<{
-    type: 'text_chunk' | 'tool_output' | 'complete' | 'error'
-    data?: any
-    conversation_id?: string
-    tool_output?: any
-    search_results?: any[]
-    is_complete?: boolean
-  }> {
-    try {
-      const params = new URLSearchParams()
-      if (conversationId) {
-        params.append("conversation_id", conversationId)
-      }
-
-      const url = `${this.baseURL}/chat/stream?${params.toString()}`
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      }
-
-      if (this.token) {
-        headers.Authorization = `Bearer ${this.token}`
-      }
-
-      const requestBody: any = { messages }
-      if (ipGeolocation) {
-        requestBody.location = {
-          country: ipGeolocation.country,
-          country_name: ipGeolocation.country_name,
-          city: ipGeolocation.city,
-          region: ipGeolocation.region,
-          ip: ipGeolocation.ip
-        }
-      }
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(requestBody),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`)
-      }
-
-      const reader = response.body?.getReader()
-      if (!reader) {
-        throw new Error("No response body")
-      }
-
-      const decoder = new TextDecoder()
-      let buffer = ""
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-
-          buffer += decoder.decode(value, { stream: true })
-
-          // Process complete lines
-          const lines = buffer.split('\n')
-          buffer = lines.pop() || "" // Keep incomplete line in buffer
-
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(line.slice(6))
-                
-                if (data.type === 'tool_start') {
-                  onToolStart?.()
-                } else if (data.type === 'tool_output') {
-                  onToolOutput?.(data.data)
-                  yield { type: 'tool_output', data: data.data }
-                } else if (data.type === 'text_chunk') {
-                  yield {
-                    type: 'text_chunk',
-                    data: data.data,
-                    conversation_id: data.conversation_id,
-                    is_complete: data.is_complete
-                  }
-                } else if (data.type === 'complete') {
-                  yield {
-                    type: 'complete',
-                    conversation_id: data.conversation_id,
-                    tool_output: data.tool_output,
-                    search_results: data.search_results
-                  }
-                } else if (data.type === 'error') {
-                  yield { type: 'error', data: data.data || data.error }
-                }
-              } catch (e) {
-                console.error('Error parsing SSE data:', e)
-              }
-            }
-          }
-        }
-      } finally {
-        reader.releaseLock()
-      }
-    } catch (error) {
-      yield { 
-        type: 'error', 
-        data: error instanceof Error ? error.message : "Unknown error" 
-      }
-    }
-  }
+  // Оставляем только sendMessage для обычного POST /chat
+  // sendMessageStream больше не используется для чата с эффектом стриминга
 
   async getConversations() {
     return this.request<
@@ -378,6 +320,14 @@ class ApiClient {
     }>("/book/activity", {
       method: "POST",
       body: JSON.stringify(selection),
+    })
+  }
+
+  // Explore methods
+  async exploreCities(limit: number = 50) {
+    return this.request<ExploreResponse>("/explore/cities", {
+      method: "POST",
+      body: JSON.stringify({ limit }),
     })
   }
 

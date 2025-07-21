@@ -12,6 +12,7 @@ interface MessagesListProps {
   isStreaming: boolean
   streamingMessage: string
   activeSearches: Set<string>
+  currentlyStreamingMessageId: string | null
   showTypingIndicator: boolean
   bookedIds: Set<string>
   onBooked: (bookedItem: any, id: string, type: string) => void
@@ -24,6 +25,7 @@ export const MessagesList = forwardRef<HTMLDivElement, MessagesListProps>(
     isStreaming,
     streamingMessage,
     activeSearches,
+    currentlyStreamingMessageId,
     showTypingIndicator,
     bookedIds,
     onBooked,
@@ -46,6 +48,7 @@ export const MessagesList = forwardRef<HTMLDivElement, MessagesListProps>(
                     isStreaming={isStreaming}
                     streamingMessage={streamingMessage}
                     activeSearches={activeSearches}
+                    currentlyStreamingMessageId={currentlyStreamingMessageId}
                     bookedIds={bookedIds}
                     onBooked={onBooked}
                   />

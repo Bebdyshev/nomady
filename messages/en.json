@@ -375,7 +375,8 @@
         "activitiesFound": "{count} activities found",
         "bookingSuccess": "Activity Booked Successfully! 🎯",
         "bookingSuccessDesc": "{name} has been added to your itinerary.",
-        "viewAllTripadvisor": "View all on TripAdvisor"
+        "viewAllTripadvisor": "View all on TripAdvisor",
+        "recommendedForYou": "Recommended for you"
       },
       "restaurants": {
         "budget": "Budget",
@@ -421,7 +422,8 @@
         "propertiesFound": "{count} properties found",
         "hotelBooked": "Hotel Booked Successfully! 🏨",
         "hotelBookedDesc": "{name} has been reserved for your stay.",
-        "reviews": "Reviews"
+        "reviews": "Reviews",
+        "recommendedByAI": "Recommended for you"
       },
       "flights": {
         "refundable": "Refundable",

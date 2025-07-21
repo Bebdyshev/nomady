@@ -9,6 +9,17 @@ export const SearchAnimation = ({ searchType }: { searchType: string }) => {
   const [currentStep, setCurrentStep] = useState(0)
   const t = useTranslations('chat.input')
 
+  // Extract the actual search type from tool names like "search_hotels" -> "hotels"
+  const getSearchType = (toolName: string) => {
+    if (toolName.includes('hotel')) return 'hotels'
+    if (toolName.includes('flight') || toolName.includes('ticket')) return 'tickets'
+    if (toolName.includes('restaurant')) return 'restaurants'
+    if (toolName.includes('activit')) return 'activities'
+    return toolName // fallback to original
+  }
+
+  const actualSearchType = getSearchType(searchType)
+
   const searchSteps: Record<string, { icon: string; steps: string[] }> = {
     tickets: {
       icon: "✈️",
@@ -28,7 +39,7 @@ export const SearchAnimation = ({ searchType }: { searchType: string }) => {
     },
   }
 
-  const search = searchSteps[searchType] || {
+  const search = searchSteps[actualSearchType] || {
     icon: "🔍",
     steps: [t('searching'), t('processing'), t('finishing')],
   }

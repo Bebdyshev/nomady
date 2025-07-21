@@ -126,6 +126,7 @@ interface HotelsAPIResponse {
   }
   total_found?: number
   success?: boolean
+  ai_recommended_indexes?: number[] // Added for AI recommended hotels
 }
 
 interface HotelDisplayProps {
@@ -318,7 +319,7 @@ const getAmenityIcon = (amenity: string) => {
 }
 
 // Enhanced Hotel Card Component
-const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) => {
+const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking, isAIRecommended }: any) => {
   const t = useTranslations('chat.displays')
   
   const formatPrice = (priceInput: number | string | null | undefined) => {
@@ -451,7 +452,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
               isBooked
                 ? "border-green-500 bg-green-50 dark:bg-green-950/20"
                 : "border-slate-200 dark:border-slate-700 hover:border-purple-300 hover:shadow-xl"
-            }`}
+            } ${isAIRecommended ? "border-yellow-400" : ""}`}
           >
             {/* Background Image */}
             <div 
@@ -477,6 +478,12 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking }: any) =>
                   <Badge className="bg-green-500/90 text-white border-none">
                     <CheckCircle2 className="h-3 w-3 mr-1" />
                     {t('common.booked')}
+                  </Badge>
+                )}
+                {isAIRecommended && (
+                  <Badge className="bg-yellow-500/90 text-white border-none">
+                    <Shield className="h-3 w-3 mr-1" />
+                    {t('hotels.recommendedByAI')}
                   </Badge>
                 )}
               </div>
@@ -839,6 +846,16 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
   const totalResults = toolOutput.total_results ?? toolOutput.total_found ?? 0
   const destination = searchParams ? ('query' in searchParams ? searchParams.query : searchParams.destination) : ''
 
+  // --- Сортировка отелей: AI-рекомендованные всегда в топе ---
+  const aiRecommendedIndexes = toolOutput.ai_recommended_indexes || []
+  const sortHotelsAIOnTop = (hotels: any[]) => {
+    if (!aiRecommendedIndexes.length) return hotels
+    return [
+      ...aiRecommendedIndexes.map(idx => hotels[idx]).filter(Boolean),
+      ...hotels.filter((_, idx) => !aiRecommendedIndexes.includes(idx))
+    ]
+  }
+
   const handleBooking = async (hotel: any, type: string) => {
     // Определяем идентификатор выбранного элемента (индекс или link / detail_url)
     const index = hotels.findIndex((h) => h === hotel)
@@ -886,7 +903,7 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
   }
 
   // Sort hotels
-  const sortedHotels = [...hotels].sort((a, b) => {
+  const sortedHotels = sortHotelsAIOnTop([...hotels].sort((a, b) => {
     switch (sortBy) {
       case "price":
         const priceA = a.rate_per_night ?? (typeof a.price === 'number' ? a.price : Infinity)
@@ -901,7 +918,7 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
       default:
         return 0
     }
-  })
+  }))
 
   const getHotelId = (hotel: any, idx: number) => {
     return (hotel.id ? hotel.id.toString() : undefined) || hotel.link || hotel.detail_url || `${hotel.name}-${idx}`
@@ -909,12 +926,12 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
 
   const hasBookedHotel = hotels.some((hotel, idx) => {
     const id = getHotelId(hotel, idx)
-    return bookedIds.has(id) || hotel.is_selected
+    return bookedIds.has(id)
   })
 
   const displayHotels = hasBookedHotel ? hotels.filter((hotel, idx) => {
     const id = getHotelId(hotel, idx)
-    return bookedIds.has(id) || hotel.is_selected
+    return bookedIds.has(id)
   }) : sortedHotels
 
   return (
@@ -963,6 +980,7 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
               const itemId = getHotelId(hotel, index)
               const isBooked = bookedIds.has(itemId)
               const isBooking = bookingStates[itemId] || false
+              const isAIRecommended = aiRecommendedIndexes.includes(index)
 
               return (
                 <motion.div
@@ -978,6 +996,7 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
                     onBook={handleBooking}
                     isBooked={isBooked}
                     isBooking={isBooking}
+                    isAIRecommended={isAIRecommended}
                   />
                 </motion.div>
               )

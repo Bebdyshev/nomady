@@ -76,6 +76,7 @@ interface AviasalesData {
   cheapest_ticket: AviasalesTicket
   tickets: AviasalesTicket[]
   search_params?: any
+  ai_recommended_indexes?: number[]
 }
 
 interface FlightSegment {
@@ -430,7 +431,7 @@ const FlightPath = ({ segments, isReturn = false }: { segments: FlightSegment[];
 }
 
 // Enhanced Flight Card Component
-const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice }: any) => {
+const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice, isAIRecommended }: any) => {
   const [currentPage, setCurrentPage] = useState(0)
   const itemId = item.combination_id || item.id || `flight-${Date.now()}`
   const t = useTranslations('chat.displays')
@@ -465,10 +466,12 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice }: any) => 
             className={`relative overflow-hidden cursor-pointer border-2 transition-all duration-300 flex flex-col min-h-[200px] card-layout ${
               isBooked
                 ? "border-green-500 bg-green-50 dark:bg-green-950/20"
-                : "border-slate-200 dark:border-slate-700 hover:border-blue-300 hover:shadow-xl"
+                : isAIRecommended
+                  ? "border-yellow-400 shadow-yellow-200/40"
+                  : "border-slate-200 dark:border-slate-700 hover:border-blue-300 hover:shadow-xl"
             }`}
           >
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600" />
+            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${isAIRecommended ? 'from-yellow-300 via-yellow-400 to-orange-400' : 'from-blue-500 via-purple-500 to-blue-600'}`} />
 
             <CardHeader className="p-3 sm:p-4">
               <div className="flex items-start justify-between gap-2 sm:gap-4">
@@ -968,13 +971,23 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
     return Array.from(new Set(all))
   }, [outputArray])
 
+  // --- Сортировка билетов: AI-рекомендованные всегда в топе ---
+  const aiRecommendedIndexes = toolOutput.ai_recommended_indexes || []
+  const sortFlightsAIOnTop = (flights: any[]) => {
+    if (!aiRecommendedIndexes.length) return flights
+    return [
+      ...aiRecommendedIndexes.map(idx => flights[idx]).filter(Boolean),
+      ...flights.filter((_, idx) => !aiRecommendedIndexes.includes(idx))
+    ]
+  }
+
   // Фильтрация билетов
   const filteredFlights = React.useMemo(() => {
     let flights = (groupedResults.flights || [])
     if (selectedAirline) flights = flights.filter((f: any) => f.validating_airline === selectedAirline)
     if (maxPrice) flights = flights.filter((f: any) => Number(f.price) <= maxPrice)
     if (directOnly) flights = flights.filter((f: any) => (f.flights_to?.length || 0) <= 1)
-    return flights
+    return sortFlightsAIOnTop(flights)
   }, [groupedResults.flights, selectedAirline, maxPrice, directOnly])
 
   // --- UI фильтров ---
@@ -1023,6 +1036,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                         const itemId = item.id || item.combination_id || `${type}-${index}`
                         const isBooked = bookedIds.has(itemId.toString()) || item.is_selected
                         const isBooking = bookingStates[itemId] || false
+                        const isAIRecommended = toolOutput.ai_recommended_indexes?.includes(index) || false
 
                         if (type === "flights") {
                           if (hasBookedFlight && !isBooked) return null;
@@ -1034,7 +1048,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                               exit={{ opacity: 0, scale: 0.9 }}
                               transition={{ duration: 0.3, delay: index * 0.1 }}
                             >
-                              <FlightCard item={item} onBook={handleBooking} isBooked={isBooked} isBooking={isBooking} formatPrice={formatPrice} />
+                              <FlightCard item={item} onBook={handleBooking} isBooked={isBooked} isBooking={isBooking} formatPrice={formatPrice} isAIRecommended={isAIRecommended} />
                             </motion.div>
                           )
                         }
@@ -1048,7 +1062,15 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                             exit={{ opacity: 0, scale: 0.9 }}
                             transition={{ duration: 0.3, delay: index * 0.1 }}
                           >
-                            <Card className="hover:shadow-lg transition-all duration-300 flex flex-col min-h-[250px] card-layout">
+                            <Card
+                              className={`relative overflow-hidden border-2 border-yellow-400 shadow-yellow-200/40 transition-all duration-300 aspect-[4/3] w-full max-w-[260px] min-w-[200px] h-[220px] p-0`}
+                            >
+                              {/* Always show badge */}
+                              <div className="absolute top-2 left-2 z-10">
+                                <Badge className="bg-yellow-400 text-yellow-900 border-none text-[10px] px-2 py-0.5 shadow-md">
+                                  {t('activities.recommendedForYou')}
+                                </Badge>
+                              </div>
                               <CardHeader className="p-4">
                                 <CardTitle className="text-lg font-semibold mb-2 text-horizontal text-wrap-normal">{item.name}</CardTitle>
                                 {getLocationString(item.location) && (
@@ -1132,6 +1154,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                         const itemId = item.id || item.combination_id || `${type}-${index}`
                         const isBooked = bookedIds.has(itemId.toString()) || item.is_selected
                         const isBooking = bookingStates[itemId] || false
+                        const isAIRecommended = toolOutput.ai_recommended_indexes?.includes(index) || false
 
                         if (type === "flights") {
                           if (hasBookedFlight && !isBooked) return null;
@@ -1143,7 +1166,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                               exit={{ opacity: 0, scale: 0.9 }}
                               transition={{ duration: 0.3, delay: index * 0.1 }}
                             >
-                              <FlightCard item={item} onBook={handleBooking} isBooked={isBooked} isBooking={isBooking} formatPrice={formatPrice} />
+                              <FlightCard item={item} onBook={handleBooking} isBooked={isBooked} isBooking={isBooking} formatPrice={formatPrice} isAIRecommended={isAIRecommended} />
                             </motion.div>
                           )
                         }
@@ -1157,7 +1180,15 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                             exit={{ opacity: 0, scale: 0.9 }}
                             transition={{ duration: 0.3, delay: index * 0.1 }}
                           >
-                            <Card className="hover:shadow-lg transition-all duration-300 flex flex-col min-h-[250px] card-layout">
+                            <Card
+                              className={`relative overflow-hidden border-2 border-yellow-400 shadow-yellow-200/40 transition-all duration-300 aspect-[4/3] w-full max-w-[260px] min-w-[200px] h-[220px] p-0`}
+                            >
+                              {/* Always show badge */}
+                              <div className="absolute top-2 left-2 z-10">
+                                <Badge className="bg-yellow-400 text-yellow-900 border-none text-[10px] px-2 py-0.5 shadow-md">
+                                  {t('activities.recommendedForYou')}
+                                </Badge>
+                              </div>
                               <CardHeader className="p-4">
                                 <CardTitle className="text-lg font-semibold mb-2 text-horizontal text-wrap-normal">{item.name}</CardTitle>
                                 {getLocationString(item.location) && (

@@ -31,24 +31,13 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Logo } from "@/components/ui/logo"
 import { cn } from "@/lib/utils"
+import { useConversations } from "@/contexts/conversations-context"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface AppSidebarProps {
   collapsed?: boolean
   onToggleCollapsed?: () => void
   // Chat-specific props (optional)
-  conversations?: Array<{
-    id: string
-    user_id: number
-    created_at: string
-    last_updated: string
-    title?: string
-    messages: Array<{
-      id: number
-      role: string
-      content: string
-      timestamp: string
-    }>
-  }>
   currentConversationId?: string | null
   onConversationSelect?: (conversationId: string) => void
   onNewChat?: () => void
@@ -60,7 +49,6 @@ interface AppSidebarProps {
 export function AppSidebar({
   collapsed = false,
   onToggleCollapsed,
-  conversations = [],
   currentConversationId,
   onConversationSelect,
   onNewChat,
@@ -69,6 +57,7 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const { user, logout } = useAuth()
   const { theme, setTheme } = useTheme()
+  const { conversations, loading } = useConversations()
   const router = useRouter()
   const pathname = usePathname()
   const t = useTranslations('chat.sidebar')
@@ -130,62 +119,54 @@ export function AppSidebar({
   // For chat page, use mobile behavior, for others use standard sidebar
   const sidebarClasses = cn(
     "flex flex-col h-full bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transition-all duration-300",
-    isOnChatPage
-      ? [
-          "fixed md:relative inset-y-0 left-0 z-50 md:z-0 transform ease-in-out",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
-          "w-64 md:w-[20%]",
-        ]
-      : collapsed
-        ? "w-16"
-        : "w-64 lg:w-[20%]"
+    "fixed md:relative inset-y-0 left-0 z-50 md:z-0 transform ease-in-out",
+    sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+    collapsed ? "w-16" : "w-64 md:w-[20%]"
   )
 
   return (
     <div className={sidebarClasses}>
       {/* Sidebar Header */}
       <div className={`${collapsed ? 'p-2' : 'p-3 md:p-4'} border-b border-slate-200 dark:border-slate-700`}>
-        {/* Mobile Header - For chat page */}
-        {isOnChatPage && (
-          <div className="md:hidden">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex-1 min-w-0 flex items-center space-x-2">
-                <Logo width={32} height={32} className="rounded-lg" />
-                <span className="hidden sm:inline text-lg font-bold text-blue-600 dark:text-blue-400 truncate">Nomady</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleLanguageChange}
-                  className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
-                  title={t('switchLanguage')}
-                >
-                  <span className="text-lg select-none">
-                    {locale === 'en' ? '🇺🇸' : '🇷🇺'}
-                  </span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                  className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700"
-                >
-                  {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                </Button>
-                <button
-                  onClick={() => setSidebarOpen?.(false)}
-                  className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
+        {/* Mobile Header */}
+        <div className="md:hidden">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex-1 min-w-0 flex items-center space-x-2">
+              <Logo width={32} height={32} className="rounded-lg" />
+              <span className="hidden sm:inline text-lg font-bold text-blue-600 dark:text-blue-400 truncate">Nomady</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleLanguageChange}
+                className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
+                title={t('switchLanguage')}
+              >
+                <span className="text-lg select-none">
+                  {locale === 'en' ? '🇺🇸' : '🇷🇺'}
+                </span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700"
+              >
+                {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </Button>
+              <button
+                onClick={() => setSidebarOpen?.(false)}
+                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
           </div>
-        )}
+        </div>
 
         {/* Desktop Header */}
-        <div className={`${isOnChatPage ? 'hidden md:block' : ''} ${collapsed ? 'flex justify-center' : ''}`}>
+        <div className={`hidden md:block ${collapsed ? 'flex justify-center' : ''}`}>
           <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'} mb-4`}>
             {!collapsed && (
               <div className="flex items-center space-x-2">
@@ -342,7 +323,18 @@ export function AppSidebar({
       </div>
 
       {/* Conversations - Show when conversations exist */}
-      {conversations.length > 0 && !collapsed && (
+      {!collapsed && loading && (
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 overflow-y-auto p-2 md:p-3">
+            <div className="space-y-2">
+              {[...Array(4)].map((_, idx) => (
+                <Skeleton key={idx} className="h-14 rounded-lg w-full" />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+      {conversations.length > 0 && !collapsed && !loading && (
         <div className="flex-1 flex flex-col min-h-0">
           <div className="flex-1 overflow-y-auto p-2 md:p-3">
             <div className="space-y-2">
@@ -396,7 +388,7 @@ export function AppSidebar({
       )}
 
       {/* For non-chat pages without conversations, add spacer */}
-      {(!isOnChatPage || conversations.length === 0) && !collapsed && <div className="flex-1" />}
+      {(!isOnChatPage && conversations.length === 0) && !collapsed && <div className="flex-1" />}
 
       {/* User Profile */}
       <div className={`${collapsed ? 'p-2' : 'p-3 md:p-4'} border-t border-slate-200 dark:border-slate-700 mt-auto`}>

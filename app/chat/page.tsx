@@ -30,6 +30,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useConversations } from "@/contexts/conversations-context"
 
 // Disable static generation for this page
 export const dynamic = "force-dynamic"
@@ -38,7 +39,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [conversations, setConversations] = useState<Conversation[]>([])
+  const { conversations, loadConversations } = useConversations()
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
   const [bookedItems, setBookedItems] = useState<Record<string, any>>({})
   const [bookedIds, setBookedIds] = useState<Set<string>>(new Set())
@@ -51,11 +52,16 @@ export default function ChatPage() {
   const [isStreaming, setIsStreaming] = useState(false)
   const [streamingToolOutput, setStreamingToolOutput] = useState<any>(null)
   const [activeSearches, setActiveSearches] = useState<Set<string>>(new Set())
+  const [currentlyStreamingMessageId, setCurrentlyStreamingMessageId] = useState<string | null>(null)
   const [showTypingIndicator, setShowTypingIndicator] = useState(false)
   const [ipGeolocation, setIpGeolocation] = useState<IpGeolocation | null>(null)
   const [isLoadingLocation, setIsLoadingLocation] = useState(false)
   const [showMobileMap, setShowMobileMap] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  
+  // Debouncing for streaming updates to reduce DOM thrashing
+  const [pendingStreamingUpdate, setPendingStreamingUpdate] = useState<string>("")
+  const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const t = useTranslations('chat')
   const tCommon = useTranslations('common')
 
@@ -67,6 +73,48 @@ export default function ChatPage() {
 
   const MIN_MAP_WIDTH = 30 // percent
   const MAX_MAP_WIDTH = 50 // percent
+  
+  // Функция для проверки, находится ли пользователь внизу чата
+  const isUserAtBottom = () => {
+    if (!messagesEndRef.current) return true
+    
+    const container = messagesEndRef.current.parentElement
+    if (!container) return true
+    
+    const threshold = 100 // пикселей от низа
+    const isAtBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - threshold
+    return isAtBottom
+  }
+
+  // Debounced update function for streaming to reduce DOM updates
+  const updateStreamingMessage = (assistantMessageId: string, newContent: string) => {
+    // Update pending content for debouncing
+    setPendingStreamingUpdate(newContent)
+    
+    // Clear existing timeout
+    if (streamingTimeoutRef.current) {
+      clearTimeout(streamingTimeoutRef.current)
+    }
+    
+    // Set new timeout for batched update
+    streamingTimeoutRef.current = setTimeout(() => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMessageId ? { ...msg, content: newContent } : msg,
+        ),
+      )
+      setPendingStreamingUpdate("")
+    }, 50) // Update every 50ms instead of every character
+    
+    // Also update immediately if this is the first content or if there's significant new content
+    if (newContent.length === 1 || newContent.length % 20 === 0) {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMessageId ? { ...msg, content: newContent } : msg,
+        ),
+      )
+    }
+  }
 
   // Auto-focus input on mount and after sending
   useEffect(() => {
@@ -89,8 +137,21 @@ export default function ChatPage() {
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
+    // Во время стриминга прокручиваем только если пользователь внизу чата
+    if (isStreaming && !isUserAtBottom()) return
+    
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages, showTypingIndicator, activeSearches])
+  }, [messages, showTypingIndicator, activeSearches, isStreaming])
+
+  // Auto-scroll when streaming ends
+  useEffect(() => {
+    if (!isStreaming && messages.length > 0) {
+      // Small delay to ensure DOM is updated
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+      }, 100)
+    }
+  }, [isStreaming, messages.length])
 
   // Load conversations on mount
   useEffect(() => {
@@ -201,7 +262,6 @@ export default function ChatPage() {
 
     for (const service of geoServices) {
       try {
-        console.log(`Trying ${service.name}...`)
         const response = await fetch(service.url)
         
         if (!response.ok) {
@@ -210,7 +270,6 @@ export default function ChatPage() {
         }
         
         const data = await response.json()
-        console.log(`${service.name} response:`, data)
         
         // Check if we got valid data
         if (data && (data.ip || data.query)) {
@@ -219,7 +278,6 @@ export default function ChatPage() {
           // Validate we got useful location data
           if (locationData.country && locationData.country !== 'Unknown' && locationData.city && locationData.city !== 'Unknown') {
             setIpGeolocation(locationData)
-            console.log("IP Geolocation obtained from", service.name, ":", locationData)
             setIsLoadingLocation(false)
             return
           } else {
@@ -251,13 +309,6 @@ export default function ChatPage() {
     setIsLoadingLocation(false)
   }
 
-  const loadConversations = async () => {
-    const { data } = await apiClient.getConversations()
-    if (data) {
-      setConversations(data)
-    }
-  }
-
   const loadBookings = async () => {
     const { data } = await apiClient.getBookings()
     if (data) {
@@ -283,171 +334,98 @@ export default function ChatPage() {
 
     setMessages((prev) => [...prev, userMessage])
     setInput("")
+    
+    // Прокрутка к новому сообщению пользователя
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    }, 50)
+    
     setIsLoading(true)
     setIsStreaming(true)
-    setShowTypingIndicator(true)
-    setStreamingMessage("")
-    setStreamingToolOutput(null)
 
-    // Show typing indicator for a brief moment before streaming starts
-    setTimeout(() => {
-      setShowTypingIndicator(false)
-    }, 1000)
-
-    // Add temporary streaming message
-    const streamingMessageId = (Date.now() + 1).toString()
-    const tempMessage: Message = {
-      id: streamingMessageId,
+    // Add a placeholder for the assistant's response
+    const assistantMessageId = (Date.now() + 1).toString()
+    setCurrentlyStreamingMessageId(assistantMessageId)
+    const assistantMessagePlaceholder: Message = {
+      id: assistantMessageId,
       role: "assistant",
       content: "",
       timestamp: new Date(),
+      toolOutput: null,
     }
-
+    setMessages((prev) => [...prev, assistantMessagePlaceholder])
+    
+    // Прокрутка к placeholder сообщению ассистента
     setTimeout(() => {
-      setMessages((prev) => [...prev, tempMessage])
-    }, 1000)
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    }, 100)
 
-    const messagesToSend = [{ role: "user", content: input }]
     let fullResponse = ""
     let finalToolOutput: any = null
-    let finalConversationId: string | null = null
-    let wasNewConversation = !currentConversationId // Track if this was a new conversation
+    let finalConversationId: string | null = currentConversationId
+    const wasNewConversation = !currentConversationId
 
     try {
-      for await (const chunk of apiClient.sendMessageStream(
+      const messagesToSend = [{ role: "user", content: input }]
+      const response = await apiClient.sendMessage(
         messagesToSend,
         currentConversationId || undefined,
-        () => {
-          // onToolStart - show tool is starting
-          console.log("Tool started")
-        },
-        (output) => {
-          // onToolOutput - handle tool output
-          setStreamingToolOutput(output)
-        },
-        ipGeolocation || undefined // Pass IP geolocation if available
-      )) {
-        if (chunk.type === "text_chunk") {
-          fullResponse += chunk.data
-          setStreamingMessage(fullResponse)
-          finalConversationId = chunk.conversation_id || finalConversationId
+        ipGeolocation || undefined,
+      )
 
-          // Check for search tags in the new chunk
-          const searchStartTags = chunk.data.match(
-            /<(searching_tickets|searching_hotels|searching_restaurants|searching_activities)>/g,
-          )
-          const searchEndTags = chunk.data.match(
-            /<\/(searching_tickets|searching_hotels|searching_restaurants|searching_activities)>/g,
-          )
+      console.log('Backend response:', response.data)
 
-          if (searchStartTags || searchEndTags) {
-            setActiveSearches((prev) => {
-              const newSearches = new Set(prev)
-
-              // Add new searches
-              searchStartTags?.forEach((tag: string) => {
-                const searchType = tag.replace(/<searching_|>/g, "")
-                newSearches.add(searchType)
-              })
-
-              // Remove completed searches
-              searchEndTags?.forEach((tag: string) => {
-                const searchType = tag.replace(/<\/searching_|>/g, "")
-                newSearches.delete(searchType)
-              })
-
-              return newSearches
-            })
-          }
-
-          // Update the streaming message in real-time
-          setMessages((prev) =>
-            prev.map((msg) => (msg.id === streamingMessageId ? { ...msg, content: fullResponse } : msg)),
-          )
-        } else if (chunk.type === "tool_output") {
-          finalToolOutput = chunk.data
-          setStreamingToolOutput(chunk.data)
-        } else if (chunk.type === "complete") {
-          finalConversationId = chunk.conversation_id || finalConversationId
-          finalToolOutput = chunk.tool_output || finalToolOutput
-
-          // Process search results like in the original code
-          let combinedOutput: any = finalToolOutput
-          const searchResults = chunk.search_results
-          if (searchResults && Array.isArray(searchResults) && searchResults.length > 0) {
-            const mapped = searchResults.map((sr: any) => {
-              const resultData = { ...sr.data }
-              resultData.search_result_id = sr.id
-              resultData.type = sr.search_type
-              // Propagate search_result_id to nested items
-              if (resultData.flights && Array.isArray(resultData.flights)) {
-                resultData.flights = resultData.flights.map((flight: any) => ({
-                  ...flight,
-                  search_result_id: sr.id,
-                }))
-              }
-              if (resultData.hotels && Array.isArray(resultData.hotels)) {
-                resultData.hotels = resultData.hotels.map((hotel: any) => ({
-                  ...hotel,
-                  search_result_id: sr.id,
-                }))
-              }
-              if (resultData.restaurants && Array.isArray(resultData.restaurants)) {
-                resultData.restaurants = resultData.restaurants.map((restaurant: any) => ({
-                  ...restaurant,
-                  search_result_id: sr.id,
-                }))
-              }
-              if (resultData.items && Array.isArray(resultData.items)) {
-                resultData.items = resultData.items.map((item: any) => ({
-                  ...item,
-                  search_result_id: sr.id,
-                }))
-              }
-              return resultData
-            })
-            // Only set a single object or fallback to finalToolOutput if ambiguous
-            combinedOutput = mapped.length === 1 ? mapped[0] : finalToolOutput
-          }
-
-          // Update final message with tool output
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === streamingMessageId ? { ...msg, content: fullResponse, toolOutput: combinedOutput } : msg,
-            ),
-          )
-
-        if (!currentConversationId) {
-            setCurrentConversationId(finalConversationId)
-        }
-        } else if (chunk.type === "error") {
-          throw new Error(chunk.data || "Streaming error")
-        }
-      }
-    } catch (error) {
-      console.error("Error sending message:", error)
-
-      // Replace streaming message with error message
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === streamingMessageId
+      // Обновить ассистентское сообщение корректно
+      setMessages((prev) => {
+        const updated = prev.map((msg) =>
+          msg.id === assistantMessageId
             ? {
                 ...msg,
-        content: "Sorry, I encountered an error. Please try again.",
-                toolOutput: null,
-      }
+                content: response.data?.response || "",
+                toolOutput: response.data?.tool_output || null,
+              }
+            : msg,
+        )
+        console.log('Updated messages after setMessages:', updated)
+        return updated
+      })
+
+      // Имитация стриминга (по желанию, можно оставить или убрать)
+      // Если нужен эффект набора текста, можно реализовать через setInterval по response.data?.response
+
+    } catch (error) {
+      console.error("Error sending message:", error)
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMessageId
+            ? {
+                ...msg,
+                content: "Sorry, I encountered an error. Please try again.",
+                isError: true,
+              }
             : msg,
         ),
       )
     } finally {
       setIsLoading(false)
       setIsStreaming(false)
-      setShowTypingIndicator(false)
-      setStreamingMessage("")
-      setStreamingToolOutput(null)
       setActiveSearches(new Set())
+      setCurrentlyStreamingMessageId(null)
       
-      // Reload conversations if this was a new conversation
+      // Clear any pending streaming updates and ensure final content is set
+      if (streamingTimeoutRef.current) {
+        clearTimeout(streamingTimeoutRef.current)
+        streamingTimeoutRef.current = null
+      }
+      
+      // REMOVE this block to prevent overwriting toolOutput with null
+      // setMessages((prev) =>
+      //   prev.map((msg) =>
+      //     msg.id === assistantMessageId && !finalToolOutput
+      //       ? { ...msg, toolOutput: null }
+      //       : msg
+      //   )
+      // )
       if (wasNewConversation && finalConversationId) {
         loadConversations()
       }
@@ -586,8 +564,6 @@ export default function ChatPage() {
     document.addEventListener("mouseup", handleMouseUp)
   }
 
-  console.log(messages)
-
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
       {/* Mobile overlay */}
@@ -606,7 +582,6 @@ export default function ChatPage() {
 
       {/* Sidebar */}
       <AppSidebar
-        conversations={conversations}
         currentConversationId={currentConversationId}
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
@@ -621,35 +596,42 @@ export default function ChatPage() {
           className="flex flex-col min-w-0 w-full md:w-auto" 
           style={{ width: isMobile ? '100%' : `${100 - mapWidth}%` }}
         >
-          {/* Mobile Header */}
-          <ChatHeader
-            setSidebarOpen={setSidebarOpen}
-            setShowMobileMap={setShowMobileMap}
-            bookedItemsCount={Object.keys(bookedItems).length}
-          />
+          {/* Mobile Header - make sticky */}
+          <div className="md:hidden sticky top-0 z-30">
+            <ChatHeader
+              setSidebarOpen={setSidebarOpen}
+              setShowMobileMap={setShowMobileMap}
+              bookedItemsCount={Object.keys(bookedItems).length}
+            />
+          </div>
 
-          {/* Messages Container */}
-          <MessagesList
-            ref={messagesEndRef}
-            messages={messages}
-            isStreaming={isStreaming}
-            streamingMessage={streamingMessage}
-            activeSearches={activeSearches}
-            showTypingIndicator={showTypingIndicator}
-            bookedIds={bookedIds}
-            onBooked={handleBooked}
-            onSuggestionClick={setInput}
-          />
+          {/* Messages Container - add extra bottom padding on mobile */}
+          <div className="flex-1 overflow-y-auto" style={{ paddingBottom: isMobile ? 112 : 0 }}>
+            <MessagesList
+              ref={messagesEndRef}
+              messages={messages}
+              isStreaming={isStreaming}
+              streamingMessage={streamingMessage}
+              activeSearches={activeSearches}
+              currentlyStreamingMessageId={currentlyStreamingMessageId}
+              showTypingIndicator={showTypingIndicator}
+              bookedIds={bookedIds}
+              onBooked={handleBooked}
+              onSuggestionClick={setInput}
+            />
+          </div>
 
-          {/* Input Area */}
-          <ChatInput
-            ref={inputRef}
-            input={input}
-            setInput={setInput}
-            onSendMessage={handleSendMessage}
-            isLoading={isLoading}
-            isStreaming={isStreaming}
-          />
+          {/* Input Area - sticky on mobile */}
+          <div className="md:static md:mt-0 sticky bottom-0 z-40">
+            <ChatInput
+              ref={inputRef}
+              input={input}
+              setInput={setInput}
+              onSendMessage={handleSendMessage}
+              isLoading={isLoading}
+              isStreaming={isStreaming}
+            />
+          </div>
         </div>
 
         {/* Resize Handle - Hidden on mobile */}

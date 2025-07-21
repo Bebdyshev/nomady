@@ -13,12 +13,10 @@ export function WelcomeScreen({ onSuggestionClick }: WelcomeScreenProps) {
 
   // Use translations for suggestions
   const suggestions = [
-    { icon: "✈️", text: t('suggestions.0') },
-    { icon: "🏨", text: t('suggestions.1') },
     { icon: "🍽️", text: t('suggestions.2') },
     { icon: "🎯", text: t('suggestions.3') },
     { icon: "💰", text: t('suggestions.4') },
-    { icon: "🌏", text: t('suggestions.5') },
+    { icon: "🌏", text: t('suggestions.1') },
   ]
 
   return (

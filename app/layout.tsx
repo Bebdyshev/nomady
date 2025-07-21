@@ -10,6 +10,7 @@ import { I18nProvider } from "@/lib/i18n-client"
 import { Toaster } from "@/components/ui/toaster"
 import { Analytics } from "@vercel/analytics/next"
 import 'leaflet/dist/leaflet.css'
+import { ConversationsProvider } from "@/contexts/conversations-context"
 
 // Динамический импорт без SSR для Google Analytics
 const GoogleAnalyticsProvider = dynamic(
@@ -189,7 +190,9 @@ export default function RootLayout({
         <ThemeProvider defaultTheme="system">
           <I18nProvider>
             <GoogleAnalyticsProvider />
-            <AuthProvider>{children}</AuthProvider>
+            <AuthProvider>
+              <ConversationsProvider>{children}</ConversationsProvider>
+            </AuthProvider>
             <Toaster />
           </I18nProvider>
         </ThemeProvider>
