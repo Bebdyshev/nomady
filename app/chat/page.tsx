@@ -237,15 +237,15 @@ export default function ChatPage() {
     const geoServices = [
       {
         name: 'ipapi.co',
-        url: 'http://ip-api.com/json',
+        url: 'http://ipwho.is/',
         parser: (data: any) => ({
           ip: data.ip,
           country: data.country_code || data.country,
-          country_name: data.country_name,
+          country_name: data.country,
           city: data.city,
           region: data.region,
-          lat: data.lat,
-          lng: data.lon
+          lat: data.latitude,
+          lng: data.longitude
         })
       },
       {
