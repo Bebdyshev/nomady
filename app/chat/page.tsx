@@ -610,7 +610,7 @@ export default function ChatPage() {
             </div>
 
             {/* Messages Container - add extra bottom padding on mobile */}
-            <div className="flex-1 overflow-y-auto" style={{ paddingBottom: isMobile ? 112 : 0 }}>
+            <div className="flex-1 overflow-y-auto min-h-0 h-full" style={{ paddingBottom: isMobile ? 112 : 0 }}>
               <MessagesList
                 ref={messagesEndRef}
                 messages={messages}

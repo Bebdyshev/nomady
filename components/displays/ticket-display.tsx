@@ -77,6 +77,7 @@ interface AviasalesData {
   tickets: AviasalesTicket[]
   search_params?: any
   ai_recommended_indexes?: number[]
+  airlines?: Record<string, string>
 }
 
 interface FlightSegment {
@@ -90,10 +91,11 @@ interface FlightSegment {
   arrival_time?: string
   flight_number?: string
   airline?: string
-  airline_name?: string
   airplane?: string
   duration?: string
   seats?: string
+  airline_code?: string
+  airline_name?: string
 }
 
 interface SearchResult {
@@ -129,6 +131,10 @@ interface SearchResult {
   items?: any[]
   passengers?: number
   [key: string]: any
+  validating_airline_code?: string
+  validating_airline_name?: string
+  airline_code?: string
+  airline_name?: string
 }
 
 interface TicketDisplayProps {
@@ -149,20 +155,11 @@ function isAviasalesData(data: any): data is AviasalesData {
   
   const result = data && typeof data === 'object' && hasTicketsArray && hasTickets && hasPrice && hasPriceValue && hasCurrency
   
-  console.log({
-    hasTicketsArray,
-    hasTickets,
-    hasPrice,
-    hasPriceValue,
-    hasCurrency,
-    result
-  })
-  
   return result
 }
 
 // Function to transform Aviasales data to SearchResult format
-function transformAviasalesData(aviasalesData: AviasalesData): SearchResult[] {
+function transformAviasalesData(aviasalesData: AviasalesData, airlines: Record<string, string> = {}): SearchResult[] {
   console.log('transformAviasalesData called with:', aviasalesData)
   
   return aviasalesData.tickets.map((ticket, ticketIndex) => {
@@ -248,14 +245,14 @@ function transformAviasalesData(aviasalesData: AviasalesData): SearchResult[] {
           if (segment.operating_carrier_designator?.carrier && segment.operating_carrier_designator?.number) {
             airline = segment.operating_carrier_designator.carrier
             flightNumber = `${segment.operating_carrier_designator.carrier}${segment.operating_carrier_designator.number}`
-            airlineName = segment.airline_name || segment.operating_carrier_designator.carrier
+            airlineName = airlines[airline] || segment.airline_name || airline
           } else if (segment.carrier && segment.flight_number) {
             airline = segment.carrier
             flightNumber = segment.flight_number
-            airlineName = segment.airline_name || segment.carrier
+            airlineName = airlines[airline] || segment.airline_name || airline
           } else if (segment.airline) {
             airline = segment.airline
-            airlineName = segment.airline
+            airlineName = airlines[airline] || segment.airline || airline
             flightNumber = segment.flight_number || "N/A"
           }
         } catch (error) {
@@ -289,10 +286,11 @@ function transformAviasalesData(aviasalesData: AviasalesData): SearchResult[] {
           }),
           flight_number: flightNumber,
           airline: airline,
-          airline_name: airlineName,
           airplane: airplane,
           duration: segmentDuration,
-          seats: segment.seats || "Available"
+          seats: segment.seats || "Available",
+          airline_code: airline,
+          airline_name: airlineName,
         }
         
         console.log(`Transformed segment ${segmentIndex}:`, result)
@@ -301,46 +299,33 @@ function transformAviasalesData(aviasalesData: AviasalesData): SearchResult[] {
     }
 
     // Get airline name from first segment with fallback to multiple segments
-    const getMainAirline = (ticket: any): string => {
+    const getMainAirlineCode = (ticket: any): string => {
       try {
-        if (!ticket.flights_to || ticket.flights_to.length === 0) return "Unknown Airline"
+        if (!ticket.flights_to || ticket.flights_to.length === 0) return "Unknown"
         
         const firstSegment = ticket.flights_to[0]
-        if (firstSegment.airline_name) {
-          return firstSegment.airline_name
-        }
-        
-        if (firstSegment.operating_carrier_designator?.carrier) {
-          const carriers = ticket.flights_to.map((segment: any) => 
-            segment.operating_carrier_designator?.carrier || segment.carrier || segment.airline || "Unknown"
-          )
-          const uniqueCarriers = [...new Set(carriers)]
-          
-          if (uniqueCarriers.length === 1) {
-            return uniqueCarriers[0] as string
-          } else {
-            return uniqueCarriers.join(' + ')
-          }
-        }
-        
-        // Fallback to any available carrier info
-        return firstSegment.carrier || firstSegment.airline || "Unknown Airline"
-      } catch (error) {
-        console.error('Error getting main airline:', error)
-        return "Unknown Airline"
+        return firstSegment.operating_carrier_designator?.carrier || firstSegment.carrier || firstSegment.airline || "Unknown"
+      } catch {
+        return "Unknown"
       }
     }
+    const getMainAirlineName = (code: string): string => airlines[code] || code
 
     const transformedFlightsTo = transformSegments(ticket.flights_to || [])
     const transformedFlightsReturn = ticket.flights_return ? transformSegments(ticket.flights_return) : undefined
     
+    const validating_airline_code = getMainAirlineCode(ticket)
+    const validating_airline_name = getMainAirlineName(validating_airline_code)
+
     const result = {
       type: "flights" as const,
       id: ticket.id || ticket.ticket_id || `ticket-${ticketIndex}`,
       combination_id: ticket.id || ticket.ticket_id || `ticket-${ticketIndex}`,
       price: ticket.price?.value || 0,
       currency: ticket.price?.currency_code || "USD",
-      validating_airline: getMainAirline(ticket),
+      validating_airline: validating_airline_code,
+      validating_airline_code,
+      validating_airline_name,
       flights_to: transformedFlightsTo,
       flights_return: transformedFlightsReturn,
       refundable: ticket.refundable || false,
@@ -463,7 +448,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice, isAIRecomm
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
         >
           <Card
-            className={`relative overflow-hidden cursor-pointer border-2 transition-all duration-300 flex flex-col min-h-[200px] card-layout max-w-full min-w-0 ${
+            className={`relative overflow-hidden cursor-pointer border-2 transition-all duration-300 flex flex-col min-h-[100px] card-layout max-w-full min-w-0 ${
               isBooked
                 ? "border-green-500 bg-green-50"
                 : isAIRecommended
@@ -476,12 +461,10 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice, isAIRecomm
             <CardHeader className="p-3 sm:p-4">
               <div className="flex items-start justify-between gap-2 sm:gap-4">
                 <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
-                  <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg flex-shrink-0">
-                    <Plane className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-                  </div>
+                  <AirlineLogo code={item.validating_airline_code} size={48} className="mr-2" />
                   <div className="flex-1 min-w-0">
                     <CardTitle className="text-sm sm:text-lg font-bold text-slate-900 text-horizontal text-wrap-normal leading-tight">
-                      {item.validating_airline}
+                      {item.validating_airline_name}
                     </CardTitle>
                     <p className="text-xs sm:text-sm text-slate-500 text-horizontal text-wrap-normal truncate">
                       {item.flights_to?.[0]?.from_city || item.flights_to?.[0]?.from} → {item.flights_to?.[item.flights_to.length - 1]?.to_city || item.flights_to?.[item.flights_to.length - 1]?.to}
@@ -490,7 +473,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice, isAIRecomm
                 </div>
 
                 <div className="text-right flex-shrink-0">
-                  <div className="text-sm sm:text-xl font-bold text-slate-900 text-horizontal">{formatPrice(item.price, item.currency)}</div>
+                  <div className="text-sm sm:text-xl font-bold text-slate-900 text-horizontal">{formatPrice(Math.round(item.price), item.currency)}</div>
                     {item.refundable && (
                     <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200 mt-1 hidden sm:inline-flex">
                       <Shield className="h-3 w-3 mr-1" />
@@ -560,7 +543,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice, isAIRecomm
               <Plane className="h-6 w-6 text-blue-600" />
             </div>
             <div>
-              <div className="text-lg md:text-xl font-bold">{item.validating_airline}</div>
+              <div className="text-lg md:text-xl font-bold">{item.validating_airline_name}</div>
               <div className="text-sm text-slate-500 font-normal">Flight Details & Booking</div>
             </div>
           </DialogTitle>
@@ -571,7 +554,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice, isAIRecomm
           <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-2xl md:text-3xl font-bold text-slate-900">{formatPrice(item.price, item.currency)}</div>
+                <div className="text-2xl md:text-3xl font-bold text-slate-900">{formatPrice(Math.round(item.price), item.currency)}</div>
                 <div className="text-xs md:text-sm text-slate-600">Total for {item.passengers} passenger{item.passengers > 1 ? "s" : ""}</div>
               </div>
               <div className="flex flex-wrap gap-1 md:gap-2">
@@ -623,8 +606,9 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice, isAIRecomm
                       </div>
                       <div className="flex justify-between items-center text-slate-500">
                         <span>{segment.departure_time} → {segment.arrival_time}</span>
-                        <span className="text-xs">
-                          {segment.airline_name || segment.airline} {segment.flight_number}
+                        <span className="text-xs flex items-center gap-1">
+                          <AirlineLogo code={segment.airline_code} size={18} />
+                          {segment.airline_name} {segment.flight_number}
                         </span>
                       </div>
                       <div className="text-xs text-slate-400 mt-1">
@@ -661,8 +645,9 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice, isAIRecomm
                         </div>
                         <div className="flex justify-between items-center text-slate-500">
                           <span>{segment.departure_time} → {segment.arrival_time}</span>
-                          <span className="text-xs">
-                            {segment.airline_name || segment.airline} {segment.flight_number}
+                          <span className="text-xs flex items-center gap-1">
+                            <AirlineLogo code={segment.airline_code} size={18} />
+                            {segment.airline_name} {segment.flight_number}
                           </span>
                         </div>
                         <div className="text-xs text-slate-400 mt-1">
@@ -680,7 +665,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice, isAIRecomm
         <DialogFooter className="pt-4 md:pt-6 border-t border-slate-200">
           <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-4">
             <div className="text-center sm:text-left">
-              <div className="text-xl md:text-2xl font-bold text-slate-900">{formatPrice(item.price, item.currency)}</div>
+              <div className="text-xl md:text-2xl font-bold text-slate-900">{formatPrice(Math.round(item.price), item.currency)}</div>
               <div className="text-xs md:text-sm text-slate-500">Total price for {item.passengers} passenger{item.passengers > 1 ? "s" : ""}</div>
             </div>
 
@@ -717,6 +702,31 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice, isAIRecomm
   )
 }
 
+// AirlineLogo component
+const AirlineLogo = ({ code, size = 28, className = "" }: { code?: string; size?: number; className?: string }) => {
+  if (!code) return (
+    <div className={`flex items-center justify-center bg-slate-100 rounded-full border border-slate-200 ${className}`} style={{ width: size, height: size }}>
+      <Plane className="text-slate-400" style={{ width: size * 0.7, height: size * 0.7 }} />
+    </div>
+  )
+  const [error, setError] = React.useState(false)
+  if (error) return (
+    <div className={`flex items-center justify-center bg-slate-100 rounded-full border border-slate-200 ${className}`} style={{ width: size, height: size }}>
+      <Plane className="text-slate-400" style={{ width: size * 0.7, height: size * 0.7 }} />
+    </div>
+  )
+  return (
+    <img
+      src={`https://img.avs.io/pics/al_square/${code}@avif?rs=fit:64:64`}
+      alt={code}
+      width={size}
+      height={size}
+      className={`object-cover rounded-full border border-slate-200 bg-white ${className}`}
+      style={{ width: size, height: size }}
+    />
+  )
+}
+
 export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: TicketDisplayProps) {
   const [bookingStates, setBookingStates] = useState<Record<string, boolean>>({})
   const { toast } = useToast()
@@ -724,12 +734,15 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
 
   console.log("TicketDisplay received toolOutput:", toolOutput)
 
+  // Получить airlines из toolOutput
+  const airlines: Record<string, string> = toolOutput.airlines || {}
+
   // Transform Aviasales data if needed
   const processedOutput = React.useMemo(() => {
     console.log("Running processedOutput memo...")
     if (isAviasalesData(toolOutput)) {
       console.log("Data is Aviasales format, transforming...")
-      const transformedResults = transformAviasalesData(toolOutput)
+      const transformedResults = transformAviasalesData(toolOutput, airlines)
       console.log("Transformed results:", transformedResults)
       // Return as flights group
       return [{
@@ -739,7 +752,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
     }
     console.log("Data is NOT Aviasales format, using as is.")
     return Array.isArray(toolOutput) ? toolOutput : [toolOutput]
-  }, [toolOutput])
+  }, [toolOutput, airlines])
 
   console.log("Final processedOutput:", processedOutput)
 
@@ -967,9 +980,10 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
 
   // Получить список авиакомпаний для фильтра
   const airlineOptions = React.useMemo(() => {
-    const all = (outputArray || []).flatMap(f => f.flights || []).flatMap((t: any) => t.validating_airline ? [t.validating_airline] : [])
-    return Array.from(new Set(all))
-  }, [outputArray])
+    const all = (outputArray || []).flatMap(f => f.flights || []).flatMap((t: any) => t.validating_airline_code ? [t.validating_airline_code] : [])
+    // Маппим коды на названия
+    return Array.from(new Set(all.map((code: string) => airlines[code] || code)))
+  }, [outputArray, airlines])
 
   // --- Сортировка билетов: AI-рекомендованные всегда в топе ---
   const aiRecommendedIndexes = toolOutput.ai_recommended_indexes || []
