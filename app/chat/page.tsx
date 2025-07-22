@@ -236,21 +236,8 @@ export default function ChatPage() {
     // Array of IP geolocation services to try
     const geoServices = [
       {
-        name: 'ipapi.co',
-        url: 'https://ipapi.co/json/',
-        parser: (data: any) => ({
-          ip: data.ip,
-          country: data.country_code || data.country,
-          country_name: data.country_name,
-          city: data.city,
-          region: data.region,
-          lat: data.latitude,
-          lng: data.longitude
-        })
-      },
-      {
-        name: 'ip-api.com',
-        url: 'https://ip-api.com/json/',
+        name: 'server-proxy',
+        url: '/api/ip-geo',
         parser: (data: any) => ({
           ip: data.query,
           country: data.countryCode,
