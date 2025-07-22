@@ -72,8 +72,8 @@
       }
     },
     "testimonials": {
-      "title": "Loved by Travelers Worldwide",
-      "subtitle": "See what our users say about their Nomady experience",
+      "title": "User Reviews",
+      "subtitle": "What do travelers say about Nomady?",
       "items": {
         "sarah": {
           "name": "Sarah Johnson",
@@ -89,6 +89,21 @@
           "name": "Emma Rodriguez",
           "role": "Family Traveler", 
           "content": "Planning family trips used to be stressful. Nomady considers everyone's preferences and creates itineraries that keep both kids and adults happy."
+        },
+        "nurzhan": {
+          "name": "Nurzhan Algashov",
+          "role": "Traveler",
+          "content": "A very convenient service for planning trips! I liked everything."
+        },
+        "madiaubakirov": {
+          "name": "madiaubakirov",
+          "role": "Traveler",
+          "content": "Nomady helped me quickly find the best options for my vacation. I recommend it!"
+        },
+        "zhuldyz_rakhmet": {
+          "name": "Zhuldyz Rakhmet",
+          "role": "Traveler",
+          "content": "Amazing experience! Everything is simple and clear, I will use it again."
         }
       }
     },

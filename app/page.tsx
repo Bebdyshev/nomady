@@ -157,25 +157,25 @@ export default function LandingPage() {
 
   const testimonials = [
     {
-      name: t('testimonials.items.sarah.name'),
-      role: t('testimonials.items.sarah.role'),
-      content: t('testimonials.items.sarah.content'),
+      name: t('testimonials.items.nurzhan.name'),
+      role: t('testimonials.items.nurzhan.role'),
+      content: t('testimonials.items.nurzhan.content'),
       rating: 5,
-      avatar: "SJ",
+      avatar: "https://instagram.fala6-1.fna.fbcdn.net/v/t51.2885-19/284078771_1042668399958938_1890022260236462066_n.jpg?_nc_ht=instagram.fala6-1.fna.fbcdn.net&_nc_cat=106&_nc_oc=Q6cZ2QGv6xow9Aoy8ifczHg7mmWUHl5FqkfVYcde4tim1hYvEpsuNn41Kh9u-ycmYafkVyA&_nc_ohc=-u5pqb-YjtQQ7kNvwGApdQL&_nc_gid=6HHUz4NZGGrnIKOpm6jhlA&edm=AP4sbd4BAAAA&ccb=7-5&oh=00_AfSJ7Gb25YT8gZCo1rlkX15sbqOip9MK4iw7ZS2SCYdD1w&oe=6885237D&_nc_sid=7a9f4b",
     },
     {
-      name: t('testimonials.items.mike.name'),
-      role: t('testimonials.items.mike.role'),
-      content: t('testimonials.items.mike.content'),
+      name: t('testimonials.items.madiaubakirov.name'),
+      role: t('testimonials.items.madiaubakirov.role'),
+      content: t('testimonials.items.madiaubakirov.content'),
       rating: 5,
-      avatar: "MC",
+      avatar: "https://instagram.fala6-1.fna.fbcdn.net/v/t51.2885-19/151316837_982196188976712_2227433073749369321_n.jpg?_nc_ht=instagram.fala6-1.fna.fbcdn.net&_nc_cat=100&_nc_oc=Q6cZ2QGSCTlwinkQpduWUdvKgpNZIilpqZRU7pUe4LI0sEa_Yl0UwmGFJf8yT43aSKzOWz4&_nc_ohc=vmOxs9SQcesQ7kNvwFfWPu0&_nc_gid=ozcp75-a76vrt4EdINx11Q&edm=ALGbJPMBAAAA&ccb=7-5&oh=00_AfT34AnBqDw_HIVOTjSJ-Bz9YDfTiFpLNJGhccfdIFjASg&oe=6885409A&_nc_sid=7d3ac5",
     },
     {
-      name: t('testimonials.items.emma.name'),
-      role: t('testimonials.items.emma.role'),
-      content: t('testimonials.items.emma.content'),
+      name: t('testimonials.items.zhuldyz_rakhmet.name'),
+      role: t('testimonials.items.zhuldyz_rakhmet.role'),
+      content: t('testimonials.items.zhuldyz_rakhmet.content'),
       rating: 5,
-      avatar: "ER",
+      avatar: "https://instagram.fala6-1.fna.fbcdn.net/v/t51.2885-19/508681510_18508830193058040_6249343980477021419_n.jpg?_nc_ht=instagram.fala6-1.fna.fbcdn.net&_nc_cat=100&_nc_oc=Q6cZ2QET60b4-4rhxphMgOZT5pnxiSpkVkPElsSqO_LvU9BIRxckrlfB71Cmw0cVgRD2uCA&_nc_ohc=EixibWE2AXUQ7kNvwFWL0Xw&_nc_gid=zD37AB849ZqhgLhsPGnNtg&edm=AP4sbd4BAAAA&ccb=7-5&oh=00_AfSLoTfaEHA2_av22KF9OhaAQpDJZt7jvwta1sdKhUbYHg&oe=6885273C&_nc_sid=7a9f4b",
     },
   ]
 
@@ -661,9 +661,13 @@ export default function LandingPage() {
                   </div>
                   <p className="text-slate-600 mb-6 leading-relaxed">"{testimonial.content}"</p>
                   <div className="flex items-center">
+                    {testimonial.avatar.startsWith('http') ? (
+                      <img src={testimonial.avatar} alt={testimonial.name} className="h-10 w-10 rounded-full object-cover mr-3 border border-slate-200" />
+                    ) : (
                     <div className="h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold mr-3">
                       {testimonial.avatar}
                     </div>
+                    )}
                     <div>
                       <div className="font-semibold text-slate-900">{testimonial.name}</div>
                       <div className="text-sm text-slate-500">{testimonial.role}</div>
@@ -748,21 +752,6 @@ export default function LandingPage() {
               </motion.div>
             ))}
           </div>
-        </div>
-      </section>
-
-        {/* Live Demo Section */}
-        <section id="demo" className="py-20 bg-slate-50">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-12 max-w-3xl mx-auto">
-            <motion.h2 initial={{opacity:0,y:20}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6}} className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
-              {t('hero.badge')}
-            </motion.h2>
-            <motion.p initial={{opacity:0,y:10}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6,delay:0.2}} className="text-xl text-slate-600">
-              Try chatting with our AI below – no sign-up needed.
-            </motion.p>
-          </div>
-          <DemoChat />
         </div>
       </section>
 
