@@ -460,12 +460,18 @@ export default function ChatPage() {
             toolOutput = null
           }
         }
-
+        let timestamp: Date
+        try {
+          timestamp = new Date(msg.created_at)
+          if (isNaN(timestamp.getTime())) throw new Error('Invalid date')
+        } catch {
+          timestamp = new Date()
+        }
         return {
           id: msg.id,
           role: msg.role,
           content: msg.content,
-          timestamp: new Date(msg.created_at),
+          timestamp,
           toolOutput,
         }
       })

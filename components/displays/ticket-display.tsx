@@ -886,24 +886,24 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
   // Group search results by type
   const groupedResults = outputArray.reduce(
     (acc, result) => {
-    if (result.flights) {
-      acc.flights = [...(acc.flights || []), ...result.flights]
-    }
-    if (result.hotels) {
-      acc.hotels = [...(acc.hotels || []), ...result.hotels]
-    }
-    if (result.restaurants) {
-      acc.restaurants = [...(acc.restaurants || []), ...result.restaurants]
-    }
-    if (result.items) {
-      const type = result.type || "activities"
-      acc[type] = [...(acc[type] || []), ...result.items]
-    }
-    // Handle direct result items
+      if (result.flights && Array.isArray(result.flights)) {
+        acc.flights = [...(acc.flights || []), ...result.flights]
+      }
+      if (result.hotels && Array.isArray(result.hotels)) {
+        acc.hotels = [...(acc.hotels || []), ...result.hotels]
+      }
+      if (result.restaurants && Array.isArray(result.restaurants)) {
+        acc.restaurants = [...(acc.restaurants || []), ...result.restaurants]
+      }
+      if (result.items && Array.isArray(result.items)) {
+        const type = result.type || "activities"
+        acc[type] = [...(acc[type] || []), ...result.items]
+      }
+      // Handle direct result items
       if (result.type && (result.name || result.combination_id)) {
-      acc[result.type] = [...(acc[result.type] || []), result]
-    }
-    return acc
+        acc[result.type] = [...(acc[result.type] || []), result]
+      }
+      return acc
     },
     {} as Record<string, any[]>,
   )
