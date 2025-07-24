@@ -448,6 +448,8 @@ export default function LandingPage() {
           fill
           className="object-cover z-0 opacity-40"
           priority
+          placeholder="blur"
+          blurDataURL="/landing/sky-blur.png" // маленькая версия (например, 20x12px, сильно сжатая)
         />
         <div className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-t from-white/80 to-transparent" />
         <div className="container mx-auto px-6 relative z-20">
