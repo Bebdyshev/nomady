@@ -20,7 +20,7 @@ export const HeroHeader = () => {
     const { locale, setLocale } = useI18n();
 
     const languages = [
-        { code: 'en', label: 'EN', flag: '🇺🇸' },
+        { code: 'en', label: 'EN', flag: '🇺🇸' }, 
         { code: 'ru', label: 'RU', flag: '🇷🇺' },
     ];
 
