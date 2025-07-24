@@ -263,21 +263,21 @@ export default function LandingPage() {
       role: t('testimonials.items.nurzhan.role'),
       content: t('testimonials.items.nurzhan.content'),
       rating: 5,
-      avatar: "https://instagram.fala6-1.fna.fbcdn.net/v/t51.2885-19/284078771_1042668399958938_1890022260236462066_n.jpg?_nc_ht=instagram.fala6-1.fna.fbcdn.net&_nc_cat=106&_nc_oc=Q6cZ2QGv6xow9Aoy8ifczHg7mmWUHl5FqkfVYcde4tim1hYvEpsuNn41Kh9u-ycmYafkVyA&_nc_ohc=-u5pqb-YjtQQ7kNvwGApdQL&_nc_gid=6HHUz4NZGGrnIKOpm6jhlA&edm=AP4sbd4BAAAA&ccb=7-5&oh=00_AfSJ7Gb25YT8gZCo1rlkX15sbqOip9MK4iw7ZS2SCYdD1w&oe=6885237D&_nc_sid=7a9f4b",
+      avatar: "/images/nurzhan.jpg",
     },
     {
       name: t('testimonials.items.madiaubakirov.name'),
       role: t('testimonials.items.madiaubakirov.role'),
       content: t('testimonials.items.madiaubakirov.content'),
       rating: 5,
-      avatar: "https://instagram.fala6-1.fna.fbcdn.net/v/t51.2885-19/151316837_982196188976712_2227433073749369321_n.jpg?_nc_ht=instagram.fala6-1.fna.fbcdn.net&_nc_cat=100&_nc_oc=Q6cZ2QGSCTlwinkQpduWUdvKgpNZIilpqZRU7pUe4LI0sEa_Yl0UwmGFJf8yT43aSKzOWz4&_nc_ohc=vmOxs9SQcesQ7kNvwFfWPu0&_nc_gid=ozcp75-a76vrt4EdINx11Q&edm=ALGbJPMBAAAA&ccb=7-5&oh=00_AfT34AnBqDw_HIVOTjSJ-Bz9YDfTiFpLNJGhccfdIFjASg&oe=6885409A&_nc_sid=7d3ac5",
+      avatar: "/images/madiaubakirov.jpg",
     },
     {
       name: t('testimonials.items.zhuldyz_rakhmet.name'),
       role: t('testimonials.items.zhuldyz_rakhmet.role'),
       content: t('testimonials.items.zhuldyz_rakhmet.content'),
       rating: 5,
-      avatar: "https://instagram.fala6-1.fna.fbcdn.net/v/t51.2885-19/508681510_18508830193058040_6249343980477021419_n.jpg?_nc_ht=instagram.fala6-1.fna.fbcdn.net&_nc_cat=100&_nc_oc=Q6cZ2QET60b4-4rhxphMgOZT5pnxiSpkVkPElsSqO_LvU9BIRxckrlfB71Cmw0cVgRD2uCA&_nc_ohc=EixibWE2AXUQ7kNvwFWL0Xw&_nc_gid=zD37AB849ZqhgLhsPGnNtg&edm=AP4sbd4BAAAA&ccb=7-5&oh=00_AfSLoTfaEHA2_av22KF9OhaAQpDJZt7jvwta1sdKhUbYHg&oe=6885273C&_nc_sid=7a9f4b",
+      avatar: "/images/zhuldyz_rakhmet.jpg",
     },
   ]
 
@@ -731,50 +731,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Demo Section */}
-      {/* Features Section */}
-      {/* <section id="features" className="py-20">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4">
-                <AnimatedGradientText colorFrom="#0f172a" colorTo="#475569" className="text-4xl md:text-5xl font-bold dark:from-white dark:to-slate-300">
-                  {t('features.title')}
-                </AnimatedGradientText>
-              </h2>
-              <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
-                {t('features.subtitle')}
-              </p>
-            </motion.div>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <Card className="p-8 h-full hover:shadow-lg transition-all duration-200 border-0 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                  <div className={`inline-flex items-center justify-center w-16 h-16 rounded-xl mb-6 ${feature.color}`}>
-                    {feature.icon}
-                  </div>
-                  <h3 className="text-xl font-semibold mb-3 text-slate-900 dark:text-white">{feature.title}</h3>
-                  <p className="text-slate-600 dark:text-slate-300 leading-relaxed">{feature.description}</p>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section> */}
-
       {/* How It Works Section */}
       <section id="how-it-works" className="py-20 bg-slate-50">
         <div className="container mx-auto px-6">
@@ -881,13 +837,7 @@ export default function LandingPage() {
                   </div>
                   <p className="text-slate-600 mb-6 leading-relaxed">"{testimonial.content}"</p>
                   <div className="flex items-center">
-                    {testimonial.avatar.startsWith('http') ? (
-                      <img src={testimonial.avatar} alt={testimonial.name} className="h-10 w-10 rounded-full object-cover mr-3 border border-slate-200" />
-                    ) : (
-                    <div className="h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold mr-3">
-                      {testimonial.avatar}
-                    </div>
-                    )}
+                    <img src={testimonial.avatar} alt={testimonial.name} className="h-12 w-12 rounded-full object-cover mr-3 border border-slate-200" />
                     <div>
                       <div className="font-semibold text-slate-900">{testimonial.name}</div>
                       <div className="text-sm text-slate-500">{testimonial.role}</div>
