@@ -2,8 +2,8 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect, useRef } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
@@ -35,6 +35,12 @@ import { AnimatedGradientText } from "@/components/magicui/animated-gradient-tex
 import { cn } from "@/lib/utils"
 import { Logo } from "@/components/ui/logo"
 import { useI18n } from "@/lib/i18n-client"
+import { useAuth } from "@/contexts/auth-context"
+import { apiClient } from "@/lib/api"
+import { InteractiveMap } from "@/components/interactive-map"
+import { MobileMapOverlay, ChatHeader, MessagesList, ChatInput } from "@/components/chat"
+import { AppSidebar } from "@/components/shared/app-sidebar"
+import { Message, Conversation, IpGeolocation } from "@/types/chat"
 
 // Lazy-load heavy client-only components to cut initial JS
 const GlobeComponent = dynamic(() => import("@/components/magicui/globe").then(m => m.Globe), { ssr: false })
@@ -70,51 +76,147 @@ export default function LandingPage() {
   // Delay heavy globe initialization until browser is idle to improve first-load performance
   const [showGlobe, setShowGlobe] = useState(false)
 
-  useEffect(() => {
-    const currentText = placeholders[placeholderIndex]
-    let timeout: NodeJS.Timeout
+  // --- chat state ---
+  const [messages, setMessages] = useState<Message[]>([])
+  const [input, setInput] = useState("")
+  const [isChatLoading, setIsChatLoading] = useState(false)
+  const [isChatStreaming, setIsChatStreaming] = useState(false)
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
+  const [bookedItems, setBookedItems] = useState<Record<string, any>>({})
+  const [bookedIds, setBookedIds] = useState<Set<string>>(new Set())
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [mapWidth, setMapWidth] = useState(35)
+  const resizingRef = useRef(false)
+  const startXRef = useRef(0)
+  const startWidthRef = useRef(35)
+  const [streamingMessage, setStreamingMessage] = useState<string>("")
+  const [showTypingIndicator, setShowTypingIndicator] = useState(false)
+  const [ipGeolocation, setIpGeolocation] = useState<IpGeolocation | null>(null)
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false)
+  const [showMobileMap, setShowMobileMap] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const [pendingStreamingUpdate, setPendingStreamingUpdate] = useState<string>("")
+  const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const [activeSearches, setActiveSearches] = useState<Set<string>>(new Set())
+  const [currentlyStreamingMessageId, setCurrentlyStreamingMessageId] = useState<string | null>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const { isAuthenticated } = useAuth()
+  const searchParams = useSearchParams()
 
-    if (charIndex < currentText.length) {
-      timeout = setTimeout(() => setCharIndex((i) => i + 1), 80)
-    } else {
-      // After full text typed, wait then move to next placeholder
-      timeout = setTimeout(() => {
-        setCharIndex(0)
-        setPlaceholderIndex((i) => (i + 1) % placeholders.length)
-      }, 2000)
+  // 1. sessionId для анонимного пользователя
+  const [sessionId, setSessionId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isAuthenticated) return;
+    let sid = localStorage.getItem('anon_chat_session_id');
+    if (!sid) {
+      sid = crypto.randomUUID();
+      localStorage.setItem('anon_chat_session_id', sid);
     }
+    setSessionId(sid);
+  }, [isAuthenticated]);
 
-    return () => clearTimeout(timeout)
-  }, [charIndex, placeholderIndex, placeholders])
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
 
+  // 2. При загрузке страницы — если есть sessionId, подгрузить историю
   useEffect(() => {
-    // show globe after main content is interactive
-    if (typeof window !== 'undefined') {
-      const cb = () => setShowGlobe(true)
-      if ('requestIdleCallback' in window) {
-        ;(window as any).requestIdleCallback(cb)
+    if (isAuthenticated || !sessionId) return;
+    fetch(`${API_BASE_URL}/chat/demo/history?session_id=${sessionId}`)
+      .then(async res => {
+        if (!res.ok) {
+          const text = await res.text();
+          console.error('Failed to fetch chat history:', res.status, text);
+          return { messages: [] };
+        }
+        return res.json();
+      })
+      .then(data => {
+        if (data && Array.isArray(data.messages) && data.messages.length > 0) {
+          setMessages(data.messages.map((m: any) => ({
+            id: m.id?.toString() || crypto.randomUUID(),
+            role: m.role,
+            content: m.content,
+            timestamp: m.timestamp ? new Date(m.timestamp) : new Date(),
+            tool_output: m.tool_output ?? null,
+            tool_type: m.tool_type ?? null,
+          })));
+        }
+      });
+  }, [sessionId, isAuthenticated]);
+
+  // 3. При отправке сообщений через demo endpoint — всегда передавать sessionId
+  const handleSendMessage = async (inputText: string) => {
+    if (!inputText.trim() || isChatLoading || isChatStreaming) return;
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: inputText,
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setIsChatLoading(true);
+    setIsChatStreaming(true);
+    const assistantMessageId = (Date.now() + 1).toString();
+    setMessages((prev) => [...prev, { id: assistantMessageId, role: "assistant", content: "", timestamp: new Date() }]);
+    try {
+      let response;
+      if (isAuthenticated) {
+        response = await apiClient.sendMessage([{ role: "user", content: inputText }]);
       } else {
-        setTimeout(cb, 300)
+        const res = await fetch(`${API_BASE_URL}/chat/demo?session_id=${sessionId}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages: [{ role: "user", content: inputText }] })
+          }
+        );
+        if (!res.ok) {
+          const text = await res.text();
+          console.error('Failed to send demo message:', res.status, text);
+          response = { response: "Sorry, error. Please try again." };
+        } else {
+          response = await res.json();
+        }
       }
+      setMessages((prev) => prev.map((msg) =>
+        msg.id === assistantMessageId
+          ? {
+              ...msg,
+              content: response.data?.response || response.response || "",
+              tool_output: response.data?.tool_output || response.tool_output || null,
+              tool_type: response.data?.tool_type || response.tool_type || null,
+            }
+          : msg
+      ));
+    } catch (error) {
+      setMessages((prev) => prev.map((msg) => msg.id === assistantMessageId ? { ...msg, content: "Sorry, error. Please try again." } : msg));
+    } finally {
+      setIsChatLoading(false);
+      setIsChatStreaming(false);
     }
+  };
 
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50)
-    }
-    
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!tripPrompt.trim()) return
-
-    setIsLoading(true)
-    // Store the prompt in sessionStorage to use after login
-    sessionStorage.setItem("pendingTripPrompt", tripPrompt)
-    router.push("/auth")
+  // handleRemoveItem, handleClearAll, loadConversation, startNewConversation, handleBooked — скопировать из chat/page.tsx или реализовать-заглушки
+  const handleRemoveItem = (id: string) => {
+    setBookedItems((prev) => {
+      const updated = { ...prev }
+      delete updated[id]
+      return updated
+    })
+    setBookedIds((prev) => {
+      const updated = new Set(prev)
+      updated.delete(id)
+      return updated
+    })
   }
+  const handleClearAll = () => {
+    setBookedItems({})
+    setBookedIds(new Set())
+  }
+  const loadConversation = async (conversationId: string) => {/* заглушка или логика */}
+  const startNewConversation = () => {/* заглушка или логика */}
+  const handleBooked = (bookedItem: any, id: string, type: string) => {/* заглушка или логика */}
 
   const features = [
     {
@@ -215,6 +317,124 @@ export default function LandingPage() {
       cta: t('pricing.plans.team.cta'),
     },
   ]
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    resizingRef.current = true;
+    startXRef.current = e.clientX;
+    startWidthRef.current = mapWidth;
+
+    const handleMouseMove = (ev: MouseEvent) => {
+      if (!resizingRef.current) return;
+      const deltaPx = startXRef.current - ev.clientX;
+      const deltaPercent = (deltaPx / window.innerWidth) * 100;
+      const newWidth = Math.max(30, Math.min(50, startWidthRef.current + deltaPercent));
+      setMapWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      resizingRef.current = false;
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tripPrompt.trim()) return;
+    setInput(tripPrompt);
+    setTripPrompt("");
+    await handleSendMessage(tripPrompt);
+  };
+
+  useEffect(() => {
+    if (isAuthenticated === true) {
+      localStorage.removeItem('anon_chat_session_id');
+      router.replace('/chat');
+    }
+  }, [isAuthenticated, router]);
+
+  if (isAuthenticated === true) return null;
+
+  // В рендере:
+  // Если showChat === true или есть сообщения — показываем чат, иначе лендинг
+  if (messages.length > 0) {
+    return (
+      <div className="flex h-screen bg-slate-50">
+        {sidebarOpen && (
+          <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
+        )}
+        <MobileMapOverlay
+          showMobileMap={showMobileMap}
+          setShowMobileMap={setShowMobileMap}
+          bookedItems={bookedItems}
+          onRemoveItem={handleRemoveItem}
+          onClearAll={handleClearAll}
+        />
+        <AppSidebar
+          currentConversationId={currentConversationId}
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          onConversationSelect={loadConversation}
+          onNewChat={startNewConversation}
+        />
+        <div className="flex-1 flex flex-col min-w-0 min-h-0">
+          <div className="flex-1 flex min-w-0 min-h-0">
+            <div className="flex flex-col min-w-0 w-full md:w-auto min-h-0" style={{ width: isMobile ? '100%' : `${100 - mapWidth}%` }}>
+              <div className="md:hidden sticky top-0 z-30">
+                <ChatHeader
+                  setSidebarOpen={setSidebarOpen}
+                  setShowMobileMap={setShowMobileMap}
+                  bookedItemsCount={Object.keys(bookedItems).length}
+                />
+              </div>
+              <div className="flex-1 overflow-y-auto min-h-0 h-full" style={{ paddingBottom: isMobile ? 112 : 0 }}>
+                <MessagesList
+                  ref={messagesEndRef}
+                  messages={messages}
+                  isStreaming={isChatStreaming}
+                  streamingMessage={streamingMessage}
+                  activeSearches={activeSearches}
+                  currentlyStreamingMessageId={currentlyStreamingMessageId}
+                  showTypingIndicator={showTypingIndicator}
+                  bookedIds={bookedIds}
+                  onBooked={handleBooked}
+                  onSuggestionClick={setInput}
+                />
+              </div>
+              <div className="md:static md:mt-0 sticky bottom-0 z-40">
+                <ChatInput
+                  ref={null}
+                  input={input}
+                  setInput={setInput}
+                  onSendMessage={(e) => {
+                    e.preventDefault();
+                    handleSendMessage(input);
+                  }}
+                  isLoading={isChatLoading}
+                  isStreaming={isChatStreaming}
+                />
+              </div>
+            </div>
+            <div className="hidden md:block w-1 bg-slate-200 hover:bg-blue-500 cursor-col-resize transition-colors relative group" onMouseDown={handleMouseDown}>
+              <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-500/20" />
+            </div>
+            <div className="hidden md:block bg-slate-50 border-l border-slate-200" style={{ width: `${mapWidth}%` }}>
+              <InteractiveMap
+                selectedItems={Object.values(bookedItems)}
+                onRemoveItem={handleRemoveItem}
+                onClearAll={handleClearAll}
+                userLocation={ipGeolocation && typeof (ipGeolocation as any).lat === 'number' && typeof (ipGeolocation as any).lng === 'number' ? { lat: Number((ipGeolocation as any).lat), lng: Number((ipGeolocation as any).lng) } : undefined}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-white">

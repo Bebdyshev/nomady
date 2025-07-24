@@ -81,6 +81,13 @@ export default function ChatPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
+  // Redirect to /auth if not authenticated
+  useEffect(() => {
+    if (isAuthenticated === false) {
+      router.push('/auth')
+    }
+  }, [isAuthenticated, router])
+
   const MIN_MAP_WIDTH = 30 // percent
   const MAX_MAP_WIDTH = 50 // percent
   
@@ -565,6 +572,8 @@ export default function ChatPage() {
     document.addEventListener("mousemove", handleMouseMove)
     document.addEventListener("mouseup", handleMouseUp)
   }
+
+  if (isAuthenticated === false) return null;
 
   return (
     <div className="flex h-screen bg-slate-50">

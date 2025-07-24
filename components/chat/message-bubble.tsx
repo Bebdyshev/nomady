@@ -13,7 +13,7 @@ import remarkGfm from "remark-gfm"
 import { Message } from "@/types/chat"
 
 interface MessageBubbleProps {
-  message: Message
+  message: Message & { tool_output?: any }
   isStreaming: boolean
   streamingMessage: string
   activeSearches: Set<string>
@@ -207,7 +207,7 @@ export const MessageBubble = React.memo(function MessageBubble({
 
   // Memoize parsed content to avoid recalculating on every render
   const parsedContent = useMemo(() => {
-    return parseMessageContent(message.content, message.toolOutput)
+    return parseMessageContent(message.content, message.tool_output)
   }, [message])
 
   // Memoize search animation condition
@@ -228,28 +228,28 @@ export const MessageBubble = React.memo(function MessageBubble({
 
   console.log("message ", message)
   const toolOutputDisplay = (
-    message.toolOutput && (
-      message.toolOutput.type === "hotels" ? (
+    message.tool_output && (
+      message.tool_output.type === "hotels" ? (
         <HotelDisplay
-          toolOutput={findHotelData(message.toolOutput)}
+          toolOutput={findHotelData(message.tool_output)}
           bookedIds={bookedIds}
           onBooked={onBooked}
         />
-      ) : message.toolOutput.type === "restaurants" ? (
+      ) : message.tool_output.type === "restaurants" ? (
         <RestaurantDisplay
-          toolOutput={findRestaurantData(message.toolOutput)}
+          toolOutput={findRestaurantData(message.tool_output)}
           bookedIds={bookedIds}
           onBooked={onBooked}
         />
-      ) : message.toolOutput.type === "activities" ? (
+      ) : message.tool_output.type === "activities" ? (
         <ActivityDisplay
-          toolOutput={findActivityData(message.toolOutput)}
+          toolOutput={findActivityData(message.tool_output)}
           bookedIds={bookedIds}
           onBooked={onBooked}
         />
       ) : (
         <TicketDisplay
-          toolOutput={findTicketData(message.toolOutput)}
+          toolOutput={findTicketData(message.tool_output)}
           bookedIds={bookedIds}
           onBooked={onBooked}
         />
@@ -301,7 +301,7 @@ export const MessageBubble = React.memo(function MessageBubble({
           )}
         </div>
 
-        {message.toolOutput && (
+        {message.tool_output && (
           <motion.div
             className="mt-3 md:mt-4"
             initial={{ opacity: 0, scale: 0.95 }}

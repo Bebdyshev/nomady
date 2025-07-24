@@ -409,18 +409,29 @@ export function AppSidebar({
                 )}
               </Avatar>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-slate-900 truncate">{user?.name || "User"}</div>
+                <div className="text-sm font-medium text-slate-900 truncate">{user?.name || "Traveler"}</div>
                 <div className="text-xs text-slate-500 max-w-[140px] truncate">{user?.email}</div>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={logout}
-              className="h-8 w-8 flex-shrink-0 hover:bg-slate-100 text-slate-600"
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
+            {user ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={logout}
+                className="h-8 w-8 flex-shrink-0 hover:bg-slate-100 text-slate-600"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="ml-2 text-blue-600 border-blue-200 hover:bg-blue-50"
+                onClick={() => router.push('/auth')}
+              >
+                Sign In
+              </Button>
+            )}
           </div>
         )}
         {collapsed && (
