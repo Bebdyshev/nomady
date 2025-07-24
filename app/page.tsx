@@ -41,6 +41,7 @@ import { InteractiveMap } from "@/components/interactive-map"
 import { MobileMapOverlay, ChatHeader, MessagesList, ChatInput } from "@/components/chat"
 import { AppSidebar } from "@/components/shared/app-sidebar"
 import { Message, Conversation, IpGeolocation } from "@/types/chat"
+import { HeroHeader } from '@/components/landing/hero-header'
 
 // Lazy-load heavy client-only components to cut initial JS
 const GlobeComponent = dynamic(() => import("@/components/magicui/globe").then(m => m.Globe), { ssr: false })
@@ -390,7 +391,7 @@ export default function LandingPage() {
                   setShowMobileMap={setShowMobileMap}
                   bookedItemsCount={Object.keys(bookedItems).length}
                 />
-              </div>
+            </div>
               <div className="flex-1 overflow-y-auto min-h-0 h-full" style={{ paddingBottom: isMobile ? 112 : 0 }}>
                 <MessagesList
                   ref={messagesEndRef}
@@ -404,7 +405,7 @@ export default function LandingPage() {
                   onBooked={handleBooked}
                   onSuggestionClick={setInput}
                 />
-              </div>
+          </div>
               <div className="md:static md:mt-0 sticky bottom-0 z-40">
                 <ChatInput
                   ref={null}
@@ -417,7 +418,7 @@ export default function LandingPage() {
                   isLoading={isChatLoading}
                   isStreaming={isChatStreaming}
                 />
-              </div>
+        </div>
             </div>
             <div className="hidden md:block w-1 bg-slate-200 hover:bg-blue-500 cursor-col-resize transition-colors relative group" onMouseDown={handleMouseDown}>
               <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-500/20" />
@@ -438,133 +439,18 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className={`sticky top-0 z-50 transition-all duration-500 ${
-        isScrolled 
-          ? 'bg-white/95 backdrop-blur-xl border-b border-slate-200/50 shadow-lg shadow-slate-200/20' 
-          : 'bg-transparent'
-      }`}>
-        <div className="container mx-auto px-6 py-4">
-          {/* Mobile Header - Two rows layout */}
-          <div className="md:hidden">
-            {/* Single row: Logo, language toggle, and get started button */}
-            <div className="flex items-center justify-center space-x-4">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8, type: "spring", bounce: 0.3 }}
-                className="flex items-center justify-center group"
-              >
-                <Logo width={48} height={48} className="rounded-xl" />
-              </motion.div>
-            
-              {/* Language toggle button */}
-              <button
-                onClick={() => setLocale(otherLang.code as 'en' | 'ru')}
-                className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-xl"
-                title="Switch language"
-              >
-                <span>{otherLang.flag}</span>
-              </button>
-              
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-              >
-                <Button 
-                  onClick={() => router.push("/auth")} 
-                  className="relative bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-lg shadow-lg hover:shadow-blue-500/25 transition-all duration-300 hover:scale-105 overflow-hidden group"
-                >
-                  <span className="relative z-10">{tNav('getStarted')}</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                </Button>
-              </motion.div>
-            </div>
-          </div>
-
-          {/* Desktop Header - Single row layout */}
-          <div className="hidden md:flex items-center justify-between">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, type: "spring", bounce: 0.3 }}
-              className="flex items-center space-x-3 group"
-            >
-                <Logo width={40} height={40} className="rounded-xl" />
-              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-                Nomady
-              </span>
-            </motion.div>
-
-            <nav className="flex items-center space-x-1">
-              {[
-                { href: "#features", label: tNav('features') },
-                { href: "#how-it-works", label: tNav('howItWorks') },
-                { href: "#pricing", label: tNav('pricing') },
-                { href: "#testimonials", label: tNav('reviews') }
-              ].map((item, index) => (
-                <motion.a
-                  key={item.href}
-                  href={item.href}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="relative px-4 py-2 text-slate-600 hover:text-blue-600 transition-all duration-300 rounded-lg hover:bg-slate-100/50 group"
-                >
-                  {item.label}
-                  <span className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-blue-600 to-blue-800 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-full"></span>
-                </motion.a>
-              ))}
-            </nav>
-
-            <div className="flex items-center space-x-3">
-              {/* Заменить LanguageSwitcher на кнопку-флаг */}
-              <button
-                onClick={() => setLocale(otherLang.code as 'en' | 'ru')}
-                className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-xl"
-                title="Switch language"
-              >
-                <span>{otherLang.flag}</span>
-              </button>
-              
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
-                <Button 
-                  variant="ghost" 
-                  onClick={() => router.push("/auth")} 
-                  className="hover:bg-slate-100 transition-all duration-300 rounded-lg px-4 py-2 hover:scale-105"
-                >
-                  {tNav('signIn')}
-                </Button>
-              </motion.div>
-              
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-              >
-                <Button 
-                  onClick={() => router.push("/auth")} 
-                  className="relative bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-lg shadow-lg hover:shadow-blue-500/25 transition-all duration-300 hover:scale-105 overflow-hidden group"
-                >
-                  <span className="relative z-10">{tNav('getStarted')}</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                </Button>
-              </motion.div>
-            </div>
-          </div>
-        </div>
-      </header>
-
+      <HeroHeader />
       {/* Hero Section */}
       <section className="relative py-20 lg:py-32 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-slate-50" />
-   
-        <div className="container mx-auto px-6 relative">
+        <Image
+          src="/landing/sky.png"
+          alt="Sky background"
+          fill
+          className="object-cover z-0 opacity-40"
+          priority
+        />
+        <div className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-t from-white/80 to-transparent" />
+        <div className="container mx-auto px-6 relative z-20">
           <div className="text-center max-w-4xl mx-auto">
             {/* SVG Launch Logo */}
             <div className="flex justify-center mb-8">
