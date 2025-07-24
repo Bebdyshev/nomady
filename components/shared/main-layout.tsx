@@ -14,7 +14,7 @@ export function MainLayout({ children, header }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="flex h-screen bg-slate-50">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
@@ -29,7 +29,7 @@ export function MainLayout({ children, header }: MainLayoutProps) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile Header */}
-        <div className="md:hidden sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-700/50">
+        <div className="md:hidden sticky top-0 z-30 bg-white/95 backdrop-blur-xl border-b border-slate-200">
           <div className="container mx-auto px-4 py-2">
             <div className="flex items-center justify-between h-12">
               <Button

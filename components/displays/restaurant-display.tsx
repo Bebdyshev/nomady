@@ -175,8 +175,6 @@ const RestaurantCard = ({ restaurant, onBook, isBooked, isBooking, isAIRecommend
               : getBackgroundGradient()
           }}
         >
-          {/* Dark overlay for better text readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/40" />
         </div>
 
         {/* Content overlay */}
@@ -375,17 +373,17 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
         {/* Header */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900 dark:to-red-900 rounded-lg">
-              <Utensils className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+            <div className="p-2 bg-gradient-to-br from-orange-100 to-red-100 rounded-lg">
+              <Utensils className="h-6 w-6 text-orange-600" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+              <h3 className="text-xl font-bold text-slate-900">
                 {t('restaurants.restaurantsIn', { location: getLocationDisplay() })}
               </h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-slate-500">
                 {t('restaurants.restaurantsFound', { count: totalResults.toLocaleString() })}
                 {toolOutput.source && (
-                  <span className="ml-2 text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
+                  <span className="ml-2 text-xs bg-slate-100 px-2 py-1 rounded">
                     {t('restaurants.via')} {toolOutput.source}
                   </span>
                 )}
@@ -395,11 +393,11 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
 
           {/* Sort Options - Simplified */}
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-slate-600 dark:text-slate-300">{t('common.sort')}</span>
+            <span className="text-sm text-slate-600">{t('common.sort')}</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="text-sm border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 bg-white dark:bg-slate-800 max-w-full"
+              className="text-sm border border-slate-200 rounded-lg px-2 py-1 bg-white max-w-full"
             >
               <option value="rating">{t('common.rating')}</option>
               <option value="name">{t('common.name')}</option>
@@ -441,7 +439,7 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
           <div className="text-center">
             <Button
               variant="ghost"
-              className="text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950"
+              className="text-orange-600 hover:bg-orange-50"
             >
               {t('common.viewMore', { count: (allRestaurants.length || 0) - 12, type: 'restaurants' })}
             </Button>
@@ -450,11 +448,11 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
 
         {/* External link if available */}
         {toolOutput.restaurants_url && (
-          <div className="text-center pt-4 border-t border-slate-200 dark:border-slate-700">
+          <div className="text-center pt-4 border-t border-slate-200">
             <Button
               variant="outline"
               onClick={() => window.open(toolOutput.restaurants_url, '_blank')}
-              className="text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800 hover:bg-orange-50 dark:hover:bg-orange-950"
+              className="text-orange-600 border-orange-200 hover:bg-orange-50"
             >
               <Globe className="h-4 w-4 mr-2" />
               {t('restaurants.viewAllExternal', { source: toolOutput.source || 'external site' })}

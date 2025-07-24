@@ -150,7 +150,7 @@ const HotelImageGallery = ({ images, hotelName }: { images: string[]; hotelName:
 
   if (!images || images.length === 0) {
     return (
-      <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center">
+      <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center">
         <Hotel className="h-16 w-16 text-slate-400" />
       </div>
     )
@@ -450,8 +450,8 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking, isAIRecom
           <Card
             className={`relative overflow-hidden cursor-pointer border-2 transition-all duration-300 h-80 ${
               isBooked
-                ? "border-green-500 bg-green-50 dark:bg-green-950/20"
-                : "border-slate-200 dark:border-slate-700 hover:border-purple-300 hover:shadow-xl"
+                ? "border-green-500 bg-green-50"
+                : "border-slate-200 hover:border-purple-300 hover:shadow-xl"
             } ${isAIRecommended ? "border-yellow-400" : ""}`}
           >
             {/* Background Image */}
@@ -463,8 +463,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking, isAIRecom
                   : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
               }}
             >
-              {/* Dark overlay for better text readability */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/40" />
+              
             </div>
 
             {/* Content overlay */}
@@ -546,7 +545,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking, isAIRecom
       <DialogContent className="sm:max-w-6xl max-h-[90vh] p-0">
         <div className="grid grid-cols-1 lg:grid-cols-2 h-full max-h-[90vh]">
           {/* Left Column - Images and Visual Info */}
-          <div className="relative bg-slate-50 dark:bg-slate-900">
+          <div className="relative bg-slate-50">
             <DialogHeader className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 to-transparent p-6">
               <DialogTitle className="flex items-start space-x-3 text-white">
                 <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg">
@@ -628,14 +627,14 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking, isAIRecom
           <div className="flex flex-col h-full max-h-[90vh] overflow-y-auto">
             {/* Booking Summary - Compact */}
             {searchParams?.check_in_date && (
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 p-4 border-b border-slate-200 dark:border-slate-700">
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 border-b border-slate-200">
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div>
-                    <div className="flex items-center justify-center space-x-1 text-xs text-slate-600 dark:text-slate-300 mb-1">
+                    <div className="flex items-center justify-center space-x-1 text-xs text-slate-600 mb-1">
                       <Calendar className="h-3 w-3" />
                       <span>{t('hotels.checkIn')}</span>
                     </div>
-                    <div className="font-semibold text-sm text-slate-900 dark:text-white">
+                    <div className="font-semibold text-sm text-slate-900">
                       {new Date(searchParams.check_in_date).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
@@ -644,11 +643,11 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking, isAIRecom
                   </div>
 
                   <div>
-                    <div className="flex items-center justify-center space-x-1 text-xs text-slate-600 dark:text-slate-300 mb-1">
+                    <div className="flex items-center justify-center space-x-1 text-xs text-slate-600 mb-1">
                       <Calendar className="h-3 w-3" />
                       <span>{t('hotels.checkOut')}</span>
                     </div>
-                    <div className="font-semibold text-sm text-slate-900 dark:text-white">
+                    <div className="font-semibold text-sm text-slate-900">
                       {new Date(searchParams.check_out_date).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
@@ -657,11 +656,11 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking, isAIRecom
                   </div>
 
                   <div>
-                    <div className="flex items-center justify-center space-x-1 text-xs text-slate-600 dark:text-slate-300 mb-1">
+                    <div className="flex items-center justify-center space-x-1 text-xs text-slate-600 mb-1">
                       <Users className="h-3 w-3" />
                       <span>{t('hotels.guests')}</span>
                     </div>
-                    <div className="font-semibold text-sm text-slate-900 dark:text-white">{searchParams.adults}</div>
+                    <div className="font-semibold text-sm text-slate-900">{searchParams.adults}</div>
                     <div className="text-xs text-slate-500">{nights} {t('hotels.nights')}</div>
                   </div>
                 </div>
@@ -672,8 +671,8 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking, isAIRecom
               {/* Hotel Description - Compact */}
               {hotel.description && (
                 <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('hotels.about')}</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-4">
+                  <h3 className="text-lg font-semibold text-slate-900">{t('hotels.about')}</h3>
+                  <p className="text-sm text-slate-600 leading-relaxed line-clamp-4">
                     {hotel.description}
                   </p>
                 </div>
@@ -682,19 +681,19 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking, isAIRecom
               {/* Room Information */}
               {hotel.rooms && hotel.rooms.length > 0 && (
                 <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('hotels.roomsAvailable')}</h3>
+                  <h3 className="text-lg font-semibold text-slate-900">{t('hotels.roomsAvailable')}</h3>
                   <div className="space-y-2 max-h-32 overflow-y-auto">
                     {hotel.rooms.slice(0, 3).map((room: any, idx: number) => (
-                      <div key={idx} className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
+                      <div key={idx} className="bg-slate-50 rounded-lg p-3 border border-slate-200">
                         <div className="flex justify-between items-center">
                           <div>
-                            <div className="font-medium text-sm text-slate-900 dark:text-white">{room.room_type}</div>
+                            <div className="font-medium text-sm text-slate-900">{room.room_type}</div>
                             {room.max_guests && (
                               <div className="text-xs text-slate-500">{t('hotels.maxGuests')} {room.max_guests}</div>
                             )}
                           </div>
                           <div className="text-right">
-                            <div className="font-semibold text-sm text-green-600 dark:text-green-400">
+                            <div className="font-semibold text-sm text-green-600">
                               {room.price_text || t('common.priceOnRequest')}
                             </div>
                           </div>
@@ -708,17 +707,17 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking, isAIRecom
               {/* Amenities Grid - More Compact */}
               {amenities.length > 0 && (
                 <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('hotels.amenities')}</h3>
+                  <h3 className="text-lg font-semibold text-slate-900">{t('hotels.amenities')}</h3>
                   <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
                     {amenities.map((amenity: string, index: number) => (
                       <div
                         key={index}
-                        className="flex items-center space-x-2 bg-slate-50 dark:bg-slate-800 rounded-lg p-2 border border-slate-200 dark:border-slate-700"
+                        className="flex items-center space-x-2 bg-slate-50 rounded-lg p-2 border border-slate-200"
                       >
-                        <div className="text-slate-600 dark:text-slate-400">
+                        <div className="text-slate-600">
                           {getAmenityIcon(amenity)}
                         </div>
-                        <span className="text-xs text-slate-700 dark:text-slate-300 line-clamp-1">{amenity}</span>
+                        <span className="text-xs text-slate-700 line-clamp-1">{amenity}</span>
                       </div>
                     ))}
                   </div>
@@ -728,11 +727,11 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking, isAIRecom
               {/* Reviews */}
               {hotel.featured_reviews && hotel.featured_reviews.length > 0 && (
                 <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('hotels.reviews')}</h3>
+                  <h3 className="text-lg font-semibold text-slate-900">{t('hotels.reviews')}</h3>
                   <div className="space-y-2 max-h-32 overflow-y-auto">
                     {hotel.featured_reviews.slice(0, 2).map((review: string, idx: number) => (
-                      <div key={idx} className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
-                        <p className="text-xs text-slate-600 dark:text-slate-300 italic line-clamp-2">
+                      <div key={idx} className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                        <p className="text-xs text-slate-600 italic line-clamp-2">
                           {review.replace(/«|»/g, '"')}
                         </p>
                       </div>
@@ -743,12 +742,12 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking, isAIRecom
 
               {/* Location & Contact - Compact */}
               <div className="space-y-2">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('hotels.location')}</h3>
-                <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 space-y-3">
+                <h3 className="text-lg font-semibold text-slate-900">{t('hotels.location')}</h3>
+                <div className="bg-slate-50 rounded-lg p-3 space-y-3">
                   {hotel.location?.address && (
                     <div className="flex items-center space-x-2">
                       <MapPin className="h-4 w-4 text-slate-500 flex-shrink-0" />
-                      <span className="text-sm text-slate-600 dark:text-slate-300 line-clamp-2">
+                      <span className="text-sm text-slate-600 line-clamp-2">
                         {hotel.location.address}
                       </span>
                     </div>
@@ -778,12 +777,12 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking, isAIRecom
               {/* Rating Breakdown */}
               {hotel.rating_subscores && Object.keys(hotel.rating_subscores).length > 0 && (
                 <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('hotels.ratings')}</h3>
+                  <h3 className="text-lg font-semibold text-slate-900">{t('hotels.ratings')}</h3>
                   <div className="grid grid-cols-2 gap-2">
                     {Object.entries(hotel.rating_subscores).slice(0, 6).map(([category, score]: [string, any]) => (
-                      <div key={category} className="flex justify-between items-center bg-slate-50 dark:bg-slate-800 rounded p-2">
-                        <span className="text-xs text-slate-600 dark:text-slate-300">{category}</span>
-                        <span className="text-xs font-semibold text-slate-900 dark:text-white">{score}</span>
+                      <div key={category} className="flex justify-between items-center bg-slate-50 rounded p-2">
+                        <span className="text-xs text-slate-600">{category}</span>
+                        <span className="text-xs font-semibold text-slate-900">{score}</span>
                       </div>
                     ))}
                   </div>
@@ -793,11 +792,11 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking, isAIRecom
           </div>
         </div>
 
-        <DialogFooter className="pt-4 md:pt-6 border-t border-slate-200 dark:border-slate-700">
+        <DialogFooter className="pt-4 md:pt-6 border-t border-slate-200">
           <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-4">
             <div className="text-center sm:text-left">
-              <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">{formatPrice(hotel.price)}</div>
-              <div className="text-xs md:text-sm text-slate-500 dark:text-slate-400">
+              <div className="text-xl md:text-2xl font-bold text-slate-900">{formatPrice(hotel.price)}</div>
+              <div className="text-xs md:text-sm text-slate-500">
                 {nights > 0 ? t('hotels.forNights', { nights }) : t('hotels.totalPrice')}
               </div>
             </div>
@@ -945,14 +944,14 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 rounded-lg">
-              <Hotel className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+            <div className="p-2 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg">
+              <Hotel className="h-6 w-6 text-purple-600" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+              <h3 className="text-xl font-bold text-slate-900">
                 {t('hotels.hotelsIn', { location: destination })}
               </h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-slate-500">
                 {t('hotels.propertiesFound', { count: totalResults.toLocaleString() })}
               </p>
             </div>
@@ -960,11 +959,11 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
 
           {/* Sort Options */}
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-slate-600 dark:text-slate-300">{t('common.sortBy')}</span>
+            <span className="text-sm text-slate-600">{t('common.sortBy')}</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="text-sm border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1 bg-white dark:bg-slate-800"
+              className="text-sm border border-slate-200 rounded-lg px-3 py-1 bg-white"
             >
               <option value="price">{t('common.price')}</option>
               <option value="rating">{t('common.rating')}</option>
@@ -1008,7 +1007,7 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
           <div className="text-center">
             <Button
               variant="ghost"
-              className="text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950"
+              className="text-purple-600 hover:bg-purple-50"
             >
               {t('common.viewMore', { count: hotels.length - 6, type: 'hotels' })}
             </Button>

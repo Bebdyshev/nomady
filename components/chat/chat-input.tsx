@@ -108,7 +108,7 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
     }
 
     return (
-      <div className="border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+      <div className="border-t border-slate-200 bg-white">
         <div className="max-w-4xl mx-auto p-3 md:p-6">
           <form ref={formRef} onSubmit={handleSubmit} className="flex items-end space-x-2 md:space-x-4">
             <div className="flex-1 relative">
@@ -123,7 +123,7 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
                   }
                 }}
                 placeholder={placeholderText}
-                className="w-full p-3 md:p-4 pr-16 md:pr-14 border border-slate-300 dark:border-slate-600 rounded-xl resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 text-sm md:text-base leading-6 transition-all duration-200 ease-out"
+                className="w-full p-3 md:p-4 pr-16 md:pr-14 border border-slate-300 rounded-xl resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-slate-900 placeholder-slate-500 text-sm md:text-base leading-6 transition-all duration-200 ease-out"
                 rows={1}
                 style={{ 
                   minHeight: "52px",
@@ -136,7 +136,7 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
               <motion.button
                 type="submit"
                 disabled={isLoading || !input.trim() || isStreaming}
-                className="absolute right-2 md:right-3 bottom-2 md:bottom-3 p-3 md:p-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-600 text-white rounded-lg transition-colors shadow-md md:shadow-none"
+                className="absolute right-2 md:right-3 bottom-2 md:bottom-3 p-3 md:p-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white rounded-lg transition-colors shadow-md md:shadow-none"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >

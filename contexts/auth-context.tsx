@@ -57,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data, error } = await apiClient.login(email, password)
       if (data && !error) {
         apiClient.setToken(data.access_token, data.refresh_token)
+        localStorage.removeItem('anon_chat_session_id');
         await checkAuth()
         return { success: true }
       }
@@ -86,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // If verification includes access token, log the user in
         if (data.access_token) {
           apiClient.setToken(data.access_token)
+          localStorage.removeItem('anon_chat_session_id');
           await checkAuth()
         }
         return { success: true, message: data.message }
@@ -113,6 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data, error } = await apiClient.googleLogin(credential)
       if (data && !error) {
         apiClient.setToken(data.access_token, data.refresh_token)
+        localStorage.removeItem('anon_chat_session_id');
         await checkAuth()
         return { success: true }
       }

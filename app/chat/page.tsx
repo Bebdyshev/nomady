@@ -31,6 +31,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useConversations } from "@/contexts/conversations-context"
+import { useI18n } from "@/lib/i18n-client"
 
 // Disable static generation for this page
 export const dynamic = "force-dynamic"
@@ -64,12 +65,28 @@ export default function ChatPage() {
   const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const t = useTranslations('chat')
   const tCommon = useTranslations('common')
+  const { locale } = useI18n()
+
+  // Получить название текущего чата
+  const currentConversation = currentConversationId
+    ? conversations.find((c) => c.id === currentConversationId)
+    : null
+  const chatTitle = currentConversation?.title?.trim()
+    ? currentConversation.title
+    : (!currentConversationId ? t('sidebar.newConversation') : t('sidebar.newConversation'))
 
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { user, logout, isAuthenticated } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  // Redirect to /auth if not authenticated
+  useEffect(() => {
+    if (isAuthenticated === false) {
+      router.push('/auth')
+    }
+  }, [isAuthenticated, router])
 
   const MIN_MAP_WIDTH = 30 // percent
   const MAX_MAP_WIDTH = 50 // percent
@@ -226,38 +243,18 @@ export default function ChatPage() {
     // Array of IP geolocation services to try
     const geoServices = [
       {
-        name: 'ipapi.co',
-        url: 'https://ipapi.co/json/',
-        parser: (data: any) => ({
-          ip: data.ip,
-          country: data.country_code || data.country,
-          country_name: data.country_name,
-          city: data.city,
-          region: data.region
-        })
-      },
-      {
-        name: 'ip-api.com',
-        url: 'https://ip-api.com/json/',
+        name: 'server-proxy',
+        url: '/api/ip-geo',
         parser: (data: any) => ({
           ip: data.query,
           country: data.countryCode,
           country_name: data.country,
           city: data.city,
-          region: data.regionName
+          region: data.regionName,
+          lat: data.lat,
+          lng: data.lon
         })
       },
-      {
-        name: 'ipinfo.io',
-        url: 'https://ipinfo.io/json',
-        parser: (data: any) => ({
-          ip: data.ip,
-          country: data.country,
-          country_name: data.country, // ipinfo doesn't provide full country name in free tier
-          city: data.city,
-          region: data.region
-        })
-      }
     ]
 
     for (const service of geoServices) {
@@ -390,6 +387,12 @@ export default function ChatPage() {
         return updated
       })
 
+      // --- Добавлено: сохраняем conversation_id, если это новый чат ---
+      if (wasNewConversation && response.data?.conversation_id) {
+        setCurrentConversationId(response.data.conversation_id)
+      }
+      // --- конец добавления ---
+
       // Имитация стриминга (по желанию, можно оставить или убрать)
       // Если нужен эффект набора текста, можно реализовать через setInterval по response.data?.response
 
@@ -464,12 +467,18 @@ export default function ChatPage() {
             toolOutput = null
           }
         }
-
+        let timestamp: Date
+        try {
+          timestamp = new Date(msg.created_at)
+          if (isNaN(timestamp.getTime())) throw new Error('Invalid date')
+        } catch {
+          timestamp = new Date()
+        }
         return {
           id: msg.id,
           role: msg.role,
           content: msg.content,
-          timestamp: new Date(msg.created_at),
+          timestamp,
           toolOutput,
         }
       })
@@ -564,8 +573,10 @@ export default function ChatPage() {
     document.addEventListener("mouseup", handleMouseUp)
   }
 
+  if (isAuthenticated === false) return null;
+
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="flex h-screen bg-slate-50">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
@@ -590,68 +601,72 @@ export default function ChatPage() {
       />
 
       {/* Main Content Area with Chat and Map */}
-      <div className="flex-1 flex min-w-0">
-        {/* Chat Area */}
-        <div 
-          className="flex flex-col min-w-0 w-full md:w-auto" 
-          style={{ width: isMobile ? '100%' : `${100 - mapWidth}%` }}
-        >
-          {/* Mobile Header - make sticky */}
-          <div className="md:hidden sticky top-0 z-30">
-            <ChatHeader
-              setSidebarOpen={setSidebarOpen}
-              setShowMobileMap={setShowMobileMap}
-              bookedItemsCount={Object.keys(bookedItems).length}
-            />
+      <div className="flex-1 flex flex-col min-w-0 min-h-0">
+        {/* Chat and Map Columns */}
+        <div className="flex-1 flex min-w-0 min-h-0">
+          {/* Chat Area */}
+          <div 
+            className="flex flex-col min-w-0 w-full md:w-auto min-h-0" 
+            style={{ width: isMobile ? '100%' : `${100 - mapWidth}%` }}
+          >
+            {/* Mobile Header - make sticky */}
+            <div className="md:hidden sticky top-0 z-30">
+              <ChatHeader
+                setSidebarOpen={setSidebarOpen}
+                setShowMobileMap={setShowMobileMap}
+                bookedItemsCount={Object.keys(bookedItems).length}
+              />
+            </div>
+
+            {/* Messages Container - add extra bottom padding on mobile */}
+            <div className="flex-1 overflow-y-auto min-h-0 h-full" style={{ paddingBottom: isMobile ? 112 : 0 }}>
+              <MessagesList
+                ref={messagesEndRef}
+                messages={messages}
+                isStreaming={isStreaming}
+                streamingMessage={streamingMessage}
+                activeSearches={activeSearches}
+                currentlyStreamingMessageId={currentlyStreamingMessageId}
+                showTypingIndicator={showTypingIndicator}
+                bookedIds={bookedIds}
+                onBooked={handleBooked}
+                onSuggestionClick={setInput}
+              />
+            </div>
+
+            {/* Input Area - sticky on mobile */}
+            <div className="md:static md:mt-0 sticky bottom-0 z-40">
+              <ChatInput
+                ref={inputRef}
+                input={input}
+                setInput={setInput}
+                onSendMessage={handleSendMessage}
+                isLoading={isLoading}
+                isStreaming={isStreaming}
+              />
+            </div>
           </div>
 
-          {/* Messages Container - add extra bottom padding on mobile */}
-          <div className="flex-1 overflow-y-auto" style={{ paddingBottom: isMobile ? 112 : 0 }}>
-            <MessagesList
-              ref={messagesEndRef}
-              messages={messages}
-              isStreaming={isStreaming}
-              streamingMessage={streamingMessage}
-              activeSearches={activeSearches}
-              currentlyStreamingMessageId={currentlyStreamingMessageId}
-              showTypingIndicator={showTypingIndicator}
-              bookedIds={bookedIds}
-              onBooked={handleBooked}
-              onSuggestionClick={setInput}
-            />
+          {/* Resize Handle - Hidden on mobile */}
+          <div
+            className="hidden md:block w-1 bg-slate-200 hover:bg-blue-500 cursor-col-resize transition-colors relative group"
+            onMouseDown={handleMouseDown}
+          >
+            <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-500/20" />
           </div>
 
-          {/* Input Area - sticky on mobile */}
-          <div className="md:static md:mt-0 sticky bottom-0 z-40">
-            <ChatInput
-              ref={inputRef}
-              input={input}
-              setInput={setInput}
-              onSendMessage={handleSendMessage}
-              isLoading={isLoading}
-              isStreaming={isStreaming}
+          {/* Map Area - Hidden on mobile, shown on md and up */}
+          <div
+            className="hidden md:block bg-slate-50 border-l border-slate-200"
+            style={{ width: `${mapWidth}%` }}
+          >
+            <InteractiveMap
+              selectedItems={Object.values(bookedItems)}
+              onRemoveItem={handleRemoveItem}
+              onClearAll={handleClearAll}
+              userLocation={ipGeolocation && typeof (ipGeolocation as any).lat === 'number' && typeof (ipGeolocation as any).lng === 'number' ? { lat: Number((ipGeolocation as any).lat), lng: Number((ipGeolocation as any).lng) } : undefined}
             />
           </div>
-        </div>
-
-        {/* Resize Handle - Hidden on mobile */}
-        <div
-          className="hidden md:block w-1 bg-slate-200 dark:bg-slate-700 hover:bg-blue-500 cursor-col-resize transition-colors relative group"
-          onMouseDown={handleMouseDown}
-        >
-          <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-500/20" />
-        </div>
-
-        {/* Map Area - Hidden on mobile, shown on md and up */}
-        <div
-          className="hidden md:block bg-slate-50 dark:bg-slate-900 border-l border-slate-200 dark:border-slate-700"
-          style={{ width: `${mapWidth}%` }}
-        >
-          <InteractiveMap
-            selectedItems={Object.values(bookedItems)}
-            onRemoveItem={handleRemoveItem}
-            onClearAll={handleClearAll}
-          />
         </div>
       </div>
     </div>

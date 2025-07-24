@@ -277,14 +277,14 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked }:
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-gradient-to-br from-green-100 to-blue-100 dark:from-green-900 dark:to-blue-900 rounded-lg">
-              <Mountain className="h-6 w-6 text-green-600 dark:text-green-400" />
+            <div className="p-2 bg-gradient-to-br from-green-100 to-blue-100 rounded-lg">
+              <Mountain className="h-6 w-6 text-green-600" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+              <h3 className="text-xl font-bold text-slate-900">
                 {t('activities.activitiesIn', { location: getLocationDisplay() })}
               </h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-slate-500">
                 {t('activities.activitiesFound', { count: totalResults.toLocaleString() })}
               </p>
             </div>
@@ -292,11 +292,11 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked }:
 
           {/* Sort Options - Simplified */}
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-slate-600 dark:text-slate-300">{t('common.sort')}</span>
+            <span className="text-sm text-slate-600">{t('common.sort')}</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="text-sm border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 bg-white dark:bg-slate-800"
+              className="text-sm border border-slate-200 rounded-lg px-2 py-1 bg-white"
             >
               <option value="rating">{t('common.rating')}</option>
               <option value="name">{t('common.name')}</option>
@@ -339,7 +339,7 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked }:
           <div className="text-center">
             <Button
               variant="ghost"
-              className="text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950"
+              className="text-green-600 hover:bg-green-50"
             >
               {t('common.viewMore', { count: allActivities.length - 12, type: 'activities' })}
             </Button>
@@ -348,11 +348,11 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked }:
 
         {/* External link if available */}
         {toolOutput.attractions_url && (
-          <div className="text-center pt-4 border-t border-slate-200 dark:border-slate-700">
+          <div className="text-center pt-4 border-t border-slate-200">
             <Button
               variant="outline"
               onClick={() => window.open(toolOutput.attractions_url, '_blank')}
-              className="text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 hover:bg-green-50 dark:hover:bg-green-950"
+              className="text-green-600 border-green-200 hover:bg-green-50"
             >
               <Globe className="h-4 w-4 mr-2" />
               {t('activities.viewAllTripadvisor')}

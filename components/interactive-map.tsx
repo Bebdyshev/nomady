@@ -1,13 +1,14 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { MapPin, Plane, Hotel, Car, Utensils, X, Star } from "lucide-react"
 import { useTranslations } from "@/lib/i18n-client"
+import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api"
 
 interface SelectedItem {
   id: string
@@ -26,11 +27,67 @@ interface InteractiveMapProps {
   selectedItems: SelectedItem[]
   onRemoveItem: (id: string) => void
   onClearAll: () => void
+  userLocation?: { lat: number, lng: number }
 }
 
-export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll }: InteractiveMapProps) {
+const mapContainerStyle = {
+  width: "100%",
+  height: "100%",
+}
+
+const defaultCenter = { lat: 55.751244, lng: 37.618423 } // Moscow as default
+
+const cleanMapStyle = [
+  { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
+  { featureType: "poi.business", stylers: [{ visibility: "off" }] },
+  { featureType: "poi.park", elementType: "labels", stylers: [{ visibility: "off" }] },
+  { featureType: "poi.attraction", stylers: [{ visibility: "off" }] },
+  { featureType: "poi.medical", stylers: [{ visibility: "off" }] },
+  { featureType: "poi.place_of_worship", stylers: [{ visibility: "off" }] },
+  { featureType: "poi.school", stylers: [{ visibility: "off" }] },
+  { featureType: "poi.sports_complex", stylers: [{ visibility: "off" }] }
+];
+
+const ultraCleanMapStyle = [
+  // Сделать все дороги белыми
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
+  { featureType: "road.arterial", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
+  { featureType: "road.local", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
+  // Скрыть все подписи дорог
+  { featureType: "road", elementType: "labels", stylers: [{ visibility: "off" }] },
+  // Скрыть районы и микрорайоны
+  { featureType: "administrative.neighborhood", stylers: [{ visibility: "off" }] },
+  // Скрыть все POI (как раньше)
+  { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
+  { featureType: "poi.business", stylers: [{ visibility: "off" }] },
+  { featureType: "poi.park", elementType: "labels", stylers: [{ visibility: "off" }] },
+  { featureType: "poi.attraction", stylers: [{ visibility: "off" }] },
+  { featureType: "poi.medical", stylers: [{ visibility: "off" }] },
+  { featureType: "poi.place_of_worship", stylers: [{ visibility: "off" }] },
+  { featureType: "poi.school", stylers: [{ visibility: "off" }] },
+  { featureType: "poi.sports_complex", stylers: [{ visibility: "off" }] }
+];
+
+// Расширяем глобальный интерфейс Window для поддержки __MAP_LANGUAGE__
+declare global {
+  interface Window {
+    __MAP_LANGUAGE__?: string
+  }
+}
+
+export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll, userLocation }: InteractiveMapProps) {
   const [isDragOver, setIsDragOver] = useState(false)
   const t = useTranslations('chat.map')
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+
+  // Язык карты всегда английский
+  const mapLanguage = 'en'
+
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: apiKey || '',
+    language: mapLanguage,
+  })
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
@@ -75,17 +132,17 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll }: Inte
   const getTypeColor = (type: string) => {
     switch (type) {
       case "flights":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+        return "bg-blue-100 text-blue-800"
       case "hotels":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+        return "bg-purple-100 text-purple-800"
       case "restaurants":
-        return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+        return "bg-orange-100 text-orange-800"
       case "cars":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+        return "bg-green-100 text-green-800"
       case "activities":
-        return "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200"
+        return "bg-pink-100 text-pink-800"
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+        return "bg-gray-100 text-gray-800"
     }
   }
 
@@ -107,7 +164,7 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll }: Inte
             className={`h-3 w-3 ${i < Math.floor(rating) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
           />
         ))}
-        <span className="text-xs text-slate-600 dark:text-slate-400 ml-1">{rating.toFixed(1)}</span>
+        <span className="text-xs text-slate-600 ml-1">{rating.toFixed(1)}</span>
       </div>
     )
   }
@@ -122,96 +179,71 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll }: Inte
     return ""
   }
 
+  // Helper to extract coordinates safely
+  const getCoordinates = (loc: any): { lat: number; lng: number } | null => {
+    if (!loc) return null
+    if (typeof loc === 'object' && loc.coordinates && typeof loc.coordinates.lat === 'number' && typeof loc.coordinates.lng === 'number') {
+      return loc.coordinates
+    }
+    return null
+  }
+
+  const firstCoord = userLocation || selectedItems.map(item => getCoordinates(item.location)).find(Boolean) || defaultCenter
+
+  const mapOptions = {
+    mapTypeControl: false,
+    styles: ultraCleanMapStyle,
+  }
+
   return (
     <div className="h-full flex flex-col">
+      {/* предупреждение о языке больше не нужно */}
       <div
         className={`flex-1 transition-colors duration-200 ${
           isDragOver
-            ? "bg-blue-50 dark:bg-blue-950/30 border-2 border-dashed border-blue-400"
-            : "bg-slate-50 dark:bg-slate-900"
+            ? "bg-blue-50 border-2 border-dashed border-blue-400"
+            : "bg-slate-50"
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        style={{ minHeight: 400 }}
       >
-        {selectedItems.length === 0 ? (
+        {apiKey ? (
+          isLoaded ? (
+            <GoogleMap
+              mapContainerStyle={mapContainerStyle}
+              center={userLocation || firstCoord}
+              key={userLocation ? `${userLocation.lat}-${userLocation.lng}` : undefined}
+              zoom={12}
+              options={mapOptions}
+            >
+              {selectedItems.map((item, idx) => {
+                const coord = getCoordinates(item.location)
+                return coord ? (
+                  <Marker
+                    key={item.id}
+                    position={coord}
+                    label={`${idx + 1}`}
+                  />
+                ) : null
+              })}
+            </GoogleMap>
+          ) : (
+            <div className="h-full flex items-center justify-center">Loading...</div>
+          )
+        ) : (
           <div className="h-full flex items-center justify-center p-6">
             <div className="text-center">
-              <div className="h-16 w-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MapPin className="h-8 w-8 text-slate-600 dark:text-slate-400" />
+              <div className="h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MapPin className="h-8 w-8 text-slate-600" />
               </div>
-              <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">{t('noItems')}</h4>
-              <p className="text-slate-600 dark:text-slate-300 max-w-sm">
-                {t('addItems')}
+              <h4 className="text-lg font-semibold text-slate-900 mb-2">Google Maps API key missing</h4>
+              <p className="text-slate-600 max-w-sm">
+                Please set <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> in your environment variables.
               </p>
             </div>
           </div>
-        ) : (
-          <ScrollArea className="h-full p-4">
-            <div className="space-y-3">
-              {selectedItems.map((item, idx) => (
-                <div key={item.id} className="flex items-start space-x-3">
-                  {/* Timeline indicator */}
-                  <div className="flex flex-col items-center">
-                    <div className="h-6 w-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-medium">
-                      {idx + 1}
-                    </div>
-                    {idx < selectedItems.length - 1 && (
-                      <div className="flex-1 w-px bg-slate-300 dark:bg-slate-700"></div>
-                    )}
-                  </div>
-
-                  {/* Card */}
-                  <Card className="relative flex-1">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center space-x-2">
-                        {getIcon(item.type)}
-                          <CardTitle className="text-sm font-semibold text-slate-900 dark:text-white line-clamp-1">
-                          {item.name}
-                        </CardTitle>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onRemoveItem(item.id)}
-                        className="h-6 w-6 p-0 text-slate-400 hover:text-red-600"
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <Badge className={`${getTypeColor(item.type)} w-fit`}>{item.type}</Badge>
-                  </CardHeader>
-
-                  <CardContent className="pt-0">
-                    {item.description && (
-                      <p className="text-xs text-slate-600 dark:text-slate-300 mb-2 line-clamp-2">{item.description}</p>
-                    )}
-
-                    <div className="space-y-1">
-                      {item.location && getLocationDisplay(item.location) && (
-                        <div className="flex items-center space-x-1 text-xs text-slate-500 dark:text-slate-400">
-                          <MapPin className="h-3 w-3" />
-                          <span>{getLocationDisplay(item.location)}</span>
-                        </div>
-                      )}
-
-                      {item.price && (
-                        <div className="flex items-center space-x-1 text-xs text-slate-500 dark:text-slate-400">
-                          <span className="font-semibold text-green-600 dark:text-green-400">
-                            {formatPrice(item.price)}
-                          </span>
-                        </div>
-                      )}
-
-                      {item.rating && <div className="flex items-center space-x-1">{renderStars(item.rating)}</div>}
-                    </div>
-                  </CardContent>
-                </Card>
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
         )}
       </div>
     </div>

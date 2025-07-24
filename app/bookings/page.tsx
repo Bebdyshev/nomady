@@ -30,7 +30,7 @@ const BookingsHeader = () => {
   const router = useRouter()
   const t = useTranslations('bookings')
   return (
-    <div className="bg-white dark:bg-slate-800 md:border-b md:border-slate-200 md:dark:border-slate-700">
+    <div className="bg-white md:border-b md:border-slate-200">
       <div className="container mx-auto px-4 sm:px-6 md:py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
@@ -43,10 +43,10 @@ const BookingsHeader = () => {
               <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
             <div className="min-w-0 flex-1">
-              <h1 className="text-base md:text-2xl font-bold text-slate-900 dark:text-white truncate">
+              <h1 className="text-base md:text-2xl font-bold text-slate-900 truncate">
                 {t('title')}
               </h1>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 hidden sm:block">
+              <p className="text-xs sm:text-sm text-slate-600 hidden sm:block">
                 {t('subtitle')}
               </p>
             </div>
@@ -111,13 +111,13 @@ export default function BookingsPage() {
   const getBookingColor = (type: string) => {
     switch (type.toLowerCase()) {
       case "flight":
-        return "bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400"
+        return "bg-blue-50 text-blue-600"
       case "hotel":
-        return "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400"
+        return "bg-slate-100 text-slate-600"
       case "car":
-        return "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400"
+        return "bg-slate-100 text-slate-600"
       default:
-        return "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400"
+        return "bg-slate-100 text-slate-600"
     }
   }
 
@@ -172,7 +172,7 @@ export default function BookingsPage() {
         <div className="flex-1 flex items-center justify-center p-4">
           <div className="text-center">
             <div className="h-8 w-8 sm:h-12 sm:w-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300">{t('loading')}</p>
+            <p className="text-sm sm:text-base text-slate-600">{t('loading')}</p>
           </div>
         </div>
       </MainLayout>
@@ -191,10 +191,10 @@ export default function BookingsPage() {
             <div className="flex justify-center mx-auto mb-4 sm:mb-6">
               <Logo width={64} height={64} className="rounded-full sm:w-24 sm:h-24" />
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mb-3 sm:mb-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-3 sm:mb-4">
               {t('noBookingsYet')}
             </h2>
-            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 mb-6 sm:mb-8 max-w-sm sm:max-w-md mx-auto leading-relaxed">
+            <p className="text-sm sm:text-base text-slate-600 mb-6 sm:mb-8 max-w-sm sm:max-w-md mx-auto leading-relaxed">
               {t('startPlanningDescription')}
             </p>
             <Button
@@ -218,7 +218,7 @@ export default function BookingsPage() {
                   transition={{ delay: index * 0.1 }}
                   className="w-full"
                 >
-                  <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-white dark:bg-slate-800 h-full">
+                  <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-white h-full">
                     <CardHeader className="pb-3 p-4 sm:p-6">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-start space-x-3 min-w-0 flex-1">
@@ -243,14 +243,14 @@ export default function BookingsPage() {
                       <div className="space-y-2 sm:space-y-3">
                         {bookingInfo.details.map((detail, idx) => (
                           <div key={idx} className="flex items-center space-x-2 sm:space-x-3 text-xs sm:text-sm">
-                            <detail.icon className="h-3 w-3 sm:h-4 sm:w-4 text-slate-500 dark:text-slate-400 flex-shrink-0" />
-                            <span className="text-slate-700 dark:text-slate-300 line-clamp-2 leading-relaxed">
+                            <detail.icon className="h-3 w-3 sm:h-4 sm:w-4 text-slate-500 flex-shrink-0" />
+                            <span className="text-slate-700 line-clamp-2 leading-relaxed">
                               {detail.text}
                             </span>
                           </div>
                         ))}
-                        <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
-                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                        <div className="pt-2 border-t border-slate-200">
+                          <p className="text-xs text-slate-500">
                             {t('bookedOn')} {new Date(booking.created_at).toLocaleDateString()}
                           </p>
                         </div>

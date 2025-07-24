@@ -77,6 +77,7 @@ interface AviasalesData {
   tickets: AviasalesTicket[]
   search_params?: any
   ai_recommended_indexes?: number[]
+  airlines?: Record<string, string>
 }
 
 interface FlightSegment {
@@ -90,10 +91,11 @@ interface FlightSegment {
   arrival_time?: string
   flight_number?: string
   airline?: string
-  airline_name?: string
   airplane?: string
   duration?: string
   seats?: string
+  airline_code?: string
+  airline_name?: string
 }
 
 interface SearchResult {
@@ -129,6 +131,10 @@ interface SearchResult {
   items?: any[]
   passengers?: number
   [key: string]: any
+  validating_airline_code?: string
+  validating_airline_name?: string
+  airline_code?: string
+  airline_name?: string
 }
 
 interface TicketDisplayProps {
@@ -149,20 +155,11 @@ function isAviasalesData(data: any): data is AviasalesData {
   
   const result = data && typeof data === 'object' && hasTicketsArray && hasTickets && hasPrice && hasPriceValue && hasCurrency
   
-  console.log({
-    hasTicketsArray,
-    hasTickets,
-    hasPrice,
-    hasPriceValue,
-    hasCurrency,
-    result
-  })
-  
   return result
 }
 
 // Function to transform Aviasales data to SearchResult format
-function transformAviasalesData(aviasalesData: AviasalesData): SearchResult[] {
+function transformAviasalesData(aviasalesData: AviasalesData, airlines: Record<string, string> = {}): SearchResult[] {
   console.log('transformAviasalesData called with:', aviasalesData)
   
   return aviasalesData.tickets.map((ticket, ticketIndex) => {
@@ -248,14 +245,14 @@ function transformAviasalesData(aviasalesData: AviasalesData): SearchResult[] {
           if (segment.operating_carrier_designator?.carrier && segment.operating_carrier_designator?.number) {
             airline = segment.operating_carrier_designator.carrier
             flightNumber = `${segment.operating_carrier_designator.carrier}${segment.operating_carrier_designator.number}`
-            airlineName = segment.airline_name || segment.operating_carrier_designator.carrier
+            airlineName = airlines[airline] || segment.airline_name || airline
           } else if (segment.carrier && segment.flight_number) {
             airline = segment.carrier
             flightNumber = segment.flight_number
-            airlineName = segment.airline_name || segment.carrier
+            airlineName = airlines[airline] || segment.airline_name || airline
           } else if (segment.airline) {
             airline = segment.airline
-            airlineName = segment.airline
+            airlineName = airlines[airline] || segment.airline || airline
             flightNumber = segment.flight_number || "N/A"
           }
         } catch (error) {
@@ -289,10 +286,11 @@ function transformAviasalesData(aviasalesData: AviasalesData): SearchResult[] {
           }),
           flight_number: flightNumber,
           airline: airline,
-          airline_name: airlineName,
           airplane: airplane,
           duration: segmentDuration,
-          seats: segment.seats || "Available"
+          seats: segment.seats || "Available",
+          airline_code: airline,
+          airline_name: airlineName,
         }
         
         console.log(`Transformed segment ${segmentIndex}:`, result)
@@ -301,46 +299,33 @@ function transformAviasalesData(aviasalesData: AviasalesData): SearchResult[] {
     }
 
     // Get airline name from first segment with fallback to multiple segments
-    const getMainAirline = (ticket: any): string => {
+    const getMainAirlineCode = (ticket: any): string => {
       try {
-        if (!ticket.flights_to || ticket.flights_to.length === 0) return "Unknown Airline"
+        if (!ticket.flights_to || ticket.flights_to.length === 0) return "Unknown"
         
         const firstSegment = ticket.flights_to[0]
-        if (firstSegment.airline_name) {
-          return firstSegment.airline_name
-        }
-        
-        if (firstSegment.operating_carrier_designator?.carrier) {
-          const carriers = ticket.flights_to.map((segment: any) => 
-            segment.operating_carrier_designator?.carrier || segment.carrier || segment.airline || "Unknown"
-          )
-          const uniqueCarriers = [...new Set(carriers)]
-          
-          if (uniqueCarriers.length === 1) {
-            return uniqueCarriers[0] as string
-          } else {
-            return uniqueCarriers.join(' + ')
-          }
-        }
-        
-        // Fallback to any available carrier info
-        return firstSegment.carrier || firstSegment.airline || "Unknown Airline"
-      } catch (error) {
-        console.error('Error getting main airline:', error)
-        return "Unknown Airline"
+        return firstSegment.operating_carrier_designator?.carrier || firstSegment.carrier || firstSegment.airline || "Unknown"
+      } catch {
+        return "Unknown"
       }
     }
+    const getMainAirlineName = (code: string): string => airlines[code] || code
 
     const transformedFlightsTo = transformSegments(ticket.flights_to || [])
     const transformedFlightsReturn = ticket.flights_return ? transformSegments(ticket.flights_return) : undefined
     
+    const validating_airline_code = getMainAirlineCode(ticket)
+    const validating_airline_name = getMainAirlineName(validating_airline_code)
+
     const result = {
       type: "flights" as const,
       id: ticket.id || ticket.ticket_id || `ticket-${ticketIndex}`,
       combination_id: ticket.id || ticket.ticket_id || `ticket-${ticketIndex}`,
       price: ticket.price?.value || 0,
       currency: ticket.price?.currency_code || "USD",
-      validating_airline: getMainAirline(ticket),
+      validating_airline: validating_airline_code,
+      validating_airline_code,
+      validating_airline_name,
       flights_to: transformedFlightsTo,
       flights_return: transformedFlightsReturn,
       refundable: ticket.refundable || false,
@@ -376,14 +361,14 @@ const FlightPath = ({ segments, isReturn = false }: { segments: FlightSegment[];
             <div className="flex flex-col items-center space-y-2 z-10">
               <div className="w-3 h-3 bg-blue-600 rounded-full border-2 border-white shadow-lg" />
               <div className="text-center">
-                <div className="font-semibold text-sm text-slate-900 dark:text-white text-horizontal">{segment.from}</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400 text-horizontal">{segment.departure_time}</div>
+                <div className="font-semibold text-sm text-slate-900 text-horizontal">{segment.from}</div>
+                <div className="text-xs text-slate-500 text-horizontal">{segment.departure_time}</div>
               </div>
             </div>
 
             {index < segments.length - 1 && (
               <div className="flex-1 relative mx-4">
-                <div className="h-0.5 bg-slate-200 dark:bg-slate-700 relative overflow-hidden rounded-full">
+                <div className="h-0.5 bg-slate-200 relative overflow-hidden rounded-full">
                   <motion.div
                     className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
                     initial={{ width: "0%" }}
@@ -398,7 +383,7 @@ const FlightPath = ({ segments, isReturn = false }: { segments: FlightSegment[];
                 >
                   <Plane className="h-4 w-4 rotate-90" />
                 </motion.div>
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 text-xs text-slate-500 dark:text-slate-400 text-horizontal whitespace-nowrap">
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 text-xs text-slate-500 text-horizontal whitespace-nowrap">
                   {segment.duration}
                 </div>
               </div>
@@ -409,10 +394,10 @@ const FlightPath = ({ segments, isReturn = false }: { segments: FlightSegment[];
         <div className="flex flex-col items-center space-y-2 z-10">
           <div className="w-3 h-3 bg-green-600 rounded-full border-2 border-white shadow-lg" />
           <div className="text-center">
-            <div className="font-semibold text-sm text-slate-900 dark:text-white text-horizontal">
+            <div className="font-semibold text-sm text-slate-900 text-horizontal">
               {segments[segments.length - 1]?.to}
             </div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 text-horizontal">
+            <div className="text-xs text-slate-500 text-horizontal">
               {segments[segments.length - 1]?.arrival_time}
             </div>
           </div>
@@ -463,12 +448,12 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice, isAIRecomm
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
         >
           <Card
-            className={`relative overflow-hidden cursor-pointer border-2 transition-all duration-300 flex flex-col min-h-[200px] card-layout ${
+            className={`relative overflow-hidden cursor-pointer border-2 transition-all duration-300 flex flex-col min-h-[100px] card-layout max-w-full min-w-0 ${
               isBooked
-                ? "border-green-500 bg-green-50 dark:bg-green-950/20"
+                ? "border-green-500 bg-green-50"
                 : isAIRecommended
                   ? "border-yellow-400 shadow-yellow-200/40"
-                  : "border-slate-200 dark:border-slate-700 hover:border-blue-300 hover:shadow-xl"
+                  : "border-slate-200 hover:border-blue-300 hover:shadow-xl"
             }`}
           >
             <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${isAIRecommended ? 'from-yellow-300 via-yellow-400 to-orange-400' : 'from-blue-500 via-purple-500 to-blue-600'}`} />
@@ -476,21 +461,19 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice, isAIRecomm
             <CardHeader className="p-3 sm:p-4">
               <div className="flex items-start justify-between gap-2 sm:gap-4">
                 <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
-                  <div className="p-1.5 sm:p-2 bg-blue-100 dark:bg-blue-900 rounded-lg flex-shrink-0">
-                    <Plane className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
-                  </div>
+                  <AirlineLogo code={item.validating_airline_code} size={48} className="mr-2" />
                   <div className="flex-1 min-w-0">
-                    <CardTitle className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white text-horizontal text-wrap-normal leading-tight">
-                      {item.validating_airline}
+                    <CardTitle className="text-sm sm:text-lg font-bold text-slate-900 text-horizontal text-wrap-normal leading-tight">
+                      {item.validating_airline_name}
                     </CardTitle>
-                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 text-horizontal text-wrap-normal truncate">
+                    <p className="text-xs sm:text-sm text-slate-500 text-horizontal text-wrap-normal truncate">
                       {item.flights_to?.[0]?.from_city || item.flights_to?.[0]?.from} → {item.flights_to?.[item.flights_to.length - 1]?.to_city || item.flights_to?.[item.flights_to.length - 1]?.to}
                     </p>
                   </div>
                 </div>
 
                 <div className="text-right flex-shrink-0">
-                  <div className="text-sm sm:text-xl font-bold text-slate-900 dark:text-white text-horizontal">{formatPrice(item.price, item.currency)}</div>
+                  <div className="text-sm sm:text-xl font-bold text-slate-900 text-horizontal">{formatPrice(Math.round(item.price), item.currency)}</div>
                     {item.refundable && (
                     <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200 mt-1 hidden sm:inline-flex">
                       <Shield className="h-3 w-3 mr-1" />
@@ -506,32 +489,32 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice, isAIRecomm
                 {/* Flight times and route */}
                 <div className="flex items-center justify-between">
                   <div className="text-center">
-                    <div className="font-semibold text-slate-900 dark:text-white text-xs sm:text-sm text-horizontal">
+                    <div className="font-semibold text-slate-900 text-xs sm:text-sm text-horizontal">
                         {item.flights_to?.[0]?.departure_time}
                       </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400 text-horizontal hidden sm:block">
+                    <div className="text-xs text-slate-500 text-horizontal hidden sm:block">
                         {item.flights_to?.[0]?.departure_date}
                       </div>
                     </div>
 
                   <div className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4">
-                    <div className="h-0.5 w-4 sm:w-8 bg-slate-300 dark:bg-slate-600" />
+                    <div className="h-0.5 w-4 sm:w-8 bg-slate-300" />
                     <Plane className="h-3 w-3 sm:h-4 sm:w-4 text-slate-400 rotate-90" />
-                    <div className="h-0.5 w-4 sm:w-8 bg-slate-300 dark:bg-slate-600" />
+                    <div className="h-0.5 w-4 sm:w-8 bg-slate-300" />
                       </div>
 
                   <div className="text-center">
-                    <div className="font-semibold text-slate-900 dark:text-white text-xs sm:text-sm text-horizontal">
+                    <div className="font-semibold text-slate-900 text-xs sm:text-sm text-horizontal">
                       {item.flights_to?.[item.flights_to.length - 1]?.arrival_time}
                     </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400 text-horizontal hidden sm:block">
+                    <div className="text-xs text-slate-500 text-horizontal hidden sm:block">
                         {item.flights_to?.[item.flights_to.length - 1]?.arrival_date}
                     </div>
                   </div>
                 </div>
 
                 {/* Flight details */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2 text-xs text-slate-500 dark:text-slate-400 text-center">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2 text-xs text-slate-500 text-center">
                   <div className="text-horizontal">Duration: {formatDuration(totalDuration)}</div>
                   <div className="text-horizontal hidden sm:block">
                     {item.flights_to && item.flights_to.length > 1
@@ -542,7 +525,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice, isAIRecomm
                 </div>
 
                 {isBooked && (
-                  <div className="flex items-center justify-center space-x-2 text-green-600 dark:text-green-400 pt-2">
+                  <div className="flex items-center justify-center space-x-2 text-green-600 pt-2">
                     <CheckCircle2 className="h-4 w-4" />
                     <span className="text-sm font-medium text-horizontal">{t('common.booked')}</span>
                   </div>
@@ -556,27 +539,27 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice, isAIRecomm
       <DialogContent className="sm:max-w-[90vw] md:max-w-4xl max-h-[90vh] overflow-y-auto mx-2 md:mx-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-              <Plane className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Plane className="h-6 w-6 text-blue-600" />
             </div>
             <div>
-              <div className="text-lg md:text-xl font-bold">{item.validating_airline}</div>
-              <div className="text-sm text-slate-500 dark:text-slate-400 font-normal">Flight Details & Booking</div>
+              <div className="text-lg md:text-xl font-bold">{item.validating_airline_name}</div>
+              <div className="text-sm text-slate-500 font-normal">Flight Details & Booking</div>
             </div>
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 md:space-y-6">
           {/* Price and Key Info */}
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 rounded-xl p-4 md:p-6">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">{formatPrice(item.price, item.currency)}</div>
-                <div className="text-xs md:text-sm text-slate-600 dark:text-slate-300">Total for {item.passengers} passenger{item.passengers > 1 ? "s" : ""}</div>
+                <div className="text-2xl md:text-3xl font-bold text-slate-900">{formatPrice(Math.round(item.price), item.currency)}</div>
+                <div className="text-xs md:text-sm text-slate-600">Total for {item.passengers} passenger{item.passengers > 1 ? "s" : ""}</div>
               </div>
               <div className="flex flex-wrap gap-1 md:gap-2">
                 {item.refundable && (
-                  <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-xs">
+                  <Badge className="bg-green-100 text-green-800">
                     <Shield className="h-3 w-3 mr-1" />
                     Refundable
                   </Badge>
@@ -600,7 +583,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice, isAIRecomm
             <div className="space-y-6 lg:space-y-0 lg:flex lg:space-x-6">
               {/* Outbound */}
               <div className="flex-1 space-y-4">
-                <h3 className="text-base md:text-lg font-semibold text-slate-900 dark:text-white flex items-center">
+                <h3 className="text-base md:text-lg font-semibold text-slate-900 flex items-center">
                   <ArrowRight className="h-4 w-4 md:h-5 md:w-5 mr-2 text-blue-600" />
                   Outbound
                 </h3>
@@ -613,7 +596,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice, isAIRecomm
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
                       transition={{ duration: 0.3, delay: index * 0.05 }}
-                      className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 md:p-4 border border-slate-200 dark:border-slate-700 text-xs md:text-sm shadow-sm"
+                      className="bg-slate-50 rounded-lg p-3 md:p-4 border border-slate-200 text-xs md:text-sm shadow-sm"
                     >
                       <div className="flex justify-between items-center mb-2">
                         <span className="font-semibold">
@@ -623,8 +606,9 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice, isAIRecomm
                       </div>
                       <div className="flex justify-between items-center text-slate-500">
                         <span>{segment.departure_time} → {segment.arrival_time}</span>
-                        <span className="text-xs">
-                          {segment.airline_name || segment.airline} {segment.flight_number}
+                        <span className="text-xs flex items-center gap-1">
+                          <AirlineLogo code={segment.airline_code} size={18} />
+                          {segment.airline_name} {segment.flight_number}
                         </span>
                       </div>
                       <div className="text-xs text-slate-400 mt-1">
@@ -638,7 +622,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice, isAIRecomm
               {/* Return if exists */}
               {item.flights_return && (
                 <div className="flex-1 space-y-4 mt-6 lg:mt-0">
-                  <h3 className="text-base md:text-lg font-semibold text-slate-900 dark:text-white flex items-center">
+                  <h3 className="text-base md:text-lg font-semibold text-slate-900 flex items-center">
                     <ArrowRight className="h-4 w-4 md:h-5 md:w-5 mr-2 text-orange-600 rotate-180" />
                     Return
                   </h3>
@@ -651,7 +635,7 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice, isAIRecomm
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 20 }}
                         transition={{ duration: 0.3, delay: index * 0.05 }}
-                        className="bg-orange-50 dark:bg-orange-950/20 rounded-lg p-3 md:p-4 border border-orange-200 dark:border-orange-700 text-xs md:text-sm shadow-sm"
+                        className="bg-orange-50 rounded-lg p-3 md:p-4 border border-orange-200 text-xs md:text-sm shadow-sm"
                       >
                         <div className="flex justify-between items-center mb-2">
                           <span className="font-semibold">
@@ -661,8 +645,9 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice, isAIRecomm
                         </div>
                         <div className="flex justify-between items-center text-slate-500">
                           <span>{segment.departure_time} → {segment.arrival_time}</span>
-                          <span className="text-xs">
-                            {segment.airline_name || segment.airline} {segment.flight_number}
+                          <span className="text-xs flex items-center gap-1">
+                            <AirlineLogo code={segment.airline_code} size={18} />
+                            {segment.airline_name} {segment.flight_number}
                           </span>
                         </div>
                         <div className="text-xs text-slate-400 mt-1">
@@ -677,11 +662,11 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice, isAIRecomm
           )}
         </div>
 
-        <DialogFooter className="pt-4 md:pt-6 border-t border-slate-200 dark:border-slate-700">
+        <DialogFooter className="pt-4 md:pt-6 border-t border-slate-200">
           <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-4">
             <div className="text-center sm:text-left">
-              <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">{formatPrice(item.price, item.currency)}</div>
-              <div className="text-xs md:text-sm text-slate-500 dark:text-slate-400">Total price for {item.passengers} passenger{item.passengers > 1 ? "s" : ""}</div>
+              <div className="text-xl md:text-2xl font-bold text-slate-900">{formatPrice(Math.round(item.price), item.currency)}</div>
+              <div className="text-xs md:text-sm text-slate-500">Total price for {item.passengers} passenger{item.passengers > 1 ? "s" : ""}</div>
             </div>
 
             <Button
@@ -717,6 +702,31 @@ const FlightCard = ({ item, onBook, isBooked, isBooking, formatPrice, isAIRecomm
   )
 }
 
+// AirlineLogo component
+const AirlineLogo = ({ code, size = 28, className = "" }: { code?: string; size?: number; className?: string }) => {
+  if (!code) return (
+    <div className={`flex items-center justify-center bg-slate-100 rounded-full border border-slate-200 ${className}`} style={{ width: size, height: size }}>
+      <Plane className="text-slate-400" style={{ width: size * 0.7, height: size * 0.7 }} />
+    </div>
+  )
+  const [error, setError] = React.useState(false)
+  if (error) return (
+    <div className={`flex items-center justify-center bg-slate-100 rounded-full border border-slate-200 ${className}`} style={{ width: size, height: size }}>
+      <Plane className="text-slate-400" style={{ width: size * 0.7, height: size * 0.7 }} />
+    </div>
+  )
+  return (
+    <img
+      src={`https://img.avs.io/pics/al_square/${code}@avif?rs=fit:64:64`}
+      alt={code}
+      width={size}
+      height={size}
+      className={`object-cover rounded-full border border-slate-200 bg-white ${className}`}
+      style={{ width: size, height: size }}
+    />
+  )
+}
+
 export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: TicketDisplayProps) {
   const [bookingStates, setBookingStates] = useState<Record<string, boolean>>({})
   const { toast } = useToast()
@@ -724,12 +734,15 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
 
   console.log("TicketDisplay received toolOutput:", toolOutput)
 
+  // Получить airlines из toolOutput
+  const airlines: Record<string, string> = toolOutput.airlines || {}
+
   // Transform Aviasales data if needed
   const processedOutput = React.useMemo(() => {
     console.log("Running processedOutput memo...")
     if (isAviasalesData(toolOutput)) {
       console.log("Data is Aviasales format, transforming...")
-      const transformedResults = transformAviasalesData(toolOutput)
+      const transformedResults = transformAviasalesData(toolOutput, airlines)
       console.log("Transformed results:", transformedResults)
       // Return as flights group
       return [{
@@ -739,7 +752,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
     }
     console.log("Data is NOT Aviasales format, using as is.")
     return Array.isArray(toolOutput) ? toolOutput : [toolOutput]
-  }, [toolOutput])
+  }, [toolOutput, airlines])
 
   console.log("Final processedOutput:", processedOutput)
 
@@ -886,24 +899,24 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
   // Group search results by type
   const groupedResults = outputArray.reduce(
     (acc, result) => {
-    if (result.flights) {
-      acc.flights = [...(acc.flights || []), ...result.flights]
-    }
-    if (result.hotels) {
-      acc.hotels = [...(acc.hotels || []), ...result.hotels]
-    }
-    if (result.restaurants) {
-      acc.restaurants = [...(acc.restaurants || []), ...result.restaurants]
-    }
-    if (result.items) {
-      const type = result.type || "activities"
-      acc[type] = [...(acc[type] || []), ...result.items]
-    }
-    // Handle direct result items
+      if (result.flights && Array.isArray(result.flights)) {
+        acc.flights = [...(acc.flights || []), ...result.flights]
+      }
+      if (result.hotels && Array.isArray(result.hotels)) {
+        acc.hotels = [...(acc.hotels || []), ...result.hotels]
+      }
+      if (result.restaurants && Array.isArray(result.restaurants)) {
+        acc.restaurants = [...(acc.restaurants || []), ...result.restaurants]
+      }
+      if (result.items && Array.isArray(result.items)) {
+        const type = result.type || "activities"
+        acc[type] = [...(acc[type] || []), ...result.items]
+      }
+      // Handle direct result items
       if (result.type && (result.name || result.combination_id)) {
-      acc[result.type] = [...(acc[result.type] || []), result]
-    }
-    return acc
+        acc[result.type] = [...(acc[result.type] || []), result]
+      }
+      return acc
     },
     {} as Record<string, any[]>,
   )
@@ -934,17 +947,17 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
   const getTypeColor = (type: string) => {
     switch (type) {
       case "flights":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+        return "bg-blue-100 text-blue-800"
       case "hotels":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+        return "bg-purple-100 text-purple-800"
       case "restaurants":
-        return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+        return "bg-orange-100 text-orange-800"
       case "cars":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+        return "bg-green-100 text-green-800"
       case "activities":
-        return "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200"
+        return "bg-pink-100 text-pink-800"
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+        return "bg-gray-100 text-gray-800"
     }
   }
 
@@ -967,9 +980,10 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
 
   // Получить список авиакомпаний для фильтра
   const airlineOptions = React.useMemo(() => {
-    const all = (outputArray || []).flatMap(f => f.flights || []).flatMap((t: any) => t.validating_airline ? [t.validating_airline] : [])
-    return Array.from(new Set(all))
-  }, [outputArray])
+    const all = (outputArray || []).flatMap(f => f.flights || []).flatMap((t: any) => t.validating_airline_code ? [t.validating_airline_code] : [])
+    // Маппим коды на названия
+    return Array.from(new Set(all.map((code: string) => airlines[code] || code)))
+  }, [outputArray, airlines])
 
   // --- Сортировка билетов: AI-рекомендованные всегда в топе ---
   const aiRecommendedIndexes = toolOutput.ai_recommended_indexes || []
@@ -994,7 +1008,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
   const isMobile = useIsMobile()
 
   return (
-    <div className="mt-6 space-y-8">
+    <div className="mt-6 space-y-8 max-w-2xl mx-auto min-w-0">
       {Object.entries(groupedResults).map(([type, items]) => (
         <motion.div
           key={type}
@@ -1005,12 +1019,12 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
         >
           <div className="max-w-6xl mx-auto px-4">
             <div className="flex items-center space-x-4 pb-2">
-              <div className="p-3 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 rounded-lg">
+              <div className="p-3 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg">
               {getIcon(type)}
                 </div>
               <div className="flex-1">
-                <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white capitalize text-horizontal">{type}</h3>
-                <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 text-horizontal">
+                <h3 className="text-xl md:text-2xl font-bold text-slate-900 capitalize text-horizontal">{type}</h3>
+                <p className="text-sm md:text-base text-slate-500 text-horizontal">
                 {t('common.optionsFound', { count: items.length, plural: items.length !== 1 ? 's' : '' })}
               </p>
               </div>
@@ -1074,7 +1088,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                               <CardHeader className="p-4">
                                 <CardTitle className="text-lg font-semibold mb-2 text-horizontal text-wrap-normal">{item.name}</CardTitle>
                                 {getLocationString(item.location) && (
-                                  <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center">
+                                  <p className="text-sm text-slate-500 flex items-center">
                                     <MapPin className="h-4 w-4 mr-2" />
                                     <span className="text-horizontal text-wrap-normal">{getLocationString(item.location)}</span>
                                   </p>
@@ -1082,7 +1096,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                               </CardHeader>
                               <CardContent className="p-4 pt-0 flex-1 flex flex-col">
                                 <div className="flex-1">
-                                  <p className="text-sm text-slate-600 dark:text-slate-300 mb-4 text-horizontal text-wrap-normal">{item.description}</p>
+                                  <p className="text-sm text-slate-600 mb-4 text-horizontal text-wrap-normal">{item.description}</p>
                                   {item.rating && (
                                     <div className="flex items-center mb-4">
                                       <div className="flex items-center">
@@ -1092,7 +1106,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                                             className={`text-lg ${
                                               i < Math.floor(item.rating)
                                                 ? 'text-yellow-400'
-                                                : 'text-slate-300 dark:text-slate-600'
+                                                : 'text-slate-300'
                                             }`}
                                           >
                                             ★
@@ -1104,7 +1118,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                                   )}
                                 </div>
                                 <div className="flex items-center justify-between mt-auto pt-4">
-                                  <span className="font-semibold text-xl text-slate-900 dark:text-white text-horizontal">
+                                  <span className="font-semibold text-xl text-slate-900 text-horizontal">
                                     {item.price ? formatPrice(item.price, item.currency) : t('common.priceOnRequest')}
                                   </span>
                                   <Button
@@ -1192,7 +1206,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                               <CardHeader className="p-4">
                                 <CardTitle className="text-lg font-semibold mb-2 text-horizontal text-wrap-normal">{item.name}</CardTitle>
                                 {getLocationString(item.location) && (
-                                  <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center">
+                                  <p className="text-sm text-slate-500 flex items-center">
                                     <MapPin className="h-4 w-4 mr-2" />
                                     <span className="text-horizontal text-wrap-normal">{getLocationString(item.location)}</span>
                                   </p>
@@ -1200,7 +1214,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                               </CardHeader>
                               <CardContent className="p-4 pt-0 flex-1 flex flex-col">
                                 <div className="flex-1">
-                                  <p className="text-sm text-slate-600 dark:text-slate-300 mb-4 text-horizontal text-wrap-normal">{item.description}</p>
+                                  <p className="text-sm text-slate-600 mb-4 text-horizontal text-wrap-normal">{item.description}</p>
                                   {item.rating && (
                                     <div className="flex items-center mb-4">
                                       <div className="flex items-center">
@@ -1210,7 +1224,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                                             className={`text-lg ${
                                               i < Math.floor(item.rating)
                                                 ? 'text-yellow-400'
-                                                : 'text-slate-300 dark:text-slate-600'
+                                                : 'text-slate-300'
                                             }`}
                                           >
                                             ★
@@ -1222,7 +1236,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                                   )}
                                 </div>
                                 <div className="flex items-center justify-between mt-auto pt-4">
-                                  <span className="font-semibold text-xl text-slate-900 dark:text-white text-horizontal">
+                                  <span className="font-semibold text-xl text-slate-900 text-horizontal">
                                     {item.price ? formatPrice(item.price, item.currency) : t('common.priceOnRequest')}
                                   </span>
                                   <Button
@@ -1252,7 +1266,7 @@ export function TicketDisplay({ toolOutput, bookedIds = new Set(), onBooked }: T
                   </div>
                   {!hasBooked && items.length > 6 && (
                     <div className="text-center mt-6">
-                      <Button variant="ghost" className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950 text-xs md:text-sm">
+                      <Button variant="ghost" className="text-blue-600 hover:bg-blue-50 text-xs md:text-sm">
                         View {items.length - 6} more {type}
                       </Button>
                     </div>
