@@ -446,7 +446,7 @@ export default function LandingPage() {
           src="/landing/sky.png"
           alt="Sky background"
           fill
-          className="object-cover z-0 opacity-40"
+          className="object-cover z-0 opacity-90"
           priority
           placeholder="blur"
           blurDataURL="/landing/sky-blur.png" // маленькая версия (например, 20x12px, сильно сжатая)
