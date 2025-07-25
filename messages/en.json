@@ -463,6 +463,12 @@
         "redirectingToAviasales": "Redirecting to Aviasales! ✈️",
         "aviasalesRedirectDesc": "Opening Aviasales in a new tab to complete your booking."
       }
+    },
+    "loginPopup": {
+      "title": "Sign in to save your chat",
+      "description": "Sign in to save your chat history, bookings, and get personalized recommendations. Or continue as a guest traveler.",
+      "signIn": "Sign In",
+      "continueAsGuest": "Continue as guest"
     }
   },
   "navigation": {
