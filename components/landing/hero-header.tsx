@@ -45,8 +45,8 @@ export const HeroHeader = () => {
                 data-state={menuState && 'active'}
                 className="fixed z-50 w-full px-1">
                 <div className={cn('mx-auto mt-2 max-w-6xl px-6 transition-all duration-300 lg:px-12 z-50', isScrolled && 'bg-background/50 max-w-4xl rounded-xl border backdrop-blur-lg lg:px-5 shadow-sm')}> {/* border-radius и тень уменьшены */}
-                    <div className="relative flex flex-wrap items-center justify-between gap-6 py-2 lg:gap-0 lg:py-2"> {/* py-1 вместо py-3 */}
-                        <div className="flex w-full justify-between lg:w-auto">
+                    <div className={cn('relative flex flex-wrap items-center justify-between gap-6 py-2 lg:gap-0 lg:py-2', 'items-center')}> {/* Added items-center for vertical alignment */}
+                        <div className="flex w-full justify-between lg:w-auto items-center"> {/* Added items-center for vertical alignment */}
                             <Link
                                 href="/"
                                 aria-label="home"
@@ -64,9 +64,9 @@ export const HeroHeader = () => {
                             </button>
                         </div>
 
-                        <div className="flex flex-1 items-center"> {/* Меню и правый блок теперь flex-1 */}
+                        <div className="flex items-center"> {/* Меню и правый блок теперь flex-1 */}
                             <div className="hidden lg:block flex-1">
-                                <ul className="flex gap-8 text-sm">
+                                <ul className={cn("flex gap-8 text-sm text-white", isScrolled && 'text-blue-600')}> {/* Ensure items-center for vertical alignment */}
                                     {menuItems.map((item, index) => (
                                         <li key={index}>
                                             <Link
@@ -78,11 +78,11 @@ export const HeroHeader = () => {
                                     ))}
                                 </ul>
                             </div>
-                            <div className="flex items-center ml-8"> {/* Явный отступ между меню и языковым дропдауном */}
+                            <div className="flex items-center gap-2 ml-8"> {/* Явный отступ между меню и языковым дропдауном */}
                                 {/* Language Dropdown и кнопки */}
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" size="sm" className="mr-2 px-2 py-1 text-xs font-bold border-blue-600 text-blue-600 flex items-center">
+                                    <Button variant="outline" size="sm" className="px-2 py-1 text-xs font-bold border-blue-600 text-blue-600 flex items-center">
                                       <span className="mr-1">{currentLang.flag}</span>{currentLang.label}
                                       <svg className="ml-1 h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.584l3.71-3.354a.75.75 0 111.02 1.1l-4.25 3.846a.75.75 0 01-1.02 0l-4.25-3.846a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
                                     </Button>

@@ -478,12 +478,15 @@
     }
   },
   "navigation": {
-    "features": "Features",
-    "howItWorks": "How it Works", 
-    "pricing": "Pricing",
-    "reviews": "Reviews",
+    "menu": {
+      "features": "Features",
+      "solution": "Solution",
+      "pricing": "Pricing",
+      "about": "About"
+    },
     "signIn": "Sign In",
-    "getStarted": "Plan Your Trip"
+    "planTrip": "Plan Trip",
+    "getStarted": "Get Started"
   },
   "common": {
     "loading": "Loading...",
