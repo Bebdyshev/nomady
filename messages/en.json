@@ -189,6 +189,12 @@
       },
       "copyright": "© 2025 Nomady. All rights reserved.",
       "madeWith": "Made with ❤️ by Unknown Developer"
+    },
+    "loginPopup": {
+      "title": "Sign in to continue",
+      "description": "Sign in to save your trips and chat history, or continue as a guest.",
+      "signIn": "Sign In",
+      "continueAsGuest": "Continue as Guest"
     }
   },
   "auth": {

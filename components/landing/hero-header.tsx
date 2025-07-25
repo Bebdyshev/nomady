@@ -3,26 +3,34 @@ import Link from 'next/link'
 import { Logo } from '@/components/ui/logo'
 import { Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu'
 import React from 'react'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n-client'
-
-const menuItems = [
-    { name: 'Features', href: '#features' },
-    { name: 'Solution', href: '#how-it-works' },
-    { name: 'Pricing', href: '#pricing' },
-    { name: 'About', href: '#testimonials' },
-]
+import { useTranslations } from '@/lib/i18n-client'
 
 export const HeroHeader = () => {
+    const tNav = useTranslations('navigation')
+    const menuItems = [
+        { name: tNav('menu.features'), href: '#features' },
+        { name: tNav('menu.solution'), href: '#howItWorks' },
+        { name: tNav('menu.pricing'), href: '#pricing' },
+        { name: tNav('menu.about'), href: '#testimonials' },
+    ]
     const [menuState, setMenuState] = React.useState(false)
     const [isScrolled, setIsScrolled] = React.useState(false)
     const { locale, setLocale } = useI18n();
 
     const languages = [
-        { code: 'en', label: 'EN', flag: '🇺🇸' }, 
-        { code: 'ru', label: 'RU', flag: '🇷🇺' },
+        { code: 'en', label: 'English', flag: '🇺🇸' }, 
+        { code: 'ru', label: 'Русский', flag: '🇷🇺' },
     ];
+    const currentLang = languages.find(l => l.code === locale) || languages[0];
 
     React.useEffect(() => {
         const handleScroll = () => {
@@ -56,23 +64,9 @@ export const HeroHeader = () => {
                             </button>
                         </div>
 
-                        <div className="absolute inset-0 m-auto hidden size-fit lg:block">
-                            <ul className="flex gap-8 text-sm">
-                                {menuItems.map((item, index) => (
-                                    <li key={index}>
-                                        <Link
-                                            href={item.href}
-                                            className="text-muted-foreground hover:text-accent-foreground block duration-150">
-                                            <span>{item.name}</span>
-                                        </Link>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-
-                        <div className="bg-background in-data-[state=active]:block lg:in-data-[state=active]:flex mb-2 hidden w-full flex-wrap items-center justify-end space-y-4 rounded-xl border p-4 shadow-sm md:flex-nowrap lg:m-0 lg:flex lg:w-fit lg:gap-4 lg:space-y-0 lg:border-transparent lg:bg-transparent lg:p-0 lg:shadow-none dark:shadow-none dark:lg:bg-transparent"> {/* mb-2, p-4, rounded-xl, shadow-sm */}
-                            <div className="lg:hidden">
-                                <ul className="space-y-4 text-base">
+                        <div className="flex flex-1 items-center"> {/* Меню и правый блок теперь flex-1 */}
+                            <div className="hidden lg:block flex-1">
+                                <ul className="flex gap-8 text-sm">
                                     {menuItems.map((item, index) => (
                                         <li key={index}>
                                             <Link
@@ -84,21 +78,27 @@ export const HeroHeader = () => {
                                     ))}
                                 </ul>
                             </div>
-                            <div className="flex w-full flex-col space-y-2 sm:flex-row sm:gap-2 sm:space-y-0 md:w-fit items-center">
-                                {/* Language Switcher */}
-                                <div className="flex gap-1 mr-2">
+                            <div className="flex items-center ml-8"> {/* Явный отступ между меню и языковым дропдауном */}
+                                {/* Language Dropdown и кнопки */}
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="sm" className="mr-2 px-2 py-1 text-xs font-bold border-blue-600 text-blue-600 flex items-center">
+                                      <span className="mr-1">{currentLang.flag}</span>{currentLang.label}
+                                      <svg className="ml-1 h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.584l3.71-3.354a.75.75 0 111.02 1.1l-4.25 3.846a.75.75 0 01-1.02 0l-4.25-3.846a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="start">
                                     {languages.map((lang) => (
-                                        <Button
-                                            key={lang.code}
-                                            variant={locale === lang.code ? 'default' : 'outline'}
-                                            size="sm"
-                                            className={cn('px-2 py-1 text-xs', locale === lang.code ? 'font-bold border-blue-600 text-blue-600' : 'border-slate-200')}
-                                            onClick={() => setLocale(lang.code as any)}
-                                        >
-                                            <span className="mr-1">{lang.flag}</span>{lang.label}
-                                        </Button>
+                                      <DropdownMenuItem
+                                        key={lang.code}
+                                        onSelect={() => setLocale(lang.code as any)}
+                                        className={cn('flex items-center px-2 py-1 text-xs', locale === lang.code && 'font-bold text-blue-600')}
+                                      >
+                                        <span className="mr-2">{lang.flag}</span>{lang.label}
+                                      </DropdownMenuItem>
                                     ))}
-                                </div>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                                 <Button
                                     asChild
                                     variant="outline"
@@ -106,7 +106,7 @@ export const HeroHeader = () => {
                                     className={cn(isScrolled && 'lg:hidden')}
                                 >
                                     <Link href="/auth">
-                                        <span>Sign In</span>
+                                        <span>{tNav('signIn')}</span>
                                     </Link>
                                 </Button>
                                 <Button
@@ -115,7 +115,7 @@ export const HeroHeader = () => {
                                     className={cn(isScrolled && 'lg:hidden')}
                                 >
                                     <Link href="/auth">
-                                        <span>Plan your trip</span>
+                                        <span>{tNav('planTrip')}</span>
                                     </Link>
                                 </Button>
                                 <Button
@@ -124,7 +124,7 @@ export const HeroHeader = () => {
                                     className={cn(isScrolled ? 'lg:inline-flex' : 'hidden')}
                                 >
                                     <Link href="/auth">
-                                        <span>Get Started</span>
+                                        <span>{tNav('getStarted')}</span>
                                     </Link>
                                 </Button>
                             </div>

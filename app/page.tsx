@@ -389,7 +389,13 @@ export default function LandingPage() {
   if (messages.length > 0) {
     return (
       <>
-        <Dialog open={showLoginPopup} onOpenChange={setShowLoginPopup}>
+        <Dialog
+          open={showLoginPopup}
+          onOpenChange={(open) => {
+            setShowLoginPopup(open);
+            if (!open) sessionStorage.setItem('hideLoginPopup', '1');
+          }}
+        >
           <DialogContent className="max-w-xs w-[90vw] sm:max-w-lg rounded-xl">
             <DialogHeader>
               <DialogTitle>{t('loginPopup.title')}</DialogTitle>
@@ -398,8 +404,8 @@ export default function LandingPage() {
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="flex flex-col gap-2">
-              <Button onClick={handleSignIn}>{t('loginPopup.signIn')}</Button>
-              <Button variant="outline" onClick={handleContinueAsGuest}>{t('loginPopup.continueAsGuest')}</Button>
+              <Button onClick={handleSignIn} className="bg-blue-600 hover:bg-blue-700 text-white focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">{t('loginPopup.signIn')}</Button>
+              <Button variant="outline" onClick={handleContinueAsGuest} className="focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">{t('loginPopup.continueAsGuest')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -553,15 +559,7 @@ ${t('hero.title.line2')}`}
                   </div>
                 </div>
               </form>
-              <TextEffect
-                as="p"
-                className="text-sm text-slate-500 mt-4 text-center"
-                preset="fade-in-blur"
-                delay={0.4}
-                speedSegment={0.8}
-              >
-                {t('hero.helpText')}
-              </TextEffect>
+          
               <div className="flex items-center justify-center mb-6">
                 <div className="group relative mx-auto flex items-center justify-center rounded-full px-4 py-2 shadow-[inset_0_-8px_10px_#ff8f8f1f] transition-all duration-500 ease-out hover:shadow-[inset_0_-5px_10px_#ff8f8f3f] hover:scale-110">
                   <span
