@@ -45,6 +45,7 @@ import { HeroHeader } from '@/components/landing/hero-header'
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { TextEffect } from "@/components/motion-primitives/text-effect"
 import { AnimatedGroup } from "@/components/motion-primitives/animated-group"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
 // Lazy-load heavy client-only components to cut initial JS
 const GlobeComponent = dynamic(() => import("@/components/magicui/globe").then(m => m.Globe), { ssr: false })
@@ -73,9 +74,7 @@ export default function LandingPage() {
   ]
   // Get placeholder phrases from translations
   const placeholderPhrases = t.raw('hero.input.placeholders') as string[];
-  console.log(placeholderPhrases);
   // Remove all typing/cycling effect state and logic
-  const [showGlobe, setShowGlobe] = useState(false)
 
   // --- chat state ---
   const [messages, setMessages] = useState<Message[]>([])
@@ -295,7 +294,7 @@ export default function LandingPage() {
       price: t('pricing.plans.free.price'),
       period: t('pricing.plans.free.period'),
       description: t('pricing.plans.free.description'),
-      features: t('pricing.plans.free.features'),
+      features: t.raw('pricing.plans.free.features'),
       popular: false,
       cta: t('pricing.plans.free.cta'),
     },
@@ -304,7 +303,7 @@ export default function LandingPage() {
       price: t('pricing.plans.pro.price'),
       period: t('pricing.plans.pro.period'),
       description: t('pricing.plans.pro.description'),
-      features: t('pricing.plans.pro.features'),
+      features: t.raw('pricing.plans.pro.features'),
       popular: true,
       cta: t('pricing.plans.pro.cta'),
     },
@@ -313,7 +312,7 @@ export default function LandingPage() {
       price: t('pricing.plans.team.price'),
       period: t('pricing.plans.team.period'),
       description: t('pricing.plans.team.description'),
-      features: t('pricing.plans.team.features'),
+      features: t.raw('pricing.plans.team.features'),
       popular: false,
       cta: t('pricing.plans.team.cta'),
     },
@@ -807,6 +806,70 @@ ${t('hero.title.line2')}`}
               </Card>
             ))}
           </AnimatedGroup>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-16 md:py-24">
+        <div className="mx-auto max-w-5xl px-4 md:px-6">
+          <div className="mx-auto max-w-xl text-center">
+            <h2 className="text-balance text-3xl font-bold md:text-4xl lg:text-5xl">Frequently Asked Questions</h2>
+            <p className="text-muted-foreground mt-4 text-balance">Find answers to common questions about using Nomady, your AI-powered travel assistant.</p>
+          </div>
+          <div className="mx-auto mt-12 max-w-xl">
+            <Accordion
+              type="single"
+              collapsible
+              className="bg-card ring-muted w-full rounded-2xl border px-8 py-3 shadow-sm ring-4 dark:ring-0">
+              {[{
+                id: 'item-1',
+                question: 'What is Nomady?',
+                answer: 'Nomady is an AI-powered travel assistant that helps you plan trips, discover destinations, and manage your travel itinerary through a chat interface.'
+              }, {
+                id: 'item-2',
+                question: 'Do I need an account to use Nomady?',
+                answer: 'No, you can use Nomady as a guest without creating an account. However, signing up allows you to save your travel history and access more features.'
+              }, {
+                id: 'item-3',
+                question: 'How does the AI assistant generate recommendations?',
+                answer: 'Nomady uses advanced AI models to analyze your preferences and suggest destinations, activities, and travel tips tailored to your needs.'
+              }, {
+                id: 'item-4',
+                question: 'Can I use Nomady on my phone?',
+                answer: 'Yes, Nomady is fully responsive and works on all modern smartphones, tablets, and desktop devices.'
+              }, {
+                id: 'item-5',
+                question: 'Is my data and chat history private?',
+                answer: 'We take privacy seriously. Your chat history is stored securely and is never shared with third parties. You can clear your history at any time.'
+              }, {
+                id: 'item-6',
+                question: 'How do I book flights or hotels through Nomady?',
+                answer: 'Nomady provides recommendations and links to trusted booking partners. You can book directly through those links.'
+              }, {
+                id: 'item-7',
+                question: 'How do I contact support?',
+                answer: 'If you need help, you can reach out to our support team using the link below.'
+              }].map((item) => (
+                <AccordionItem
+                  key={item.id}
+                  value={item.id}
+                  className="border-dashed">
+                  <AccordionTrigger className="cursor-pointer text-base hover:no-underline">{item.question}</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-base">{item.answer}</p>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+            <p className="text-muted-foreground mt-6 px-8">
+              Can&apos;t find what you&apos;re looking for? Contact our{' '}
+              <a
+                href="#"
+                className="text-primary font-medium hover:underline">
+                support team
+              </a>
+            </p>
+          </div>
         </div>
       </section>
 
