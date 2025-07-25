@@ -366,7 +366,7 @@ export default function LandingPage() {
     return (
       <div className="flex h-screen bg-slate-50">
         {sidebarOpen && (
-          <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
+          <div className="fixed inset-0 bg-black/50 z-50 md:hidden" onClick={() => setSidebarOpen(false)} />
         )}
         <MobileMapOverlay
           showMobileMap={showMobileMap}
@@ -384,14 +384,14 @@ export default function LandingPage() {
         />
         <div className="flex-1 flex flex-col min-w-0 min-h-0">
           <div className="flex-1 flex min-w-0 min-h-0">
-            <div className="flex flex-col min-w-0 w-full md:w-auto min-h-0" style={{ width: isMobile ? '100%' : `${100 - mapWidth}%` }}>
+            <div className="flex flex-col min-w-0 w-full flex-1 min-h-0">
               <div className="md:hidden sticky top-0 z-30">
                 <ChatHeader
                   setSidebarOpen={setSidebarOpen}
                   setShowMobileMap={setShowMobileMap}
                   bookedItemsCount={Object.keys(bookedItems).length}
                 />
-            </div>
+              </div>
               <div className="flex-1 overflow-y-auto min-h-0 h-full" style={{ paddingBottom: isMobile ? 112 : 0 }}>
                 <MessagesList
                   ref={messagesEndRef}
@@ -405,8 +405,8 @@ export default function LandingPage() {
                   onBooked={handleBooked}
                   onSuggestionClick={setInput}
                 />
-          </div>
-              <div className="md:static md:mt-0 sticky bottom-0 z-40">
+              </div>
+              <div className="md:static md:mt-0 sticky bottom-0 z-30">
                 <ChatInput
                   ref={null}
                   input={input}
@@ -418,8 +418,9 @@ export default function LandingPage() {
                   isLoading={isChatLoading}
                   isStreaming={isChatStreaming}
                 />
-        </div>
+              </div>
             </div>
+            {/* Resize handle и карта только на md+ */}
             <div className="hidden md:block w-1 bg-slate-200 hover:bg-blue-500 cursor-col-resize transition-colors relative group" onMouseDown={handleMouseDown}>
               <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-500/20" />
             </div>
