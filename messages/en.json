@@ -8,23 +8,11 @@
       },
       "subtitle": "Skip the endless research.",
       "placeholder": {
-        "text1": "Plan a 5-day trip to Tokyo for 2 people",
-        "text2": "Budget-friendly weekend in Barcelona",
-        "text3": "Romantic honeymoon in Bali for 7 days",
-        "text4": "Family adventure in Disneyland next summer",
-        "text5": "Solo backpacking across South America for a month"
-      },
-      "input": {
-        "mainPlaceholder": "Describe your dream trip...",
-        "placeholders": [
-          "Plan a 5-day trip to Tokyo",
-          "Budget weekend in Barcelona",
-          "Romantic honeymoon in Bali",
-          "Family adventure in Disneyland",
-          "Solo backpacking in South America"
-        ],
-        "dynamicPlaceholder": "I want to go to {city}",
-        "cities": ["Paris", "London", "Tokyo", "New York", "Istanbul"]
+        "text1": "Plan a 5-day trip to Tokyo for 2 people...",
+        "text2": "Budget-friendly weekend in Barcelona...",
+        "text3": "Romantic honeymoon in Bali for 7 days...",
+        "text4": "Family adventure in Disneyland next summer...",
+        "text5": "Solo backpacking across South America for a month..."
       },
       "helpText": "No credit card required • Get started in 30 seconds",
       "backedBy": "Backed by nFactorial Incubator"
@@ -64,6 +52,12 @@
           "description": "Real-time safety updates and travel advisories for peace of mind"
         }
       }
+    },
+    "loginPopup": {
+      "title": "Sign in to save your chat",
+      "description": "Sign in to save your chat history, bookings, and get personalized recommendations. Or continue as a guest traveler.",
+      "signIn": "Sign In",
+      "continueAsGuest": "Continue as unknown traveler"
     },
     "howItWorks": {
       "title": "How It Works",
@@ -201,12 +195,6 @@
       },
       "copyright": "© 2025 Nomady. All rights reserved.",
       "madeWith": "Made with ❤️ by Unknown Developer"
-    },
-    "loginPopup": {
-      "title": "Sign in to continue",
-      "description": "Sign in to save your trips and chat history, or continue as a guest.",
-      "signIn": "Sign In",
-      "continueAsGuest": "Continue as Guest"
     }
   },
   "auth": {
@@ -481,24 +469,15 @@
         "redirectingToAviasales": "Redirecting to Aviasales! ✈️",
         "aviasalesRedirectDesc": "Opening Aviasales in a new tab to complete your booking."
       }
-    },
-    "loginPopup": {
-      "title": "Sign in to save your chat",
-      "description": "Sign in to save your chat history, bookings, and get personalized recommendations. Or continue as a guest traveler.",
-      "signIn": "Sign In",
-      "continueAsGuest": "Continue as guest"
     }
   },
   "navigation": {
-    "menu": {
-      "features": "Features",
-      "solution": "Solution",
-      "pricing": "Pricing",
-      "about": "About"
-    },
+    "features": "Features",
+    "howItWorks": "How it Works", 
+    "pricing": "Pricing",
+    "reviews": "Reviews",
     "signIn": "Sign In",
-    "planTrip": "Plan Trip",
-    "getStarted": "Get Started"
+    "getStarted": "Plan Your Trip"
   },
   "common": {
     "loading": "Loading...",

@@ -43,9 +43,6 @@ import { AppSidebar } from "@/components/shared/app-sidebar"
 import { Message, Conversation, IpGeolocation } from "@/types/chat"
 import { HeroHeader } from '@/components/landing/hero-header'
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from '@/components/ui/dialog'
-import { TextEffect } from "@/components/motion-primitives/text-effect"
-import { AnimatedGroup } from "@/components/motion-primitives/animated-group"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
 // Lazy-load heavy client-only components to cut initial JS
 const GlobeComponent = dynamic(() => import("@/components/magicui/globe").then(m => m.Globe), { ssr: false })
@@ -71,10 +68,15 @@ export default function LandingPage() {
     t('hero.placeholder.text1'),
     t('hero.placeholder.text2'),
     t('hero.placeholder.text3'),
+    t('hero.placeholder.text4'),
+    t('hero.placeholder.text5'),
   ]
-  // Get placeholder phrases from translations
-  const placeholderPhrases = t.raw('hero.input.placeholders') as string[];
-  // Remove all typing/cycling effect state and logic
+  const [placeholderIndex, setPlaceholderIndex] = useState(0)
+
+  // Typing effect for placeholder
+  const [charIndex, setCharIndex] = useState(0)
+  // Delay heavy globe initialization until browser is idle to improve first-load performance
+  const [showGlobe, setShowGlobe] = useState(false)
 
   // --- chat state ---
   const [messages, setMessages] = useState<Message[]>([])
@@ -294,7 +296,7 @@ export default function LandingPage() {
       price: t('pricing.plans.free.price'),
       period: t('pricing.plans.free.period'),
       description: t('pricing.plans.free.description'),
-      features: t.raw('pricing.plans.free.features'),
+      features: t('pricing.plans.free.features'),
       popular: false,
       cta: t('pricing.plans.free.cta'),
     },
@@ -303,7 +305,7 @@ export default function LandingPage() {
       price: t('pricing.plans.pro.price'),
       period: t('pricing.plans.pro.period'),
       description: t('pricing.plans.pro.description'),
-      features: t.raw('pricing.plans.pro.features'),
+      features: t('pricing.plans.pro.features'),
       popular: true,
       cta: t('pricing.plans.pro.cta'),
     },
@@ -312,7 +314,7 @@ export default function LandingPage() {
       price: t('pricing.plans.team.price'),
       period: t('pricing.plans.team.period'),
       description: t('pricing.plans.team.description'),
-      features: t.raw('pricing.plans.team.features'),
+      features: t('pricing.plans.team.features'),
       popular: false,
       cta: t('pricing.plans.team.cta'),
     },
@@ -385,23 +387,15 @@ export default function LandingPage() {
   if (messages.length > 0) {
     return (
       <>
-        <Dialog
-          open={showLoginPopup}
-          onOpenChange={(open) => {
-            setShowLoginPopup(open);
-            if (!open) sessionStorage.setItem('hideLoginPopup', '1');
-          }}
-        >
+        <Dialog open={showLoginPopup} onOpenChange={setShowLoginPopup}>
           <DialogContent className="max-w-xs w-[90vw] sm:max-w-lg rounded-xl">
             <DialogHeader>
               <DialogTitle>{t('loginPopup.title')}</DialogTitle>
-              <DialogDescription>
-                {t('loginPopup.description')}
-              </DialogDescription>
+              <DialogDescription>{t('loginPopup.description')}</DialogDescription>
             </DialogHeader>
             <DialogFooter className="flex flex-col gap-2">
-              <Button onClick={handleSignIn} className="bg-blue-600 hover:bg-blue-700 text-white focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">{t('loginPopup.signIn')}</Button>
-              <Button variant="outline" onClick={handleContinueAsGuest} className="focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">{t('loginPopup.continueAsGuest')}</Button>
+              <Button onClick={handleSignIn}>{t('loginPopup.signIn')}</Button>
+              <Button variant="outline" onClick={handleContinueAsGuest}>{t('loginPopup.continueAsGuest')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -480,28 +474,6 @@ export default function LandingPage() {
     )
   }
 
-  // --- ДО состояния placeholders ---
-  const cities = t.raw('hero.input.cities');
-  const [cityIndex, setCityIndex] = useState(0);
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCityIndex((prev) => (prev + 1) % cities.length);
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
-  const dynamicPlaceholder = t('hero.input.dynamicPlaceholder', { city: cities[cityIndex] });
-
-  // Typing effect for placeholder
-  useEffect(() => {
-    // setCharIndex(0); // Removed typing effect
-  }, [cityIndex, dynamicPlaceholder]);
-  useEffect(() => {
-    // if (charIndex < dynamicPlaceholder.length) { // Removed typing effect
-    //   const timeout = setTimeout(() => setCharIndex(charIndex + 1), 35);
-    //   return () => clearTimeout(timeout);
-    // }
-  }, [dynamicPlaceholder]); // Removed typing effect
-
   return (
     <div className="min-h-screen bg-white">
       <HeroHeader />
@@ -525,43 +497,87 @@ export default function LandingPage() {
                 <Image src="/Launch_SVG_Light.svg" alt="Launch" width={221} height={60} priority />
               </a>
             </div>
-            <AnimatedGroup preset="blur-slide" className="space-y-6">
-              <div className="inline-flex items-center space-x-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
-                <Logo width={16} height={16} />
-                <TextEffect className="text-sm" preset="fade-in-blur" delay={0.1} speedSegment={0.8} as="span">
-                  {t('hero.badge')}
-                </TextEffect>
-              </div>
-              <TextEffect
-                as="h1"
-                className="text-5xl md:text-7xl font-bold mb-6 text-center"
-                preset="fade-in-blur"
-                delay={0.2}
-                speedSegment={0.7}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, delay: 0.2, type: "spring", bounce: 0.4 }}
+                className="inline-flex items-center space-x-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-6"
               >
-                {`${t('hero.title.line1')}
-${t('hero.title.line2')}`}
-              </TextEffect>
-              <TextEffect
-                as="p"
+                <Logo width={16} height={16} />
+                <AnimatedGradientText className="text-sm" colorFrom="#1d4ed8" colorTo="#3b82f6">
+                  {t('hero.badge')}
+                </AnimatedGradientText>
+              </motion.div>
+              
+              <motion.h1 
+                className="text-5xl md:text-7xl font-bold mb-6 text-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1, delay: 0.3 }}
+              >
+                <motion.span 
+                  className="text-slate-900 block"
+                  initial={{ y: 50, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.8, delay: 0.4, type: "spring", bounce: 0.3 }}
+                >
+                  {t('hero.title.line1')}
+                </motion.span>
+                <motion.span 
+                  className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent block"
+                  initial={{ y: 50, opacity: 0, scale: 0.8 }}
+                  animate={{ y: 0, opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.8, delay: 0.6, type: "spring", bounce: 0.3 }}
+                >
+                  {t('hero.title.line2')}
+                </motion.span>
+              </motion.h1>
+
+              <motion.p 
                 className="text-xl md:text-2xl text-slate-600 mb-12 leading-relaxed max-w-3xl mx-auto"
-                preset="fade-in-blur"
-                delay={0.3}
-                speedSegment={0.8}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.8, type: "spring", bounce: 0.2 }}
               >
                 {t('hero.subtitle')}
-              </TextEffect>
-              <form onSubmit={handleSubmit} className="relative max-w-xl mx-auto mb-16">
-                <div className="relative">
+              </motion.p>
+            </motion.div>
+
+            {/* Trip Prompt Form */}
+            <motion.div
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.8, delay: 1, type: "spring", bounce: 0.3 }}
+              className="max-w-xl mx-auto mb-16"
+            >
+              <form onSubmit={handleSubmit} className="relative">
+                <motion.div 
+                  className="relative"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 1.2 }}
+                >
                   <Input
                     type="text"
-                    placeholder={t('hero.input.mainPlaceholder')}
+                    placeholder={placeholders[placeholderIndex].slice(0, charIndex)}
                     value={tripPrompt}
                     onChange={(e) => setTripPrompt(e.target.value)}
                     className="text-[1.2rem] py-6 px-6 pr-16 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:scale-[1.02] shadow-lg"
                     disabled={isLoading}
                   />
-                  <div className="absolute right-1 inset-y-0 flex items-center">
+                  
+                  <motion.div
+                    className="absolute right-1 inset-y-0 flex items-center"
+                    initial={false}
+                    animate={{
+                      opacity: tripPrompt.trim() ? 1 : 0,
+                      scale: tripPrompt.trim() ? 1 : 0.8,
+                      x: tripPrompt.trim() ? 0 : 10,
+                    }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                  >
                     <Button
                       type="submit"
                       size="icon"
@@ -574,26 +590,27 @@ ${t('hero.title.line2')}`}
                         <ArrowRight className="h-4 w-4" />
                       )}
                     </Button>
-                  </div>
-                </div>
-                {/* Prompt suggestions below input, outside relative container */}
-                {Array.isArray(placeholderPhrases) && placeholderPhrases.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-2 justify-center">
-                    {placeholderPhrases.slice(0, 3).map((phrase: string, idx: number) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        className="bg-slate-100 hover:bg-blue-100 text-slate-600 rounded-full px-4 py-2 text-sm transition-colors border border-slate-200"
-                        onClick={() => setTripPrompt(phrase)}
-                      >
-                        {phrase}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                  </motion.div>
+                </motion.div>
               </form>
-          
-              <div className="flex items-center justify-center mb-6">
+              
+              <motion.p 
+                className="text-sm text-slate-500 mt-4 text-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 1.6 }}
+              >
+                {t('hero.helpText')}
+              </motion.p>
+            </motion.div>
+
+                          {/* Backed by nFactorial Badge */}
+                          <motion.div 
+                initial={{ opacity: 0, y: -10, scale: 0.8 }} 
+                animate={{ opacity: 1, y: 0, scale: 1 }} 
+                transition={{ duration: 0.8, delay: 1.8, type: "spring", bounce: 0.5 }}
+                className="flex items-center justify-center mb-6"
+              >
                 <div className="group relative mx-auto flex items-center justify-center rounded-full px-4 py-2 shadow-[inset_0_-8px_10px_#ff8f8f1f] transition-all duration-500 ease-out hover:shadow-[inset_0_-5px_10px_#ff8f8f3f] hover:scale-110">
                   <span
                     className={cn(
@@ -611,8 +628,7 @@ ${t('hero.title.line2')}`}
                   <Image src="/nfactorial-logo.png" alt="nFactorial Incubator" width={20} height={20} className="h-5 w-5 mr-2" />
                   <span className="text-slate-600 text-sm font-medium mr-1">{t('hero.backedBy')}</span>
                 </div>
-              </div>
-            </AnimatedGroup>
+              </motion.div>
           </div>
         </div>
       </section>
@@ -620,16 +636,23 @@ ${t('hero.title.line2')}`}
       {/* Stats Section */}
       <section className="py-16 bg-slate-50">
         <div className="container mx-auto px-6">
-          <AnimatedGroup preset="fade" className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
-              <div key={index} className="text-center">
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                className="text-center"
+              >
                 <div className="text-3xl md:text-4xl font-bold text-blue-600 mb-2">
                   {stat.number}
                 </div>
                 <div className="text-slate-600 font-medium">{stat.label}</div>
-              </div>
+              </motion.div>
             ))}
-          </AnimatedGroup>
+          </div>
         </div>
       </section>
 
@@ -637,60 +660,67 @@ ${t('hero.title.line2')}`}
       <section id="how-it-works" className="py-20 bg-slate-50">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <TextEffect
-              as="h2"
-              className="text-4xl md:text-5xl font-bold text-slate-900 mb-4"
-              preset="fade-in-blur"
-              delay={0.1}
-              speedSegment={0.8}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
             >
-              {t('howItWorks.title')}
-            </TextEffect>
-            <TextEffect
-              as="p"
-              className="text-xl text-slate-600 max-w-2xl mx-auto"
-              preset="fade-in-blur"
-              delay={0.2}
-              speedSegment={0.8}
-            >
-              {t('howItWorks.subtitle')}
-            </TextEffect>
+              <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
+                <AnimatedGradientText colorFrom="#3b82f6" colorTo="#1d4ed8" className="text-4xl md:text-5xl font-bold">
+                  {t('howItWorks.title')}
+                </AnimatedGradientText>
+              </h2>
+              <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+                {t('howItWorks.subtitle')}
+              </p>
+            </motion.div>
           </div>
-          <AnimatedGroup preset="fade" className="max-w-4xl mx-auto grid md:grid-cols-3 gap-8">
-            {[
-              {
-                step: "1",
-                title: t('howItWorks.steps.step1.title'),
-                description: t('howItWorks.steps.step1.description'),
-                icon: <MessageCircle className="h-8 w-8" />,
-              },
-              {
-                step: "2",
-                title: t('howItWorks.steps.step2.title'),
-                description: t('howItWorks.steps.step2.description'),
-                icon: <Zap className="h-8 w-8" />,
-              },
-              {
-                step: "3",
-                title: t('howItWorks.steps.step3.title'),
-                description: t('howItWorks.steps.step3.description'),
-                icon: <CheckCircle className="h-8 w-8" />,
-              },
-            ].map((step, index) => (
-              <div key={index} className="text-center relative">
-                <div className="relative">
-                  <div className="h-16 w-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white">
-                    {step.icon}
+
+          <div className="max-w-4xl mx-auto">
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                {
+                  step: "1",
+                  title: t('howItWorks.steps.step1.title'),
+                  description: t('howItWorks.steps.step1.description'),
+                  icon: <MessageCircle className="h-8 w-8" />,
+                },
+                {
+                  step: "2",
+                  title: t('howItWorks.steps.step2.title'),
+                  description: t('howItWorks.steps.step2.description'),
+                  icon: <Zap className="h-8 w-8" />,
+                },
+                {
+                  step: "3",
+                  title: t('howItWorks.steps.step3.title'),
+                  description: t('howItWorks.steps.step3.description'),
+                  icon: <CheckCircle className="h-8 w-8" />,
+                },
+              ].map((step, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.2 }}
+                  viewport={{ once: true }}
+                  className="text-center relative"
+                >
+                  <div className="relative">
+                    <div className="h-16 w-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white">
+                      {step.icon}
+                    </div>
+                    <div className="absolute -top-2 -right-2 h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-bold text-blue-600">{step.step}</span>
+                    </div>
                   </div>
-                  <div className="absolute -top-2 -right-2 h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-bold text-blue-600">{step.step}</span>
-                  </div>
-                </div>
-                <div className="text-xl font-semibold mb-3 text-slate-900">{step.title}</div>
-                <div className="text-slate-600">{step.description}</div>
-              </div>
-            ))}
-          </AnimatedGroup>
+                  <h3 className="text-xl font-semibold mb-3 text-slate-900">{step.title}</h3>
+                  <p className="text-slate-600">{step.description}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -698,44 +728,50 @@ ${t('hero.title.line2')}`}
       <section id="testimonials" className="py-20">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <TextEffect
-              as="h2"
-              className="text-4xl md:text-5xl font-bold text-slate-900 mb-4"
-              preset="fade-in-blur"
-              delay={0.1}
-              speedSegment={0.8}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
             >
-              {t('testimonials.title')}
-            </TextEffect>
-            <TextEffect
-              as="p"
-              className="text-xl text-slate-600 max-w-2xl mx-auto"
-              preset="fade-in-blur"
-              delay={0.2}
-              speedSegment={0.8}
-            >
-              {t('testimonials.subtitle')}
-            </TextEffect>
+              <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
+                <AnimatedGradientText colorFrom="#f59e0b" colorTo="#d97706" className="text-4xl md:text-5xl font-bold">
+                  {t('testimonials.title')}
+                </AnimatedGradientText>
+              </h2>
+              <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+                {t('testimonials.subtitle')}
+              </p>
+            </motion.div>
           </div>
-          <AnimatedGroup preset="fade" className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {testimonials.map((testimonial, index) => (
-              <Card key={index} className="p-6 h-full bg-white border-0 shadow-lg">
-                <div className="flex items-center mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-                <div className="text-slate-600 mb-6 leading-relaxed">"{testimonial.content}"</div>
-                <div className="flex items-center">
-                  <img src={testimonial.avatar} alt={testimonial.name} className="h-12 w-12 rounded-full object-cover mr-3 border border-slate-200" />
-                  <div>
-                    <div className="font-semibold text-slate-900">{testimonial.name}</div>
-                    <div className="text-sm text-slate-500">{testimonial.role}</div>
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                viewport={{ once: true }}
+              >
+                <Card className="p-6 h-full bg-white border-0 shadow-lg">
+                  <div className="flex items-center mb-4">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                    ))}
                   </div>
-                </div>
-              </Card>
+                  <p className="text-slate-600 mb-6 leading-relaxed">"{testimonial.content}"</p>
+                  <div className="flex items-center">
+                    <img src={testimonial.avatar} alt={testimonial.name} className="h-12 w-12 rounded-full object-cover mr-3 border border-slate-200" />
+                    <div>
+                      <div className="font-semibold text-slate-900">{testimonial.name}</div>
+                      <div className="text-sm text-slate-500">{testimonial.role}</div>
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
             ))}
-          </AnimatedGroup>
+          </div>
         </div>
       </section>
 
@@ -743,132 +779,73 @@ ${t('hero.title.line2')}`}
       <section id="pricing" className="py-20 bg-slate-50">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <TextEffect
-              as="h2"
-              className="text-4xl md:text-5xl font-bold text-slate-900 mb-4"
-              preset="fade-in-blur"
-              delay={0.1}
-              speedSegment={0.8}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
             >
-              {t('pricing.title')}
-            </TextEffect>
-            <TextEffect
-              as="p"
-              className="text-xl text-slate-600 max-w-2xl mx-auto"
-              preset="fade-in-blur"
-              delay={0.2}
-              speedSegment={0.8}
-            >
-              {t('pricing.subtitle')}
-            </TextEffect>
+              <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
+                {t('pricing.title')}
+              </h2>
+              <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+                {t('pricing.subtitle')}
+              </p>
+            </motion.div>
           </div>
-          <AnimatedGroup preset="fade" className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {pricingPlans.map((plan, index) => (
-              <Card
-                key={index}
-                className={`p-8 h-full relative ${
-                  plan.popular ? "border-2 border-blue-500 shadow-xl scale-105" : "border-0 shadow-lg"
-                } bg-white`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <div className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-medium">
-                      {t('pricing.mostPopular')}
-                    </div>
-                  </div>
-                )}
-                <div className="text-center mb-8">
-                  <div className="text-2xl font-bold text-slate-900 mb-2">{plan.name}</div>
-                  <div className="mb-4">
-                    <span className="text-4xl font-bold text-slate-900">{plan.price}</span>
-                    <span className="text-slate-500">/{plan.period}</span>
-                  </div>
-                  <div className="text-slate-600">{plan.description}</div>
-                </div>
-                <ul className="space-y-4 mb-8">
-                  {Array.isArray(plan.features) && plan.features.map((feature: string, featureIndex: number) => (
-                    <li key={featureIndex} className="flex items-center">
-                      <CheckCircle className="h-5 w-5 text-blue-600 mr-3 flex-shrink-0" />
-                      <span className="text-slate-600">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  className={`w-full ${
-                    plan.popular
-                      ? "bg-blue-600 hover:bg-blue-700 text-white"
-                      : "bg-slate-100 hover:bg-slate-200 text-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-white"
-                  }`}
-                  onClick={() => router.push("/auth")}
-                >
-                  {plan.cta}
-                </Button>
-              </Card>
-            ))}
-          </AnimatedGroup>
-        </div>
-      </section>
 
-      {/* FAQ Section */}
-      <section className="py-16 md:py-24">
-        <div className="mx-auto max-w-5xl px-4 md:px-6">
-          <div className="mx-auto max-w-xl text-center">
-            <h2 className="text-balance text-3xl font-bold md:text-4xl lg:text-5xl">Frequently Asked Questions</h2>
-            <p className="text-muted-foreground mt-4 text-balance">Find answers to common questions about using Nomady, your AI-powered travel assistant.</p>
-          </div>
-          <div className="mx-auto mt-12 max-w-xl">
-            <Accordion
-              type="single"
-              collapsible
-              className="bg-card ring-muted w-full rounded-2xl border px-8 py-3 shadow-sm ring-4 dark:ring-0">
-              {[{
-                id: 'item-1',
-                question: 'What is Nomady?',
-                answer: 'Nomady is an AI-powered travel assistant that helps you plan trips, discover destinations, and manage your travel itinerary through a chat interface.'
-              }, {
-                id: 'item-2',
-                question: 'Do I need an account to use Nomady?',
-                answer: 'No, you can use Nomady as a guest without creating an account. However, signing up allows you to save your travel history and access more features.'
-              }, {
-                id: 'item-3',
-                question: 'How does the AI assistant generate recommendations?',
-                answer: 'Nomady uses advanced AI models to analyze your preferences and suggest destinations, activities, and travel tips tailored to your needs.'
-              }, {
-                id: 'item-4',
-                question: 'Can I use Nomady on my phone?',
-                answer: 'Yes, Nomady is fully responsive and works on all modern smartphones, tablets, and desktop devices.'
-              }, {
-                id: 'item-5',
-                question: 'Is my data and chat history private?',
-                answer: 'We take privacy seriously. Your chat history is stored securely and is never shared with third parties. You can clear your history at any time.'
-              }, {
-                id: 'item-6',
-                question: 'How do I book flights or hotels through Nomady?',
-                answer: 'Nomady provides recommendations and links to trusted booking partners. You can book directly through those links.'
-              }, {
-                id: 'item-7',
-                question: 'How do I contact support?',
-                answer: 'If you need help, you can reach out to our support team using the link below.'
-              }].map((item) => (
-                <AccordionItem
-                  key={item.id}
-                  value={item.id}
-                  className="border-dashed">
-                  <AccordionTrigger className="cursor-pointer text-base hover:no-underline">{item.question}</AccordionTrigger>
-                  <AccordionContent>
-                    <p className="text-base">{item.answer}</p>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-            <p className="text-muted-foreground mt-6 px-8">
-              Can&apos;t find what you&apos;re looking for? Contact our{' '}
-              <a
-                href="#"
-                className="text-primary font-medium hover:underline">
-                support team
-              </a>
-            </p>
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {pricingPlans.map((plan, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                viewport={{ once: true }}
+              >
+                <Card
+                  className={`p-8 h-full relative ${
+                    plan.popular ? "border-2 border-blue-500 shadow-xl scale-105" : "border-0 shadow-lg"
+                  } bg-white`}
+                >
+                  {plan.popular && (
+                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                      <div className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-medium">
+                        {t('pricing.mostPopular')}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="text-center mb-8">
+                    <h3 className="text-2xl font-bold text-slate-900 mb-2">{plan.name}</h3>
+                    <div className="mb-4">
+                      <span className="text-4xl font-bold text-slate-900">{plan.price}</span>
+                      <span className="text-slate-500">/{plan.period}</span>
+                    </div>
+                    <p className="text-slate-600">{plan.description}</p>
+                  </div>
+                  <ul className="space-y-4 mb-8">
+                    {Array.isArray(plan.features) && plan.features.map((feature: string, featureIndex: number) => (
+                      <li key={featureIndex} className="flex items-center">
+                        <CheckCircle className="h-5 w-5 text-blue-600 mr-3 flex-shrink-0" />
+                        <span className="text-slate-600">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Button
+                    className={`w-full ${
+                      plan.popular
+                        ? "bg-blue-600 hover:bg-blue-700 text-white"
+                        : "bg-slate-100 hover:bg-slate-200 text-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-white"
+                    }`}
+                    onClick={() => router.push("/auth")}
+                  >
+                    {plan.cta}
+                  </Button>
+                </Card>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
