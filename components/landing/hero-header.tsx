@@ -82,7 +82,7 @@ export const HeroHeader = () => {
                                 {/* Language Dropdown и кнопки */}
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" size="sm" className="px-2 py-1 text-xs font-bold border-blue-600 text-blue-600 flex items-center">
+                                    <Button variant="outline" size="sm" className="x-2 py-1 text-xs font-bold border-blue-600 text-blue-600 flex items-center">
                                       <span className="mr-1">{currentLang.flag}</span>{currentLang.label}
                                       <svg className="ml-1 h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.584l3.71-3.354a.75.75 0 111.02 1.1l-4.25 3.846a.75.75 0 01-1.02 0l-4.25-3.846a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
                                     </Button>

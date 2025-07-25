@@ -70,14 +70,11 @@ export default function LandingPage() {
     t('hero.placeholder.text1'),
     t('hero.placeholder.text2'),
     t('hero.placeholder.text3'),
-    t('hero.placeholder.text4'),
-    t('hero.placeholder.text5'),
   ]
-  const [placeholderIndex, setPlaceholderIndex] = useState(0)
-
-  // Typing effect for placeholder
-  const [charIndex, setCharIndex] = useState(0)
-  // Delay heavy globe initialization until browser is idle to improve first-load performance
+  // Get placeholder phrases from translations
+  const placeholderPhrases = t.raw('hero.input.placeholders') as string[];
+  console.log(placeholderPhrases);
+  // Remove all typing/cycling effect state and logic
   const [showGlobe, setShowGlobe] = useState(false)
 
   // --- chat state ---
@@ -484,6 +481,28 @@ export default function LandingPage() {
     )
   }
 
+  // --- ДО состояния placeholders ---
+  const cities = t.raw('hero.input.cities');
+  const [cityIndex, setCityIndex] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCityIndex((prev) => (prev + 1) % cities.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+  const dynamicPlaceholder = t('hero.input.dynamicPlaceholder', { city: cities[cityIndex] });
+
+  // Typing effect for placeholder
+  useEffect(() => {
+    // setCharIndex(0); // Removed typing effect
+  }, [cityIndex, dynamicPlaceholder]);
+  useEffect(() => {
+    // if (charIndex < dynamicPlaceholder.length) { // Removed typing effect
+    //   const timeout = setTimeout(() => setCharIndex(charIndex + 1), 35);
+    //   return () => clearTimeout(timeout);
+    // }
+  }, [dynamicPlaceholder]); // Removed typing effect
+
   return (
     <div className="min-h-screen bg-white">
       <HeroHeader />
@@ -537,7 +556,7 @@ ${t('hero.title.line2')}`}
                 <div className="relative">
                   <Input
                     type="text"
-                    placeholder={placeholders[placeholderIndex].slice(0, charIndex)}
+                    placeholder={t('hero.input.mainPlaceholder')}
                     value={tripPrompt}
                     onChange={(e) => setTripPrompt(e.target.value)}
                     className="text-[1.2rem] py-6 px-6 pr-16 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:scale-[1.02] shadow-lg"
@@ -558,6 +577,21 @@ ${t('hero.title.line2')}`}
                     </Button>
                   </div>
                 </div>
+                {/* Prompt suggestions below input, outside relative container */}
+                {Array.isArray(placeholderPhrases) && placeholderPhrases.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2 justify-center">
+                    {placeholderPhrases.slice(0, 3).map((phrase: string, idx: number) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        className="bg-slate-100 hover:bg-blue-100 text-slate-600 rounded-full px-4 py-2 text-sm transition-colors border border-slate-200"
+                        onClick={() => setTripPrompt(phrase)}
+                      >
+                        {phrase}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </form>
           
               <div className="flex items-center justify-center mb-6">
