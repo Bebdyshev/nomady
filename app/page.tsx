@@ -42,6 +42,9 @@ import { MobileMapOverlay, ChatHeader, MessagesList, ChatInput } from "@/compone
 import { AppSidebar } from "@/components/shared/app-sidebar"
 import { Message, Conversation, IpGeolocation } from "@/types/chat"
 import { HeroHeader } from '@/components/landing/hero-header'
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { TextEffect } from "@/components/motion-primitives/text-effect"
+import { AnimatedGroup } from "@/components/motion-primitives/animated-group"
 
 // Lazy-load heavy client-only components to cut initial JS
 const GlobeComponent = dynamic(() => import("@/components/magicui/globe").then(m => m.Globe), { ssr: false })
@@ -358,82 +361,126 @@ export default function LandingPage() {
     }
   }, [isAuthenticated, router]);
 
+  // Переместить определения состояния и функций выше, до рендера
+  const [showLoginPopup, setShowLoginPopup] = useState(false);
+  const handleContinueAsGuest = () => {
+    setShowLoginPopup(false);
+    sessionStorage.setItem('hideLoginPopup', '1');
+  };
+  const handleSignIn = () => {
+    setShowLoginPopup(false);
+    router.push('/auth');
+  };
+  useEffect(() => {
+    if (
+      !isAuthenticated &&
+      messages.some(m => m.role === 'user') &&
+      !sessionStorage.getItem('hideLoginPopup') &&
+      !showLoginPopup
+    ) {
+      setShowLoginPopup(true);
+    }
+  }, [messages, isAuthenticated, showLoginPopup]);
+
   if (isAuthenticated === true) return null;
 
   // В рендере:
   // Если showChat === true или есть сообщения — показываем чат, иначе лендинг
   if (messages.length > 0) {
     return (
-      <div className="flex h-screen bg-slate-50">
-        {sidebarOpen && (
-          <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
-        )}
-        <MobileMapOverlay
-          showMobileMap={showMobileMap}
-          setShowMobileMap={setShowMobileMap}
-          bookedItems={bookedItems}
-          onRemoveItem={handleRemoveItem}
-          onClearAll={handleClearAll}
-        />
-        <AppSidebar
-          currentConversationId={currentConversationId}
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
-          onConversationSelect={loadConversation}
-          onNewChat={startNewConversation}
-        />
-        <div className="flex-1 flex flex-col min-w-0 min-h-0">
-          <div className="flex-1 flex min-w-0 min-h-0">
-            <div className="flex flex-col min-w-0 w-full md:w-auto min-h-0" style={{ width: isMobile ? '100%' : `${100 - mapWidth}%` }}>
-              <div className="md:hidden sticky top-0 z-30">
-                <ChatHeader
-                  setSidebarOpen={setSidebarOpen}
-                  setShowMobileMap={setShowMobileMap}
-                  bookedItemsCount={Object.keys(bookedItems).length}
-                />
+      <>
+        <Dialog
+          open={showLoginPopup}
+          onOpenChange={(open) => {
+            setShowLoginPopup(open);
+            if (!open) sessionStorage.setItem('hideLoginPopup', '1');
+          }}
+        >
+          <DialogContent className="max-w-xs w-[90vw] sm:max-w-lg rounded-xl">
+            <DialogHeader>
+              <DialogTitle>{t('loginPopup.title')}</DialogTitle>
+              <DialogDescription>
+                {t('loginPopup.description')}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex flex-col gap-2">
+              <Button onClick={handleSignIn} className="bg-blue-600 hover:bg-blue-700 text-white focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">{t('loginPopup.signIn')}</Button>
+              <Button variant="outline" onClick={handleContinueAsGuest} className="focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">{t('loginPopup.continueAsGuest')}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        <div className="flex h-screen bg-slate-50">
+          {sidebarOpen && (
+            <div className="fixed inset-0 bg-black/50 z-50 md:hidden" onClick={() => setSidebarOpen(false)} />
+          )}
+          <MobileMapOverlay
+            showMobileMap={showMobileMap}
+            setShowMobileMap={setShowMobileMap}
+            bookedItems={bookedItems}
+            onRemoveItem={handleRemoveItem}
+            onClearAll={handleClearAll}
+          />
+          <AppSidebar
+            currentConversationId={currentConversationId}
+            sidebarOpen={sidebarOpen}
+            setSidebarOpen={setSidebarOpen}
+            onConversationSelect={loadConversation}
+            onNewChat={startNewConversation}
+          />
+          <div className="flex-1 flex flex-col min-w-0 min-h-0">
+            <div className="flex-1 flex min-w-0 min-h-0">
+              <div className="flex flex-col min-w-0 w-full flex-1 min-h-0">
+                <div className="md:hidden sticky top-0 z-30">
+                  <ChatHeader
+                    setSidebarOpen={setSidebarOpen}
+                    setShowMobileMap={setShowMobileMap}
+                    bookedItemsCount={Object.keys(bookedItems).length}
+                  />
             </div>
-              <div className="flex-1 overflow-y-auto min-h-0 h-full" style={{ paddingBottom: isMobile ? 112 : 0 }}>
-                <MessagesList
-                  ref={messagesEndRef}
-                  messages={messages}
-                  isStreaming={isChatStreaming}
-                  streamingMessage={streamingMessage}
-                  activeSearches={activeSearches}
-                  currentlyStreamingMessageId={currentlyStreamingMessageId}
-                  showTypingIndicator={showTypingIndicator}
-                  bookedIds={bookedIds}
-                  onBooked={handleBooked}
-                  onSuggestionClick={setInput}
-                />
+                <div className="flex-1 overflow-y-auto min-h-0 h-full" style={{ paddingBottom: isMobile ? 112 : 0 }}>
+                  <MessagesList
+                    ref={messagesEndRef}
+                    messages={messages}
+                    isStreaming={isChatStreaming}
+                    streamingMessage={streamingMessage}
+                    activeSearches={activeSearches}
+                    currentlyStreamingMessageId={currentlyStreamingMessageId}
+                    showTypingIndicator={showTypingIndicator}
+                    bookedIds={bookedIds}
+                    onBooked={handleBooked}
+                    onSuggestionClick={setInput}
+                  />
           </div>
-              <div className="md:static md:mt-0 sticky bottom-0 z-40">
-                <ChatInput
-                  ref={null}
-                  input={input}
-                  setInput={setInput}
-                  onSendMessage={(e) => {
-                    e.preventDefault();
-                    handleSendMessage(input);
-                  }}
-                  isLoading={isChatLoading}
-                  isStreaming={isChatStreaming}
-                />
+                <div className="md:static md:mt-0 sticky bottom-0 z-30">
+                  <ChatInput
+                    ref={null}
+                    input={input}
+                    setInput={setInput}
+                    onSendMessage={(e) => {
+                      e.preventDefault();
+                      handleSendMessage(input);
+                    }}
+                    isLoading={isChatLoading}
+                    isStreaming={isChatStreaming}
+                  />
         </div>
-            </div>
-            <div className="hidden md:block w-1 bg-slate-200 hover:bg-blue-500 cursor-col-resize transition-colors relative group" onMouseDown={handleMouseDown}>
-              <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-500/20" />
-            </div>
-            <div className="hidden md:block bg-slate-50 border-l border-slate-200" style={{ width: `${mapWidth}%` }}>
-              <InteractiveMap
-                selectedItems={Object.values(bookedItems)}
-                onRemoveItem={handleRemoveItem}
-                onClearAll={handleClearAll}
-                userLocation={ipGeolocation && typeof (ipGeolocation as any).lat === 'number' && typeof (ipGeolocation as any).lng === 'number' ? { lat: Number((ipGeolocation as any).lat), lng: Number((ipGeolocation as any).lng) } : undefined}
-              />
+              </div>
+              {/* Resize handle и карта только на md+ */}
+              <div className="hidden md:block w-1 bg-slate-200 hover:bg-blue-500 cursor-col-resize transition-colors relative group" onMouseDown={handleMouseDown}>
+                <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-500/20" />
+              </div>
+              <div className="hidden md:block bg-slate-50 border-l border-slate-200" style={{ width: `${mapWidth}%` }}>
+                <InteractiveMap
+                  selectedItems={Object.values(bookedItems)}
+                  onRemoveItem={handleRemoveItem}
+                  onClearAll={handleClearAll}
+                  userLocation={ipGeolocation && typeof (ipGeolocation as any).lat === 'number' && typeof (ipGeolocation as any).lng === 'number' ? { lat: Number((ipGeolocation as any).lat), lng: Number((ipGeolocation as any).lng) } : undefined}
+                />
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </>
     )
   }
 
@@ -446,7 +493,7 @@ export default function LandingPage() {
           src="/landing/sky.png"
           alt="Sky background"
           fill
-          className="object-cover z-0 opacity-40"
+          className="object-cover z-0 opacity-90"
           priority
           placeholder="blur"
           blurDataURL="/landing/sky-blur.png" // маленькая версия (например, 20x12px, сильно сжатая)
@@ -460,68 +507,34 @@ export default function LandingPage() {
                 <Image src="/Launch_SVG_Light.svg" alt="Launch" width={221} height={60} priority />
               </a>
             </div>
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, delay: 0.2, type: "spring", bounce: 0.4 }}
-                className="inline-flex items-center space-x-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-6"
-              >
+            <AnimatedGroup preset="blur-slide" className="space-y-6">
+              <div className="inline-flex items-center space-x-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
                 <Logo width={16} height={16} />
-                <AnimatedGradientText className="text-sm" colorFrom="#1d4ed8" colorTo="#3b82f6">
+                <TextEffect className="text-sm" preset="fade-in-blur" delay={0.1} speedSegment={0.8} as="span">
                   {t('hero.badge')}
-                </AnimatedGradientText>
-              </motion.div>
-              
-              <motion.h1 
+                </TextEffect>
+              </div>
+              <TextEffect
+                as="h1"
                 className="text-5xl md:text-7xl font-bold mb-6 text-center"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1, delay: 0.3 }}
+                preset="fade-in-blur"
+                delay={0.2}
+                speedSegment={0.7}
               >
-                <motion.span 
-                  className="text-slate-900 block"
-                  initial={{ y: 50, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.8, delay: 0.4, type: "spring", bounce: 0.3 }}
-                >
-                  {t('hero.title.line1')}
-                </motion.span>
-                <motion.span 
-                  className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent block"
-                  initial={{ y: 50, opacity: 0, scale: 0.8 }}
-                  animate={{ y: 0, opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.8, delay: 0.6, type: "spring", bounce: 0.3 }}
-                >
-                  {t('hero.title.line2')}
-                </motion.span>
-              </motion.h1>
-
-              <motion.p 
+                {`${t('hero.title.line1')}
+${t('hero.title.line2')}`}
+              </TextEffect>
+              <TextEffect
+                as="p"
                 className="text-xl md:text-2xl text-slate-600 mb-12 leading-relaxed max-w-3xl mx-auto"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.8, type: "spring", bounce: 0.2 }}
+                preset="fade-in-blur"
+                delay={0.3}
+                speedSegment={0.8}
               >
                 {t('hero.subtitle')}
-              </motion.p>
-            </motion.div>
-
-            {/* Trip Prompt Form */}
-            <motion.div
-              initial={{ opacity: 0, y: 50, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.8, delay: 1, type: "spring", bounce: 0.3 }}
-              className="max-w-xl mx-auto mb-16"
-            >
-              <form onSubmit={handleSubmit} className="relative">
-                <motion.div 
-                  className="relative"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.6, delay: 1.2 }}
-                >
+              </TextEffect>
+              <form onSubmit={handleSubmit} className="relative max-w-xl mx-auto mb-16">
+                <div className="relative">
                   <Input
                     type="text"
                     placeholder={placeholders[placeholderIndex].slice(0, charIndex)}
@@ -530,17 +543,7 @@ export default function LandingPage() {
                     className="text-[1.2rem] py-6 px-6 pr-16 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:scale-[1.02] shadow-lg"
                     disabled={isLoading}
                   />
-                  
-                  <motion.div
-                    className="absolute right-1 inset-y-0 flex items-center"
-                    initial={false}
-                    animate={{
-                      opacity: tripPrompt.trim() ? 1 : 0,
-                      scale: tripPrompt.trim() ? 1 : 0.8,
-                      x: tripPrompt.trim() ? 0 : 10,
-                    }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
-                  >
+                  <div className="absolute right-1 inset-y-0 flex items-center">
                     <Button
                       type="submit"
                       size="icon"
@@ -553,27 +556,11 @@ export default function LandingPage() {
                         <ArrowRight className="h-4 w-4" />
                       )}
                     </Button>
-                  </motion.div>
-                </motion.div>
+                  </div>
+                </div>
               </form>
-              
-              <motion.p 
-                className="text-sm text-slate-500 mt-4 text-center"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.6, delay: 1.6 }}
-              >
-                {t('hero.helpText')}
-              </motion.p>
-            </motion.div>
-
-                          {/* Backed by nFactorial Badge */}
-                          <motion.div 
-                initial={{ opacity: 0, y: -10, scale: 0.8 }} 
-                animate={{ opacity: 1, y: 0, scale: 1 }} 
-                transition={{ duration: 0.8, delay: 1.8, type: "spring", bounce: 0.5 }}
-                className="flex items-center justify-center mb-6"
-              >
+          
+              <div className="flex items-center justify-center mb-6">
                 <div className="group relative mx-auto flex items-center justify-center rounded-full px-4 py-2 shadow-[inset_0_-8px_10px_#ff8f8f1f] transition-all duration-500 ease-out hover:shadow-[inset_0_-5px_10px_#ff8f8f3f] hover:scale-110">
                   <span
                     className={cn(
@@ -591,7 +578,8 @@ export default function LandingPage() {
                   <Image src="/nfactorial-logo.png" alt="nFactorial Incubator" width={20} height={20} className="h-5 w-5 mr-2" />
                   <span className="text-slate-600 text-sm font-medium mr-1">{t('hero.backedBy')}</span>
                 </div>
-              </motion.div>
+              </div>
+            </AnimatedGroup>
           </div>
         </div>
       </section>
@@ -599,23 +587,16 @@ export default function LandingPage() {
       {/* Stats Section */}
       <section className="py-16 bg-slate-50">
         <div className="container mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <AnimatedGroup preset="fade" className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                className="text-center"
-              >
+              <div key={index} className="text-center">
                 <div className="text-3xl md:text-4xl font-bold text-blue-600 mb-2">
                   {stat.number}
                 </div>
                 <div className="text-slate-600 font-medium">{stat.label}</div>
-              </motion.div>
+              </div>
             ))}
-          </div>
+          </AnimatedGroup>
         </div>
       </section>
 
@@ -623,67 +604,60 @@ export default function LandingPage() {
       <section id="how-it-works" className="py-20 bg-slate-50">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
+            <TextEffect
+              as="h2"
+              className="text-4xl md:text-5xl font-bold text-slate-900 mb-4"
+              preset="fade-in-blur"
+              delay={0.1}
+              speedSegment={0.8}
             >
-              <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
-                <AnimatedGradientText colorFrom="#3b82f6" colorTo="#1d4ed8" className="text-4xl md:text-5xl font-bold">
-                  {t('howItWorks.title')}
-                </AnimatedGradientText>
-              </h2>
-              <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-                {t('howItWorks.subtitle')}
-              </p>
-            </motion.div>
+              {t('howItWorks.title')}
+            </TextEffect>
+            <TextEffect
+              as="p"
+              className="text-xl text-slate-600 max-w-2xl mx-auto"
+              preset="fade-in-blur"
+              delay={0.2}
+              speedSegment={0.8}
+            >
+              {t('howItWorks.subtitle')}
+            </TextEffect>
           </div>
-
-          <div className="max-w-4xl mx-auto">
-            <div className="grid md:grid-cols-3 gap-8">
-              {[
-                {
-                  step: "1",
-                  title: t('howItWorks.steps.step1.title'),
-                  description: t('howItWorks.steps.step1.description'),
-                  icon: <MessageCircle className="h-8 w-8" />,
-                },
-                {
-                  step: "2",
-                  title: t('howItWorks.steps.step2.title'),
-                  description: t('howItWorks.steps.step2.description'),
-                  icon: <Zap className="h-8 w-8" />,
-                },
-                {
-                  step: "3",
-                  title: t('howItWorks.steps.step3.title'),
-                  description: t('howItWorks.steps.step3.description'),
-                  icon: <CheckCircle className="h-8 w-8" />,
-                },
-              ].map((step, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.2 }}
-                  viewport={{ once: true }}
-                  className="text-center relative"
-                >
-                  <div className="relative">
-                    <div className="h-16 w-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white">
-                      {step.icon}
-                    </div>
-                    <div className="absolute -top-2 -right-2 h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-bold text-blue-600">{step.step}</span>
-                    </div>
+          <AnimatedGroup preset="fade" className="max-w-4xl mx-auto grid md:grid-cols-3 gap-8">
+            {[
+              {
+                step: "1",
+                title: t('howItWorks.steps.step1.title'),
+                description: t('howItWorks.steps.step1.description'),
+                icon: <MessageCircle className="h-8 w-8" />,
+              },
+              {
+                step: "2",
+                title: t('howItWorks.steps.step2.title'),
+                description: t('howItWorks.steps.step2.description'),
+                icon: <Zap className="h-8 w-8" />,
+              },
+              {
+                step: "3",
+                title: t('howItWorks.steps.step3.title'),
+                description: t('howItWorks.steps.step3.description'),
+                icon: <CheckCircle className="h-8 w-8" />,
+              },
+            ].map((step, index) => (
+              <div key={index} className="text-center relative">
+                <div className="relative">
+                  <div className="h-16 w-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white">
+                    {step.icon}
                   </div>
-                  <h3 className="text-xl font-semibold mb-3 text-slate-900">{step.title}</h3>
-                  <p className="text-slate-600">{step.description}</p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
+                  <div className="absolute -top-2 -right-2 h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-bold text-blue-600">{step.step}</span>
+                  </div>
+                </div>
+                <div className="text-xl font-semibold mb-3 text-slate-900">{step.title}</div>
+                <div className="text-slate-600">{step.description}</div>
+              </div>
+            ))}
+          </AnimatedGroup>
         </div>
       </section>
 
@@ -691,50 +665,44 @@ export default function LandingPage() {
       <section id="testimonials" className="py-20">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
+            <TextEffect
+              as="h2"
+              className="text-4xl md:text-5xl font-bold text-slate-900 mb-4"
+              preset="fade-in-blur"
+              delay={0.1}
+              speedSegment={0.8}
             >
-              <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
-                <AnimatedGradientText colorFrom="#f59e0b" colorTo="#d97706" className="text-4xl md:text-5xl font-bold">
-                  {t('testimonials.title')}
-                </AnimatedGradientText>
-              </h2>
-              <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-                {t('testimonials.subtitle')}
-              </p>
-            </motion.div>
+              {t('testimonials.title')}
+            </TextEffect>
+            <TextEffect
+              as="p"
+              className="text-xl text-slate-600 max-w-2xl mx-auto"
+              preset="fade-in-blur"
+              delay={0.2}
+              speedSegment={0.8}
+            >
+              {t('testimonials.subtitle')}
+            </TextEffect>
           </div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <AnimatedGroup preset="fade" className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {testimonials.map((testimonial, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <Card className="p-6 h-full bg-white border-0 shadow-lg">
-                  <div className="flex items-center mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                    ))}
+              <Card key={index} className="p-6 h-full bg-white border-0 shadow-lg">
+                <div className="flex items-center mb-4">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                  ))}
+                </div>
+                <div className="text-slate-600 mb-6 leading-relaxed">"{testimonial.content}"</div>
+                <div className="flex items-center">
+                  <img src={testimonial.avatar} alt={testimonial.name} className="h-12 w-12 rounded-full object-cover mr-3 border border-slate-200" />
+                  <div>
+                    <div className="font-semibold text-slate-900">{testimonial.name}</div>
+                    <div className="text-sm text-slate-500">{testimonial.role}</div>
                   </div>
-                  <p className="text-slate-600 mb-6 leading-relaxed">"{testimonial.content}"</p>
-                  <div className="flex items-center">
-                    <img src={testimonial.avatar} alt={testimonial.name} className="h-12 w-12 rounded-full object-cover mr-3 border border-slate-200" />
-                    <div>
-                      <div className="font-semibold text-slate-900">{testimonial.name}</div>
-                      <div className="text-sm text-slate-500">{testimonial.role}</div>
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
+                </div>
+              </Card>
             ))}
-          </div>
+          </AnimatedGroup>
         </div>
       </section>
 
@@ -742,74 +710,69 @@ export default function LandingPage() {
       <section id="pricing" className="py-20 bg-slate-50">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
+            <TextEffect
+              as="h2"
+              className="text-4xl md:text-5xl font-bold text-slate-900 mb-4"
+              preset="fade-in-blur"
+              delay={0.1}
+              speedSegment={0.8}
             >
-              <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
-                {t('pricing.title')}
-              </h2>
-              <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-                {t('pricing.subtitle')}
-              </p>
-            </motion.div>
+              {t('pricing.title')}
+            </TextEffect>
+            <TextEffect
+              as="p"
+              className="text-xl text-slate-600 max-w-2xl mx-auto"
+              preset="fade-in-blur"
+              delay={0.2}
+              speedSegment={0.8}
+            >
+              {t('pricing.subtitle')}
+            </TextEffect>
           </div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <AnimatedGroup preset="fade" className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {pricingPlans.map((plan, index) => (
-              <motion.div
+              <Card
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
+                className={`p-8 h-full relative ${
+                  plan.popular ? "border-2 border-blue-500 shadow-xl scale-105" : "border-0 shadow-lg"
+                } bg-white`}
               >
-                <Card
-                  className={`p-8 h-full relative ${
-                    plan.popular ? "border-2 border-blue-500 shadow-xl scale-105" : "border-0 shadow-lg"
-                  } bg-white`}
-                >
-                  {plan.popular && (
-                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                      <div className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-medium">
-                        {t('pricing.mostPopular')}
-                      </div>
+                {plan.popular && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <div className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-medium">
+                      {t('pricing.mostPopular')}
                     </div>
-                  )}
-
-                  <div className="text-center mb-8">
-                    <h3 className="text-2xl font-bold text-slate-900 mb-2">{plan.name}</h3>
-                    <div className="mb-4">
-                      <span className="text-4xl font-bold text-slate-900">{plan.price}</span>
-                      <span className="text-slate-500">/{plan.period}</span>
-                    </div>
-                    <p className="text-slate-600">{plan.description}</p>
                   </div>
-                  <ul className="space-y-4 mb-8">
-                    {Array.isArray(plan.features) && plan.features.map((feature: string, featureIndex: number) => (
-                      <li key={featureIndex} className="flex items-center">
-                        <CheckCircle className="h-5 w-5 text-blue-600 mr-3 flex-shrink-0" />
-                        <span className="text-slate-600">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <Button
-                    className={`w-full ${
-                      plan.popular
-                        ? "bg-blue-600 hover:bg-blue-700 text-white"
-                        : "bg-slate-100 hover:bg-slate-200 text-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-white"
-                    }`}
-                    onClick={() => router.push("/auth")}
-                  >
-                    {plan.cta}
-                  </Button>
-                </Card>
-              </motion.div>
+                )}
+                <div className="text-center mb-8">
+                  <div className="text-2xl font-bold text-slate-900 mb-2">{plan.name}</div>
+                  <div className="mb-4">
+                    <span className="text-4xl font-bold text-slate-900">{plan.price}</span>
+                    <span className="text-slate-500">/{plan.period}</span>
+                  </div>
+                  <div className="text-slate-600">{plan.description}</div>
+                </div>
+                <ul className="space-y-4 mb-8">
+                  {Array.isArray(plan.features) && plan.features.map((feature: string, featureIndex: number) => (
+                    <li key={featureIndex} className="flex items-center">
+                      <CheckCircle className="h-5 w-5 text-blue-600 mr-3 flex-shrink-0" />
+                      <span className="text-slate-600">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  className={`w-full ${
+                    plan.popular
+                      ? "bg-blue-600 hover:bg-blue-700 text-white"
+                      : "bg-slate-100 hover:bg-slate-200 text-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-white"
+                  }`}
+                  onClick={() => router.push("/auth")}
+                >
+                  {plan.cta}
+                </Button>
+              </Card>
             ))}
-          </div>
+          </AnimatedGroup>
         </div>
       </section>
 

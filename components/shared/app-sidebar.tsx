@@ -414,14 +414,14 @@ export function AppSidebar({
               </div>
             </div>
             {user ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={logout}
-                className="h-8 w-8 flex-shrink-0 hover:bg-slate-100 text-slate-600"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={logout}
+              className="h-8 w-8 flex-shrink-0 hover:bg-slate-100 text-slate-600"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
             ) : (
               <Button
                 variant="outline"
