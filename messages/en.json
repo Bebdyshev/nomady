@@ -85,35 +85,40 @@
       "title": "User Reviews",
       "subtitle": "What do travelers say about Nomady?",
       "items": {
-        "sarah": {
-          "name": "Sarah Johnson",
+        "aron": {
+          "name": "Nathalie Aron",
+          "role": "Adventure & Luxury Travel Creator",
+          "content": "Nomady helped me quickly find the best options for my vacation. The AI suggestions were surprisingly on point!"
+        },
+        "sana": {
+          "name": "Sana",
+          "role": "Travel & Food Blogger",
+          "content": "Nomady revolutionized my travel planning! Its AI finds the most amazing hidden restaurants and food tours I would never discover on my own:)"
+        },
+        "manta": {
+          "name": "Brinda Sharma",
           "role": "Travel Blogger",
-          "content": "Nomady planned my entire 2-week Europe trip in minutes. The recommendations were spot-on and I discovered places I never would have found on my own."
+          "content": "Nomady saved me countless hours of planning! As a travel blogger, I can focus on creating content instead of searching for the best routes📸🌍"
         },
-        "mike": {
-          "name": "Mike Chen", 
-          "role": "Business Executive",
-          "content": "As someone who travels frequently for work, Nomady has become indispensable. It saves me hours of planning and always finds the best deals."
-        },
-        "emma": {
-          "name": "Emma Rodriguez",
-          "role": "Family Traveler", 
-          "content": "Planning family trips used to be stressful. Nomady considers everyone's preferences and creates itineraries that keep both kids and adults happy."
+        "baha": {
+          "name": "Bahredin Zurgambaev",
+          "role": "Mountain Guide",
+          "content": "Nomady saved me tons of time and helped me plan the perfect hiking adventure! 🏔️⏱️ Highly recommend for all explorers!"
         },
         "nurzhan": {
           "name": "Nurzhan Algashov",
           "role": "Traveler",
-          "content": "A very convenient service for planning trips! I liked everything."
+          "content": "A super convenient service for planning trips! Everything was smooth, and I found hidden gems I never expected."
         },
         "madiaubakirov": {
           "name": "Madia Aubakirov",
           "role": "Traveler",
-          "content": "Nomady helped me quickly find the best options for my vacation. I recommend it!"
+          "content": "Nomady helped me quickly find the best options for my vacation. The AI suggestions were surprisingly on point!"
         },
         "zhuldyz_rakhmet": {
           "name": "Zhuldyz Rakhmet",
           "role": "Traveler",
-          "content": "Amazing experience! Everything is simple and clear, I will use it again."
+          "content": "Amazing experience! Everything is simple, clear, and inspiring. I’ll definitely use it again for my next trip!"
         }
       }
     },

@@ -45,6 +45,7 @@ import { HeroHeader } from '@/components/landing/hero-header'
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { TextEffect } from "@/components/motion-primitives/text-effect"
 import { AnimatedGroup } from "@/components/motion-primitives/animated-group"
+import { Marquee } from '@/components/magicui/marquee'
 
 // Lazy-load heavy client-only components to cut initial JS
 const GlobeComponent = dynamic(() => import("@/components/magicui/globe").then(m => m.Globe), { ssr: false })
@@ -282,6 +283,34 @@ export default function LandingPage() {
       content: t('testimonials.items.zhuldyz_rakhmet.content'),
       rating: 5,
       avatar: "/images/zhuldyz_rakhmet.jpg",
+    },
+    {
+      name: t('testimonials.items.manta.name'),
+      role: t('testimonials.items.manta.role'),
+      content: t('testimonials.items.manta.content'),
+      rating: 5,
+      avatar: "/images/manta.jpg",
+    },
+    {
+      name: t('testimonials.items.baha.name'),
+      role: t('testimonials.items.baha.role'),
+      content: t('testimonials.items.baha.content'),
+      rating: 5,
+      avatar: "/images/baha.jpeg",
+    },
+    {
+      name: t('testimonials.items.sana.name'),
+      role: t('testimonials.items.sana.role'),
+      content: t('testimonials.items.sana.content'),
+      rating: 5,
+      avatar: "/images/sana.jpg",
+    },
+    {
+      name: t('testimonials.items.aron.name'),
+      role: t('testimonials.items.aron.role'),
+      content: t('testimonials.items.aron.content'),
+      rating: 5,
+      avatar: "/images/aron.jpg",
     },
   ]
 
@@ -701,64 +730,52 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section id="testimonials" className="py-20">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <TextEffect
-              as="h2"
-              preset="fade-in-blur"
-              speedSegment={0.3}
-              className="text-4xl md:text-5xl font-bold text-slate-900 mb-4"
-              delay={0.1}
-            >
-              {t('testimonials.title')}
-            </TextEffect>
-            <TextEffect
-              as="p"
-              preset="fade-in-blur"
-              speedSegment={0.3}
-              delay={0.1}
-              className="text-xl text-slate-600 max-w-2xl mx-auto"
-            >
-              {t('testimonials.subtitle')}
-            </TextEffect>
-          </div>
-
-          <AnimatedGroup
-            variants={{
-              container: { visible: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } } },
-              item: {
-                hidden: { opacity: 0, y: 20, filter: 'blur(12px)' },
-                visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { type: 'spring', bounce: 0.3, duration: 1.2 } },
-              },
-            }}
-            className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto"
-          >
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="p-6 h-full bg-white border-0 shadow-lg">
-                <div className="flex items-center mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-                <TextEffect as="p" preset="fade-in-blur" speedSegment={0.3} className="text-slate-600 mb-6 leading-relaxed">
-                  {testimonial.content}
-                </TextEffect>
-                <div className="flex items-center">
-                  <img src={testimonial.avatar} alt={testimonial.name} className="h-12 w-12 rounded-full object-cover mr-3 border border-slate-200" />
-                  <div>
-                    <TextEffect as="div" preset="fade-in-blur" speedSegment={0.3} className="font-semibold text-slate-900">
-                      {testimonial.name}
-                    </TextEffect>
-                    <TextEffect as="div" preset="fade-in-blur" speedSegment={0.3} className="text-sm text-slate-500">
-                      {testimonial.role}
-                    </TextEffect>
+      {/* Testimonials Section (Marquee) */}
+      <section className="relative py-20">
+        <div className="mx-auto max-w-5xl px-4 md:px-6">
+          <h2 className="text-center text-3xl font-bold md:text-4xl mb-10">{t('testimonials.title') ?? 'What our travelers say'}</h2>
+          <div className="relative flex w-full flex-col items-center justify-center overflow-hidden">
+            <Marquee pauseOnHover className="[--duration:20s]">
+              {testimonials.slice(0, testimonials.length / 2).map((review, idx) => (
+                <figure
+                  key={idx}
+                  className="relative h-full w-64 cursor-pointer overflow-hidden rounded-xl border p-4 mx-2 border-gray-950/[.1] bg-gray-950/[.01] hover:bg-gray-950/[.05] dark:border-gray-50/[.1] dark:bg-gray-50/[.10] dark:hover:bg-gray-50/[.15]"
+                >
+                  <div className="flex flex-row items-center gap-2">
+                    <img className="rounded-full" width="32" height="32" alt="" src={review.avatar} />
+                    <div className="flex flex-col">
+                      <figcaption className="text-sm font-medium text-slate-900">
+                        {review.name}
+                      </figcaption>
+                      <p className="text-xs font-medium text-slate-600">{review.role}</p>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            ))}
-          </AnimatedGroup>
+                  <blockquote className="mt-2 text-sm">{review.content}</blockquote>
+                </figure>
+              ))}
+            </Marquee>
+            <Marquee reverse pauseOnHover className="[--duration:20s]">
+              {testimonials.slice(testimonials.length / 2).map((review, idx) => (
+                <figure
+                  key={idx}
+                  className="relative h-full w-64 cursor-pointer overflow-hidden rounded-xl border p-4 mx-2 border-gray-950/[.1] bg-gray-950/[.01] hover:bg-gray-950/[.05] dark:border-gray-50/[.1] dark:bg-gray-50/[.10] dark:hover:bg-gray-50/[.15]"
+                >
+                  <div className="flex flex-row items-center gap-2">
+                    <img className="rounded-full" width="32" height="32" alt="" src={review.avatar} />
+                    <div className="flex flex-col">
+                      <figcaption className="text-sm font-medium text-slate-900">
+                        {review.name}
+                      </figcaption>
+                      <p className="text-xs font-medium text-slate-600">{review.role}</p>
+                    </div>
+                  </div>
+                  <blockquote className="mt-2 text-sm">{review.content}</blockquote>
+                </figure>
+              ))}
+            </Marquee>
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r from-background"></div>
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-1/4 bg-gradient-to-l from-background"></div>
+          </div>
         </div>
       </section>
 

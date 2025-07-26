@@ -128,7 +128,7 @@ export const HeroHeader = () => {
                                 <Button
                                     asChild
                                     size="sm"
-                                    className={cn(isScrolled && 'lg:hidden')}
+                                    className={cn('bg-blue-600 text-white', isScrolled && 'lg:hidden')}
                                 >
                                     <Link href="/auth">
                                         <span>{tNav('planTrip')}</span>
@@ -137,7 +137,7 @@ export const HeroHeader = () => {
                                 <Button
                                     asChild
                                     size="sm"
-                                    className={cn(isScrolled ? 'lg:inline-flex' : 'hidden')}
+                                    className={cn('bg-blue-600 text-white', isScrolled ? 'lg:inline-flex' : 'hidden')}
                                 >
                                     <Link href="/auth">
                                         <span>{tNav('getStarted')}</span>

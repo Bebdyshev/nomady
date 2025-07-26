@@ -13,6 +13,18 @@ body {
   .animate-gradient {
     animation: gradient 8s linear infinite;
   }
+  .animation-direction-alternate {
+    animation-direction: alternate;
+  }
+  .animation-direction-reverse {
+    animation-direction: reverse;
+  }
+  .animate-marquee {
+    animation: marquee var(--duration, 40s) infinite linear;
+  }
+  .animate-marquee-vertical {
+    animation: marquee-vertical var(--duration, 40s) infinite linear;
+  }
 }
 
 @layer base {
@@ -54,6 +66,8 @@ body {
   .theme {
     --animate-gradient: gradient 8s linear infinite;
     --animate-line-shadow: line-shadow 15s linear infinite;
+    --animate-marquee: marquee var(--duration) infinite linear;
+    --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
   }
 }
 
@@ -115,6 +129,22 @@ body {
     }
   100% {
     background-position: 100% -100%;
+    }
+  }
+  @keyframes marquee {
+  from {
+    transform: translateX(0);
+    }
+  to {
+    transform: translateX(calc(-100% - var(--gap)));
+    }
+  }
+  @keyframes marquee-vertical {
+  from {
+    transform: translateY(0);
+    }
+  to {
+    transform: translateY(calc(-100% - var(--gap)));
     }
   }
 }
