@@ -43,6 +43,8 @@ import { AppSidebar } from "@/components/shared/app-sidebar"
 import { Message, Conversation, IpGeolocation } from "@/types/chat"
 import { HeroHeader } from '@/components/landing/hero-header'
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { TextEffect } from "@/components/motion-primitives/text-effect"
+import { AnimatedGroup } from "@/components/motion-primitives/animated-group"
 
 // Lazy-load heavy client-only components to cut initial JS
 const GlobeComponent = dynamic(() => import("@/components/magicui/globe").then(m => m.Globe), { ssr: false })
@@ -486,7 +488,7 @@ export default function LandingPage() {
           className="object-cover z-0 opacity-90"
           priority
           placeholder="blur"
-          blurDataURL="/landing/sky-blur.png" // маленькая версия (например, 20x12px, сильно сжатая)
+          blurDataURL="/landing/sky-blur.png"
         />
         <div className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-t from-white/80 to-transparent" />
         <div className="container mx-auto px-6 relative z-20">
@@ -497,138 +499,127 @@ export default function LandingPage() {
                 <Image src="/Launch_SVG_Light.svg" alt="Launch" width={221} height={60} priority />
               </a>
             </div>
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, delay: 0.2, type: "spring", bounce: 0.4 }}
-                className="inline-flex items-center space-x-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-6"
-              >
+            <AnimatedGroup
+              variants={{
+                container: { visible: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } } },
+                item: {
+                  hidden: { opacity: 0, y: 20, filter: 'blur(12px)' },
+                  visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { type: 'spring', bounce: 0.3, duration: 1.2 } },
+                },
+              }}
+              className="inline-flex flex-col items-center w-full"
+            >
+              <div className="inline-flex items-center space-x-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
                 <Logo width={16} height={16} />
-                <AnimatedGradientText className="text-sm" colorFrom="#1d4ed8" colorTo="#3b82f6">
+                <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3} className="text-sm">
                   {t('hero.badge')}
-                </AnimatedGradientText>
-              </motion.div>
-              
-              <motion.h1 
-                className="text-5xl md:text-7xl font-bold mb-6 text-center"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1, delay: 0.3 }}
+                </TextEffect>
+              </div>
+              <TextEffect
+                as="h1"
+                preset="fade-in-blur"
+                speedSegment={0.3}
+                className="text-5xl md:text-7xl font-bold mb-2 text-center"
               >
-                <motion.span 
-                  className="text-slate-900 block"
-                  initial={{ y: 50, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.8, delay: 0.4, type: "spring", bounce: 0.3 }}
-                >
-                  {t('hero.title.line1')}
-                </motion.span>
-                <motion.span 
-                  className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent block"
-                  initial={{ y: 50, opacity: 0, scale: 0.8 }}
-                  animate={{ y: 0, opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.8, delay: 0.6, type: "spring", bounce: 0.3 }}
-                >
-                  {t('hero.title.line2')}
-                </motion.span>
-              </motion.h1>
-
-              <motion.p 
+                {t('hero.title.line1')}
+              </TextEffect>
+              <TextEffect
+                as="span"
+                preset="fade-in-blur"
+                speedSegment={0.3}
+                className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent block mb-6"
+              >
+                {t('hero.title.line2')}
+              </TextEffect>
+              <TextEffect
+                as="p"
+                preset="fade-in-blur"
+                speedSegment={0.3}
+                delay={0.2}
                 className="text-xl md:text-2xl text-slate-600 mb-12 leading-relaxed max-w-3xl mx-auto"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.8, type: "spring", bounce: 0.2 }}
               >
                 {t('hero.subtitle')}
-              </motion.p>
-            </motion.div>
-
+              </TextEffect>
+            </AnimatedGroup>
             {/* Trip Prompt Form */}
-            <motion.div
-              initial={{ opacity: 0, y: 50, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.8, delay: 1, type: "spring", bounce: 0.3 }}
+            <AnimatedGroup
+              variants={{
+                container: { visible: { transition: { staggerChildren: 0.08, delayChildren: 0.5 } } },
+                item: {
+                  hidden: { opacity: 0, y: 20, filter: 'blur(12px)' },
+                  visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { type: 'spring', bounce: 0.3, duration: 1.2 } },
+                },
+              }}
               className="max-w-xl mx-auto mb-16"
             >
               <form onSubmit={handleSubmit} className="relative">
-                <motion.div 
-                  className="relative"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.6, delay: 1.2 }}
-                >
-                  <Input
-                    type="text"
-                    placeholder={placeholders[placeholderIndex].slice(0, charIndex)}
-                    value={tripPrompt}
-                    onChange={(e) => setTripPrompt(e.target.value)}
-                    className="text-[1.2rem] py-6 px-6 pr-16 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:scale-[1.02] shadow-lg"
-                    disabled={isLoading}
-                  />
-                  
-                  <motion.div
-                    className="absolute right-1 inset-y-0 flex items-center"
-                    initial={false}
-                    animate={{
-                      opacity: tripPrompt.trim() ? 1 : 0,
-                      scale: tripPrompt.trim() ? 1 : 0.8,
-                      x: tripPrompt.trim() ? 0 : 10,
-                    }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
+                <Input
+                  type="text"
+                  placeholder={t('hero.placeholder.text1')}
+                  value={tripPrompt}
+                  onChange={(e) => setTripPrompt(e.target.value)}
+                  className="text-[1.2rem] py-6 px-6 pr-16 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:scale-[1.02] shadow-lg"
+                  disabled={isLoading}
+                />
+                <div className="absolute right-1 inset-y-0 flex items-center">
+                  <Button
+                    type="submit"
+                    size="icon"
+                    disabled={!tripPrompt.trim() || isLoading}
+                    className="h-10 w-10 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
                   >
-                    <Button
-                      type="submit"
-                      size="icon"
-                      disabled={!tripPrompt.trim() || isLoading}
-                      className="h-10 w-10 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
-                    >
-                      {isLoading ? (
-                        <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <ArrowRight className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </motion.div>
-                </motion.div>
-              </form>
-              
-              <motion.p 
-                className="text-sm text-slate-500 mt-4 text-center"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.6, delay: 1.6 }}
-              >
-                {t('hero.helpText')}
-              </motion.p>
-            </motion.div>
-
-                          {/* Backed by nFactorial Badge */}
-                          <motion.div 
-                initial={{ opacity: 0, y: -10, scale: 0.8 }} 
-                animate={{ opacity: 1, y: 0, scale: 1 }} 
-                transition={{ duration: 0.8, delay: 1.8, type: "spring", bounce: 0.5 }}
-                className="flex items-center justify-center mb-6"
-              >
-                <div className="group relative mx-auto flex items-center justify-center rounded-full px-4 py-2 shadow-[inset_0_-8px_10px_#ff8f8f1f] transition-all duration-500 ease-out hover:shadow-[inset_0_-5px_10px_#ff8f8f3f] hover:scale-110">
-                  <span
-                    className={cn(
-                      "absolute inset-0 block h-full w-full animate-gradient rounded-[inherit] bg-gradient-to-r from-[#ef4444]/50 via-[#dc2626]/50 to-[#ef4444]/50 bg-[length:300%_100%] p-[1px]",
+                    {isLoading ? (
+                      <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <ArrowRight className="h-4 w-4" />
                     )}
-                    style={{
-                      WebkitMask:
-                        "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-                      WebkitMaskComposite: "destination-out",
-                      mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-                      maskComposite: "subtract",
-                      WebkitClipPath: "padding-box",
-                    }}
-                  />
-                  <Image src="/nfactorial-logo.png" alt="nFactorial Incubator" width={20} height={20} className="h-5 w-5 mr-2" />
-                  <span className="text-slate-600 text-sm font-medium mr-1">{t('hero.backedBy')}</span>
+                  </Button>
                 </div>
-              </motion.div>
+              </form>
+              <div className="flex flex-wrap gap-2 mt-4 justify-center">
+                {(t.raw('hero.suggestions') as string[]).map((s, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-700 text-sm border border-slate-200 transition-colors"
+                    onClick={() => setTripPrompt(s)}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </AnimatedGroup>
+            {/* Backed by nFactorial Badge */}
+            <AnimatedGroup
+              variants={{
+                container: { visible: { transition: { staggerChildren: 0.08, delayChildren: 0.8 } } },
+                item: {
+                  hidden: { opacity: 0, y: 20, filter: 'blur(12px)' },
+                  visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { type: 'spring', bounce: 0.3, duration: 1.2 } },
+                },
+              }}
+              className="flex items-center justify-center mb-6"
+            >
+              <div className="group relative mx-auto flex items-center justify-center rounded-full px-4 py-2 shadow-[inset_0_-8px_10px_#ff8f8f1f] transition-all duration-500 ease-out hover:shadow-[inset_0_-5px_10px_#ff8f8f3f] hover:scale-110">
+                <span
+                  className={cn(
+                    "absolute inset-0 block h-full w-full animate-gradient rounded-[inherit] bg-gradient-to-r from-[#ef4444]/50 via-[#dc2626]/50 to-[#ef4444]/50 bg-[length:300%_100%] p-[1px]",
+                  )}
+                  style={{
+                    WebkitMask:
+                      "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                    WebkitMaskComposite: "destination-out",
+                    mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                    maskComposite: "subtract",
+                    WebkitClipPath: "padding-box",
+                  }}
+                />
+                <Image src="/nfactorial-logo.png" alt="nFactorial Incubator" width={20} height={20} className="h-5 w-5 mr-2" />
+                <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3} className="text-slate-600 text-sm font-medium mr-1">
+                  {t('hero.backedBy')}
+                </TextEffect>
+              </div>
+            </AnimatedGroup>
           </div>
         </div>
       </section>
@@ -636,23 +627,27 @@ export default function LandingPage() {
       {/* Stats Section */}
       <section className="py-16 bg-slate-50">
         <div className="container mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <AnimatedGroup
+            variants={{
+              container: { visible: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } } },
+              item: {
+                hidden: { opacity: 0, y: 20, filter: 'blur(12px)' },
+                visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { type: 'spring', bounce: 0.3, duration: 1.2 } },
+              },
+            }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-8"
+          >
             {stats.map((stat, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                className="text-center"
-              >
-                <div className="text-3xl md:text-4xl font-bold text-blue-600 mb-2">
+              <div key={index} className="text-center">
+                <TextEffect as="div" preset="fade-in-blur" speedSegment={0.3} className="text-3xl md:text-4xl font-bold text-blue-600 mb-2">
                   {stat.number}
-                </div>
-                <div className="text-slate-600 font-medium">{stat.label}</div>
-              </motion.div>
+                </TextEffect>
+                <TextEffect as="div" preset="fade-in-blur" speedSegment={0.3} className="text-slate-600 font-medium">
+                  {stat.label}
+                </TextEffect>
+              </div>
             ))}
-          </div>
+          </AnimatedGroup>
         </div>
       </section>
 
@@ -660,25 +655,36 @@ export default function LandingPage() {
       <section id="how-it-works" className="py-20 bg-slate-50">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
+            <TextEffect
+              as="h2"
+              preset="fade-in-blur"
+              speedSegment={0.3}
+              className="text-4xl md:text-5xl font-bold text-slate-900 mb-4"
             >
-              <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
-                <AnimatedGradientText colorFrom="#3b82f6" colorTo="#1d4ed8" className="text-4xl md:text-5xl font-bold">
-                  {t('howItWorks.title')}
-                </AnimatedGradientText>
-              </h2>
-              <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-                {t('howItWorks.subtitle')}
-              </p>
-            </motion.div>
+              {t('howItWorks.title')}
+            </TextEffect>
+            <TextEffect
+              as="p"
+              preset="fade-in-blur"
+              speedSegment={0.3}
+              delay={0.1}
+              className="text-xl text-slate-600 max-w-2xl mx-auto"
+            >
+              {t('howItWorks.subtitle')}
+            </TextEffect>
           </div>
 
           <div className="max-w-4xl mx-auto">
-            <div className="grid md:grid-cols-3 gap-8">
+            <AnimatedGroup
+              variants={{
+                container: { visible: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } } },
+                item: {
+                  hidden: { opacity: 0, y: 20, filter: 'blur(12px)' },
+                  visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { type: 'spring', bounce: 0.3, duration: 1.2 } },
+                },
+              }}
+              className="grid md:grid-cols-3 gap-8"
+            >
               {[
                 {
                   step: "1",
@@ -699,14 +705,7 @@ export default function LandingPage() {
                   icon: <CheckCircle className="h-8 w-8" />,
                 },
               ].map((step, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.2 }}
-                  viewport={{ once: true }}
-                  className="text-center relative"
-                >
+                <div key={index} className="text-center relative">
                   <div className="relative">
                     <div className="h-16 w-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white">
                       {step.icon}
@@ -715,11 +714,15 @@ export default function LandingPage() {
                       <span className="text-sm font-bold text-blue-600">{step.step}</span>
                     </div>
                   </div>
-                  <h3 className="text-xl font-semibold mb-3 text-slate-900">{step.title}</h3>
-                  <p className="text-slate-600">{step.description}</p>
-                </motion.div>
+                  <TextEffect as="div" preset="fade-in-blur" speedSegment={0.3} className="text-xl font-semibold mb-3 text-slate-900">
+                    {step.title}
+                  </TextEffect>
+                  <TextEffect as="div" preset="fade-in-blur" speedSegment={0.3} className="text-slate-600">
+                    {step.description}
+                  </TextEffect>
+                </div>
               ))}
-            </div>
+            </AnimatedGroup>
           </div>
         </div>
       </section>
@@ -728,50 +731,60 @@ export default function LandingPage() {
       <section id="testimonials" className="py-20">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
+            <TextEffect
+              as="h2"
+              preset="fade-in-blur"
+              speedSegment={0.3}
+              className="text-4xl md:text-5xl font-bold text-slate-900 mb-4"
+              delay={0.1}
             >
-              <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
-                <AnimatedGradientText colorFrom="#f59e0b" colorTo="#d97706" className="text-4xl md:text-5xl font-bold">
-                  {t('testimonials.title')}
-                </AnimatedGradientText>
-              </h2>
-              <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-                {t('testimonials.subtitle')}
-              </p>
-            </motion.div>
+              {t('testimonials.title')}
+            </TextEffect>
+            <TextEffect
+              as="p"
+              preset="fade-in-blur"
+              speedSegment={0.3}
+              delay={0.1}
+              className="text-xl text-slate-600 max-w-2xl mx-auto"
+            >
+              {t('testimonials.subtitle')}
+            </TextEffect>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <AnimatedGroup
+            variants={{
+              container: { visible: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } } },
+              item: {
+                hidden: { opacity: 0, y: 20, filter: 'blur(12px)' },
+                visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { type: 'spring', bounce: 0.3, duration: 1.2 } },
+              },
+            }}
+            className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto"
+          >
             {testimonials.map((testimonial, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <Card className="p-6 h-full bg-white border-0 shadow-lg">
-                  <div className="flex items-center mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                    ))}
+              <Card key={index} className="p-6 h-full bg-white border-0 shadow-lg">
+                <div className="flex items-center mb-4">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                  ))}
+                </div>
+                <TextEffect as="p" preset="fade-in-blur" speedSegment={0.3} className="text-slate-600 mb-6 leading-relaxed">
+                  {testimonial.content}
+                </TextEffect>
+                <div className="flex items-center">
+                  <img src={testimonial.avatar} alt={testimonial.name} className="h-12 w-12 rounded-full object-cover mr-3 border border-slate-200" />
+                  <div>
+                    <TextEffect as="div" preset="fade-in-blur" speedSegment={0.3} className="font-semibold text-slate-900">
+                      {testimonial.name}
+                    </TextEffect>
+                    <TextEffect as="div" preset="fade-in-blur" speedSegment={0.3} className="text-sm text-slate-500">
+                      {testimonial.role}
+                    </TextEffect>
                   </div>
-                  <p className="text-slate-600 mb-6 leading-relaxed">"{testimonial.content}"</p>
-                  <div className="flex items-center">
-                    <img src={testimonial.avatar} alt={testimonial.name} className="h-12 w-12 rounded-full object-cover mr-3 border border-slate-200" />
-                    <div>
-                      <div className="font-semibold text-slate-900">{testimonial.name}</div>
-                      <div className="text-sm text-slate-500">{testimonial.role}</div>
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
+                </div>
+              </Card>
             ))}
-          </div>
+          </AnimatedGroup>
         </div>
       </section>
 
@@ -850,104 +863,175 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Features Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-6">
+          <AnimatedGroup
+            variants={{
+              container: { visible: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } } },
+              item: {
+                hidden: { opacity: 0, y: 20, filter: 'blur(12px)' },
+                visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { type: 'spring', bounce: 0.3, duration: 1.2 } },
+              },
+            }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+          >
+            {features.map((feature, index) => (
+              <div key={index} className={`p-6 rounded-xl shadow-lg ${feature.color}`}> 
+                <div className="mb-4 flex justify-center">{feature.icon}</div>
+                <TextEffect as="div" preset="fade-in-blur" speedSegment={0.3} className="text-xl font-bold mb-2 text-center">
+                  {feature.title}
+                </TextEffect>
+                <TextEffect as="div" preset="fade-in-blur" speedSegment={0.3} className="text-slate-600 text-center">
+                  {feature.description}
+                </TextEffect>
+              </div>
+            ))}
+          </AnimatedGroup>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="bg-slate-900 text-white py-16">
         <div className="container mx-auto px-6">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
+          <AnimatedGroup
+            variants={{
+              container: { visible: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } } },
+              item: {
+                hidden: { opacity: 0, y: 20, filter: 'blur(12px)' },
+                visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { type: 'spring', bounce: 0.3, duration: 1.2 } },
+              },
+            }}
+            className="grid md:grid-cols-4 gap-8 mb-8"
+          >
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <Logo width={32} height={32} className="rounded-lg" />
                 <span className="text-xl font-bold text-blue-400">Nomady</span>
               </div>
-              <p className="text-slate-400 mb-4">
+              <TextEffect as="p" preset="fade-in-blur" speedSegment={0.3} className="text-slate-400 mb-4">
                 {t('footer.description')}
-              </p>
+              </TextEffect>
               <div className="flex space-x-4">{/* Social media icons would go here */}</div>
             </div>
 
             <div>
-              <h4 className="font-semibold mb-4">{t('footer.product')}</h4>
+              <TextEffect as="h4" preset="fade-in-blur" speedSegment={0.3} className="font-semibold mb-4">
+                {t('footer.product')}
+              </TextEffect>
               <ul className="space-y-2 text-slate-400">
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    {t('footer.links.features')}
+                    <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3}>
+                      {t('footer.links.features')}
+                    </TextEffect>
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    {t('footer.links.pricing')}
+                    <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3}>
+                      {t('footer.links.pricing')}
+                    </TextEffect>
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    {t('footer.links.api')}
+                    <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3}>
+                      {t('footer.links.api')}
+                    </TextEffect>
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    {t('footer.links.mobileApp')}
+                    <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3}>
+                      {t('footer.links.mobileApp')}
+                    </TextEffect>
                   </a>
                 </li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-semibold mb-4">{t('footer.company')}</h4>
+              <TextEffect as="h4" preset="fade-in-blur" speedSegment={0.3} className="font-semibold mb-4">
+                {t('footer.company')}
+              </TextEffect>
               <ul className="space-y-2 text-slate-400">
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    {t('footer.links.about')}
+                    <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3}>
+                      {t('footer.links.about')}
+                    </TextEffect>
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    {t('footer.links.blog')}
+                    <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3}>
+                      {t('footer.links.blog')}
+                    </TextEffect>
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    {t('footer.links.careers')}
+                    <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3}>
+                      {t('footer.links.careers')}
+                    </TextEffect>
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    {t('footer.links.contact')}
+                    <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3}>
+                      {t('footer.links.contact')}
+                    </TextEffect>
                   </a>
                 </li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-semibold mb-4">{t('footer.support')}</h4>
+              <TextEffect as="h4" preset="fade-in-blur" speedSegment={0.3} className="font-semibold mb-4">
+                {t('footer.support')}
+              </TextEffect>
               <ul className="space-y-2 text-slate-400">
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    {t('footer.links.helpCenter')}
+                    <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3}>
+                      {t('footer.links.helpCenter')}
+                    </TextEffect>
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    {t('footer.links.privacy')}
+                    <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3}>
+                      {t('footer.links.privacy')}
+                    </TextEffect>
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    {t('footer.links.terms')}
+                    <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3}>
+                      {t('footer.links.terms')}
+                    </TextEffect>
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    {t('footer.links.status')}
+                    <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3}>
+                      {t('footer.links.status')}
+                    </TextEffect>
                   </a>
                 </li>
               </ul>
             </div>
-          </div>
+          </AnimatedGroup>
 
           <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-slate-400 text-sm">{t('footer.copyright')}</p>
+            <TextEffect as="p" preset="fade-in-blur" speedSegment={0.3} className="text-slate-400 text-sm">
+              {t('footer.copyright')}
+            </TextEffect>
             <div className="flex items-center space-x-6 mt-4 md:mt-0">
-              <span className="text-slate-400 text-sm">{t('footer.madeWith')}</span>
+              <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3} className="text-slate-400 text-sm">
+                {t('footer.madeWith')}
+              </TextEffect>
             </div>
           </div>
         </div>

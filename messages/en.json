@@ -8,14 +8,18 @@
       },
       "subtitle": "Skip the endless research.",
       "placeholder": {
-        "text1": "Plan a 5-day trip to Tokyo for 2 people...",
-        "text2": "Budget-friendly weekend in Barcelona...",
-        "text3": "Romantic honeymoon in Bali for 7 days...",
-        "text4": "Family adventure in Disneyland next summer...",
-        "text5": "Solo backpacking across South America for a month..."
+        "text1": "Describe your dream trip...",
+        "text2": "Plan a 5-day trip to Tokyo for 2 people",
+        "text3": "Budget-friendly weekend in Barcelona",
+        "text4": "Romantic honeymoon in Bali for 7 days"
       },
       "helpText": "No credit card required • Get started in 30 seconds",
-      "backedBy": "Backed by nFactorial Incubator"
+      "backedBy": "Backed by nFactorial Incubator",
+      "suggestions": [
+        "Plan a 5-day trip to Tokyo for 2 people",
+        "Budget-friendly weekend in Barcelona",
+        "Romantic honeymoon in Bali for 7 days"
+      ]
     },
     "stats": {
       "travelers": "Happy Travelers",
@@ -472,11 +476,18 @@
     }
   },
   "navigation": {
+    "menu": {
+      "features": "Features",
+      "solution": "Solution", 
+      "pricing": "Pricing",
+      "about": "About"
+    },
     "features": "Features",
     "howItWorks": "How it Works", 
     "pricing": "Pricing",
     "reviews": "Reviews",
     "signIn": "Sign In",
+    "planTrip": "Plan your trip",
     "getStarted": "Plan Your Trip"
   },
   "common": {
