@@ -524,15 +524,7 @@ export default function LandingPage() {
                 speedSegment={0.3}
                 className="text-5xl md:text-7xl font-bold mb-2 text-center"
               >
-                {t('hero.title.line1')}
-              </TextEffect>
-              <TextEffect
-                as="span"
-                preset="fade-in-blur"
-                speedSegment={0.3}
-                className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent block mb-6"
-              >
-                {t('hero.title.line2')}
+                {t('hero.title.line1') + ' ' + t('hero.title.line2')}
               </TextEffect>
               <TextEffect
                 as="p"
