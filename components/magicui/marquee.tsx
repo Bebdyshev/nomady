@@ -30,11 +30,6 @@ interface MarqueeProps extends ComponentPropsWithoutRef<"div"> {
    * @default 4
    */
   repeat?: number;
-  /**
-   * Whether to animate in alternate (ping-pong) direction
-   * @default false
-   */
-  alternate?: boolean;
 }
 
 export function Marquee({
@@ -44,7 +39,6 @@ export function Marquee({
   children,
   vertical = false,
   repeat = 4,
-  alternate = false,
   ...props
 }: MarqueeProps) {
   return (
@@ -68,8 +62,7 @@ export function Marquee({
               "animate-marquee flex-row": !vertical,
               "animate-marquee-vertical flex-col": vertical,
               "group-hover:[animation-play-state:paused]": pauseOnHover,
-              "animation-direction-reverse": reverse && !alternate,
-              "animation-direction-alternate": alternate,
+              "[animation-direction:reverse]": reverse,
             })}
           >
             {children}

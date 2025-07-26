@@ -117,34 +117,32 @@ body {
   overflow: hidden;
 }
 
-@theme inline {
-  @keyframes gradient {
+@keyframes gradient {
   to {
     background-position: var(--bg-size, 300%) 0;
-    }
   }
-  @keyframes line-shadow {
+}
+@keyframes line-shadow {
   0% {
     background-position: 0 0;
-    }
+  }
   100% {
     background-position: 100% -100%;
-    }
   }
-  @keyframes marquee {
+}
+@keyframes marquee {
   from {
     transform: translateX(0);
-    }
+  }
   to {
     transform: translateX(calc(-100% - var(--gap)));
-    }
   }
-  @keyframes marquee-vertical {
+}
+@keyframes marquee-vertical {
   from {
     transform: translateY(0);
-    }
+  }
   to {
     transform: translateY(calc(-100% - var(--gap)));
-    }
   }
 }
