@@ -122,54 +122,81 @@
       "subtitle": "Choose the plan that fits your travel needs. Upgrade or downgrade anytime.",
       "plans": {
         "free": {
-          "name": "Free",
+          "name": "Free Explorer",
           "price": "$0",
           "period": "forever",
           "description": "Perfect for occasional travelers",
           "popular": false,
           "features": [
-            "3 trip plans per month",
-            "Basic recommendations", 
-            "Email support",
-            "Mobile app access"
+            "5 AI trip suggestions per month",
+            "Basic itinerary planning",
+            "Community support"
           ],
-          "cta": "Get Started Free"
+          "cta": "Start Free"
         },
         "pro": {
-          "name": "Pro",
-          "price": "$9.99", 
-          "period": "per month",
-          "description": "Ideal for frequent travelers",
+          "name": "Pro Traveler",
+          "price": "$3",
+          "period": "month",
+          "description": "For frequent travelers and adventurers",
           "popular": true,
           "features": [
-            "Unlimited trip plans",
-            "Advanced AI recommendations",
-            "Priority support",
-            "Collaborative planning", 
-            "Real-time price alerts",
-            "Offline access"
+            "Unlimited AI trip suggestions",
+            "Advanced itinerary customization",
+            "Priority customer support",
+            "Offline access",
+            "Group planning tools",
+            "Real-time travel updates"
           ],
-          "cta": "Start Pro Plan"
+          "cta": "Start Pro Trial"
         },
         "team": {
-          "name": "Team",
-          "price": "$19.99",
-          "period": "per month", 
-          "description": "Best for travel agencies & groups",
+          "name": "Team Explorer",
+          "price": "Let's talk",
+          "period": "",
+          "description": "Perfect for travel agencies and teams",
           "popular": false,
           "features": [
             "Everything in Pro",
             "Team collaboration tools",
             "White-label options",
             "API access",
-            "Custom integrations", 
+            "Custom integrations",
             "Dedicated account manager"
           ],
-          "cta": "Start Team Plan"
+          "cta": "Contact Sales"
         }
       },
       "mostPopular": "Most Popular"
     },
+    "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Discover quick and comprehensive answers to common questions about our platform, services, and features.",
+    "contactText": "Can't find what you're looking for? Contact our",
+    "contactLink": "customer support team",
+    "items": {
+      "aiPlanning": {
+        "question": "How does AI-powered trip planning work?",
+        "answer": "Our AI analyzes millions of data points including flight prices, hotel reviews, local attractions, and user preferences to create personalized itineraries. Simply describe your dream trip in natural language, and our AI will generate a complete travel plan with flights, hotels, activities, and local recommendations."
+      },
+      "paymentMethods": {
+        "question": "What payment methods do you accept?",
+        "answer": "We accept all major credit cards (Visa, Mastercard, American Express), PayPal, Apple Pay, and Google Pay. For enterprise customers, we also offer invoicing options. All payments are processed securely through our trusted payment partners."
+      },
+      "internationalDestinations": {
+        "question": "Do you work with international destinations?",
+        "answer": "Yes, we cover over 200 countries worldwide with comprehensive travel information. Our AI provides local insights, cultural recommendations, and safety updates for international destinations. We also offer multi-language support for global travelers."
+      },
+      "aiPlanner": {
+        "question": "How does the AI travel planner work?",
+        "answer": "Our AI travel planner uses advanced machine learning to understand your preferences, budget, and travel style. It analyzes real-time data from multiple sources to recommend the best flights, hotels, and activities. The more you use it, the better it learns your preferences."
+      },
+      "dataSecurity": {
+        "question": "Is my data secure?",
+        "answer": "Yes, we take data security seriously. All personal information is encrypted and stored securely. We never share your data with third parties without your consent. Our platform complies with international data protection regulations including GDPR."
+      }
+    }
+  },
     "cta": {
       "title": "Ready to Plan Your Next Adventure?",
       "subtitle": "Join thousands of travelers who trust Nomady to create their perfect trips.",
@@ -187,7 +214,6 @@
         "features": "Features",
         "pricing": "Pricing",
         "api": "API",
-        "mobileApp": "Mobile App",
         "about": "About",
         "blog": "Blog", 
         "careers": "Careers",

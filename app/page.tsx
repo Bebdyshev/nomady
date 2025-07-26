@@ -292,35 +292,9 @@ export default function LandingPage() {
     { number: "4.9/5", label: t('stats.rating') },
   ]
 
-  const pricingPlans = [
-    {
-      name: t('pricing.plans.free.name'),
-      price: t('pricing.plans.free.price'),
-      period: t('pricing.plans.free.period'),
-      description: t('pricing.plans.free.description'),
-      features: t('pricing.plans.free.features'),
-      popular: false,
-      cta: t('pricing.plans.free.cta'),
-    },
-    {
-      name: t('pricing.plans.pro.name'),
-      price: t('pricing.plans.pro.price'),
-      period: t('pricing.plans.pro.period'),
-      description: t('pricing.plans.pro.description'),
-      features: t('pricing.plans.pro.features'),
-      popular: true,
-      cta: t('pricing.plans.pro.cta'),
-    },
-    {
-      name: t('pricing.plans.team.name'),
-      price: t('pricing.plans.team.price'),
-      period: t('pricing.plans.team.period'),
-      description: t('pricing.plans.team.description'),
-      features: t('pricing.plans.team.features'),
-      popular: false,
-      cta: t('pricing.plans.team.cta'),
-    },
-  ]
+  // Remove the hardcoded pricingPlans array
+  // Use translation-based plans
+  const planKeys = ['free', 'pro', 'team'];
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -808,86 +782,122 @@ export default function LandingPage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {pricingPlans.map((plan, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <Card
-                  className={`p-8 h-full relative ${
-                    plan.popular ? "border-2 border-blue-500 shadow-xl scale-105" : "border-0 shadow-lg"
-                  } bg-white`}
+            {planKeys.map((key: string, index: number) => {
+              const plan = t.raw(`pricing.plans.${key}`) as any;
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  viewport={{ once: true }}
                 >
-                  {plan.popular && (
-                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                      <div className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-medium">
-                        {t('pricing.mostPopular')}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="text-center mb-8">
-                    <h3 className="text-2xl font-bold text-slate-900 mb-2">{plan.name}</h3>
-                    <div className="mb-4">
-                      <span className="text-4xl font-bold text-slate-900">{plan.price}</span>
-                      <span className="text-slate-500">/{plan.period}</span>
-                    </div>
-                    <p className="text-slate-600">{plan.description}</p>
-                  </div>
-                  <ul className="space-y-4 mb-8">
-                    {Array.isArray(plan.features) && plan.features.map((feature: string, featureIndex: number) => (
-                      <li key={featureIndex} className="flex items-center">
-                        <CheckCircle className="h-5 w-5 text-blue-600 mr-3 flex-shrink-0" />
-                        <span className="text-slate-600">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <Button
-                    className={`w-full ${
-                      plan.popular
-                        ? "bg-blue-600 hover:bg-blue-700 text-white"
-                        : "bg-slate-100 hover:bg-slate-200 text-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-white"
-                    }`}
-                    onClick={() => router.push("/auth")}
+                  <Card
+                    className={`p-8 relative ${
+                      plan.popular ? "border-2 border-blue-500 shadow-xl scale-105" : "border-0 shadow-lg"
+                    } bg-white`}
                   >
-                    {plan.cta}
-                  </Button>
-                </Card>
-              </motion.div>
-            ))}
+                    {plan.popular && (
+                      <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                        <div className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-medium text-center">
+                          {t('pricing.mostPopular')}
+                        </div>
+                      </div>
+                    )}
+                    <div className="text-center mb-8">
+                      <h3 className="text-2xl font-bold text-slate-900 mb-2">{plan.name}</h3>
+                      <div className="mb-4">
+                        <span className="text-4xl font-bold text-slate-900">{plan.price}</span>
+                        {plan.period && <span className="text-slate-500">/{plan.period}</span>}
+                      </div>
+                      <p className="text-slate-600">{plan.description}</p>
+                    </div>
+                    <ul className="space-y-4 mb-8">
+                      {Array.isArray(plan.features) && plan.features.map((feature: string, featureIndex: number) => (
+                        <li key={featureIndex} className="flex items-center">
+                          <CheckCircle className="h-5 w-5 text-blue-600 mr-3 flex-shrink-0" />
+                          <span className="text-slate-600">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Button
+                      className={`w-full ${
+                        plan.popular
+                          ? "bg-blue-600 hover:bg-blue-700 text-white"
+                          : "bg-slate-100 hover:bg-slate-200 text-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-white"
+                      }`}
+                      onClick={() => router.push("/auth")}
+                    >
+                      {plan.cta}
+                    </Button>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 bg-white">
+      {/* FAQ Section */}
+      <section className="py-20">
         <div className="container mx-auto px-6">
-          <AnimatedGroup
-            variants={{
-              container: { visible: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } } },
-              item: {
-                hidden: { opacity: 0, y: 20, filter: 'blur(12px)' },
-                visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { type: 'spring', bounce: 0.3, duration: 1.2 } },
-              },
-            }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8"
-          >
-            {features.map((feature, index) => (
-              <div key={index} className={`p-6 rounded-xl shadow-lg ${feature.color}`}> 
-                <div className="mb-4 flex justify-center">{feature.icon}</div>
-                <TextEffect as="div" preset="fade-in-blur" speedSegment={0.3} className="text-xl font-bold mb-2 text-center">
-                  {feature.title}
-                </TextEffect>
-                <TextEffect as="div" preset="fade-in-blur" speedSegment={0.3} className="text-slate-600 text-center">
-                  {feature.description}
-                </TextEffect>
+          <div className="text-center mb-16">
+            <TextEffect
+              as="h2"
+              preset="fade-in-blur"
+              speedSegment={0.3}
+              className="text-4xl md:text-5xl font-bold text-slate-900 mb-4"
+            >
+              {t('faq.title')}
+            </TextEffect>
+            <TextEffect
+              as="p"
+              preset="fade-in-blur"
+              speedSegment={0.3}
+              delay={0.1}
+              className="text-xl text-slate-600 max-w-2xl mx-auto"
+            >
+              {t('faq.subtitle')}
+            </TextEffect>
+          </div>
+
+          <div className="mx-auto max-w-4xl">
+            <AnimatedGroup
+              variants={{
+                container: { visible: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } } },
+                item: {
+                  hidden: { opacity: 0, y: 20, filter: 'blur(12px)' },
+                  visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { type: 'spring', bounce: 0.3, duration: 1.2 } },
+                },
+              }}
+            >
+              <div className="bg-card ring-muted w-full rounded-2xl border px-8 py-3 shadow-sm ring-4 dark:ring-0">
+                {Object.keys(t.raw('faq.items')).map((key) => (
+                  <div key={key} className="border-b border-dashed last:border-b-0">
+                    <details className="group">
+                      <summary className="cursor-pointer text-base hover:no-underline py-4 font-medium text-slate-900">
+                        {t(`faq.items.${key}.question`)}
+                      </summary>
+                      <div className="pb-4">
+                        <p className="text-base text-slate-600 leading-relaxed">
+                          {t(`faq.items.${key}.answer`)}
+                        </p>
+                      </div>
+                    </details>
+                  </div>
+                ))}
               </div>
-            ))}
-          </AnimatedGroup>
+
+              <div className="text-center mt-8">
+                <p className="text-slate-600">
+                  {t('faq.contactText')}{' '}
+                  <a href="#" className="text-blue-600 font-medium hover:underline">
+                    {t('faq.contactLink')}
+                  </a>
+                </p>
+              </div>
+            </AnimatedGroup>
+          </div>
         </div>
       </section>
 
