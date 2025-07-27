@@ -190,7 +190,7 @@ class ApiClient {
     ipGeolocation?: { ip: string; country: string; country_name: string; city: string; region?: string }
   ) {
     const params = new URLSearchParams()
-    if (conversationId) {
+    if (conversationId && conversationId !== "null" && conversationId !== "undefined") {
       params.append("conversation_id", conversationId)
     }
 
@@ -208,14 +208,62 @@ class ApiClient {
       }
     }
 
+    const url = `/chat/?${params.toString()}`
     return this.request<{
       response: string
       conversation_id: string
       tool_output?: any
-    }>(`/chat/?${params.toString()}`, {
+    }>(url, {
       method: "POST",
       body: JSON.stringify(requestBody),
     })
+  }
+
+  async sendMessageStream(
+    messages: Array<{ role: string; content: string }>, 
+    mode?: string,
+    conversationId?: string,
+    ipGeolocation?: { ip: string; country: string; country_name: string; city: string; region?: string }
+  ): Promise<ReadableStream<Uint8Array>> {
+    const params = new URLSearchParams()
+    if (conversationId && conversationId !== "null" && conversationId !== "undefined") {
+      params.append("conversation_id", conversationId)
+    }
+
+    const requestBody: any = { messages }
+    if (mode) {
+      requestBody.mode = mode
+    }
+    if (ipGeolocation) {
+      requestBody.location = {
+        country: ipGeolocation.country,
+        country_name: ipGeolocation.country_name,
+        city: ipGeolocation.city,
+        region: ipGeolocation.region,
+        ip: ipGeolocation.ip
+      }
+    }
+
+    const url = `${this.baseURL}/chat/stream?${params.toString()}`
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    }
+
+    if (this.token) {
+      headers.Authorization = `Bearer ${this.token}`
+    }
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(requestBody),
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    return response.body!
   }
 
   // Оставляем только sendMessage для обычного POST /chat

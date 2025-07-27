@@ -368,8 +368,9 @@ export default function ChatPage() {
       const messagesToSend = [{ role: "user", content: input }]
       const response = await apiClient.sendMessage(
         messagesToSend,
-        currentConversationId || undefined,
-        ipGeolocation || undefined,
+        "search", // mode
+        currentConversationId || undefined, // conversationId
+        ipGeolocation || undefined, // ipGeolocation
       )
 
       console.log('Backend response:', response.data)

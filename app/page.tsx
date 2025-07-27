@@ -154,23 +154,98 @@ export default function LandingPage() {
   // 3. При отправке сообщений через demo endpoint — всегда передавать sessionId
   const handleSendMessage = async (inputText: string) => {
     if (!inputText.trim() || isChatLoading || isChatStreaming) return;
+    
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
       content: inputText,
       timestamp: new Date(),
+      mode: chatMode
     };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsChatLoading(true);
-    setIsChatStreaming(true);
+    
+    // Only use streaming for generate mode
+    if (chatMode === "generate") {
+      setIsChatStreaming(true);
+    }
+    
     const assistantMessageId = (Date.now() + 1).toString();
-    setMessages((prev) => [...prev, { id: assistantMessageId, role: "assistant", content: "", timestamp: new Date() }]);
+    setMessages((prev) => [...prev, { 
+      id: assistantMessageId, 
+      role: "assistant", 
+      content: "", 
+      timestamp: new Date(),
+      mode: chatMode
+    }]);
+    
     try {
       let response;
       if (isAuthenticated) {
-        response = await apiClient.sendMessage([{ role: "user", content: inputText }], chatMode);
+        // For search mode, use regular POST without streaming
+        if (chatMode === "search") {
+          const conversationId = currentConversationId && 
+                               currentConversationId !== "null" && 
+                               currentConversationId !== "undefined" && 
+                               typeof currentConversationId === "string" ? 
+                               currentConversationId : undefined;
+          response = await apiClient.sendMessage([{ role: "user", content: inputText }], chatMode, conversationId);
+        } else {
+          // For generate mode, use streaming
+          try {
+            const conversationId = currentConversationId && 
+                                 currentConversationId !== "null" && 
+                                 currentConversationId !== "undefined" && 
+                                 typeof currentConversationId === "string" ? 
+                                 currentConversationId : undefined;
+            const stream = await apiClient.sendMessageStream([{ role: "user", content: inputText }], chatMode, conversationId);
+            const reader = stream.getReader();
+            const decoder = new TextDecoder();
+            let fullResponse = "";
+            let toolOutput = null;
+            let responseConversationId = currentConversationId;
+
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+
+              const chunk = decoder.decode(value);
+              const lines = chunk.split('\n');
+
+              for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                  try {
+                    const data = JSON.parse(line.slice(6));
+                    
+                    if (data.type === 'text_chunk') {
+                      fullResponse += data.data;
+                      setStreamingMessage(fullResponse);
+                    } else if (data.type === 'tool_output') {
+                      toolOutput = data.data;
+                    } else if (data.type === 'complete') {
+                      responseConversationId = data.conversation_id;
+                      toolOutput = data.tool_output;
+                    }
+                  } catch (e) {
+                    console.error('Error parsing stream data:', e);
+                  }
+                }
+              }
+            }
+
+            response = {
+              response: fullResponse,
+              conversation_id: responseConversationId,
+              tool_output: toolOutput
+            };
+          } catch (error) {
+            console.error('Streaming error:', error);
+            response = { response: "Sorry, error occurred during generation." };
+          }
+        }
       } else {
+        // Demo mode - always use regular POST
         const res = await fetch(`${API_BASE_URL}/chat/demo?session_id=${sessionId}`,
           {
             method: 'POST',
@@ -189,6 +264,15 @@ export default function LandingPage() {
           response = await res.json();
         }
       }
+      
+      // Update conversation_id if returned from API
+      if (response.data?.conversation_id || response.conversation_id) {
+        const newConversationId = response.data?.conversation_id || response.conversation_id;
+        if (newConversationId && typeof newConversationId === "string") {
+          setCurrentConversationId(newConversationId);
+        }
+      }
+      
       setMessages((prev) => prev.map((msg) =>
         msg.id === assistantMessageId
           ? {
