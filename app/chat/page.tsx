@@ -14,6 +14,7 @@ import {
   MessagesList, 
   ChatInput 
 } from "@/components/chat"
+import { ChatModeSwitcher } from "@/components/chat/chat-mode-switcher"
 import { AppSidebar } from "@/components/shared/app-sidebar"
 import { Message, Conversation, IpGeolocation } from "@/types/chat"
 import { Button } from "@/components/ui/button"
@@ -59,6 +60,7 @@ export default function ChatPage() {
   const [isLoadingLocation, setIsLoadingLocation] = useState(false)
   const [showMobileMap, setShowMobileMap] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [chatMode, setChatMode] = useState<"search" | "generate">("search")
   
   // Debouncing for streaming updates to reduce DOM thrashing
   const [pendingStreamingUpdate, setPendingStreamingUpdate] = useState<string>("")
@@ -618,6 +620,18 @@ export default function ChatPage() {
               />
             </div>
 
+            {/* Desktop Header with Mode Switcher */}
+            <div className="hidden md:block sticky top-0 z-30 bg-white border-b border-slate-200">
+              <div className="flex items-center justify-between p-4">
+                <div className="flex items-center space-x-4">
+                  <h1 className="text-xl font-semibold text-slate-900">{chatTitle}</h1>
+                </div>
+                <div className="flex items-center space-x-4">
+                  {/* Right side can be used for additional controls if needed */}
+                </div>
+              </div>
+            </div>
+
             {/* Messages Container - add extra bottom padding on mobile */}
             <div className="flex-1 overflow-y-auto min-h-0 h-full" style={{ paddingBottom: isMobile ? 112 : 0 }}>
               <MessagesList
@@ -631,6 +645,8 @@ export default function ChatPage() {
                 bookedIds={bookedIds}
                 onBooked={handleBooked}
                 onSuggestionClick={setInput}
+                currentMode={chatMode}
+                onModeChange={setChatMode}
               />
             </div>
 

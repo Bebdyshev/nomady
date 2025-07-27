@@ -1,38 +1,75 @@
 "use client"
 
-import { MessageCircle } from "lucide-react"
+import { MessageCircle, Search, Sparkles } from "lucide-react"
 import { motion } from "framer-motion"
 import { useTranslations } from "@/lib/i18n-client"
+import Image from "next/image"
+import { ChatModeSwitcher } from "./chat-mode-switcher"
 
 interface WelcomeScreenProps {
   onSuggestionClick: (text: string) => void
+  currentMode?: "search" | "generate"
+  onModeChange?: (mode: "search" | "generate") => void
 }
 
-export function WelcomeScreen({ onSuggestionClick }: WelcomeScreenProps) {
+export function WelcomeScreen({ 
+  onSuggestionClick, 
+  currentMode = "search", 
+  onModeChange 
+}: WelcomeScreenProps) {
   const t = useTranslations('chat.welcome')
 
-  // Use translations for suggestions
-  const suggestions = [
-    { icon: "🍽️", text: t('suggestions.2') },
-    { icon: "🎯", text: t('suggestions.3') },
-    { icon: "💰", text: t('suggestions.4') },
-    { icon: "🌏", text: t('suggestions.1') },
+  // Different suggestions based on mode
+  const searchSuggestions = [
+    { icon: "✈️", text: "Find flights from New York to Tokyo" },
+    { icon: "🏨", text: "Best hotels in London under $300" },
+    { icon: "🍽️", text: "Family-friendly restaurants in Rome" },
+    { icon: "🎯", text: "Things to do in Barcelona" },
   ]
+
+  const generateSuggestions = [
+    { icon: "📝", text: "Create a 5-day itinerary for Paris" },
+    { icon: "💡", text: "Plan a romantic honeymoon in Bali" },
+    { icon: "🎒", text: "Design a budget backpacking trip" },
+    { icon: "👨‍👩‍👧‍👦", text: "Plan a family vacation to Disney World" },
+  ]
+
+  const suggestions = currentMode === "search" ? searchSuggestions : generateSuggestions
 
   return (
     <div className="flex flex-col items-center justify-center h-full min-h-[60vh] text-center">
-      <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4 md:mb-6">
-        <MessageCircle className="w-8 h-8 md:w-10 md:h-10 text-white" />
-      </div>
+      {/* Mode Switcher at the top */}
+      {onModeChange && (
+        <div className="mb-6">
+          <ChatModeSwitcher
+            currentMode={currentMode}
+            onModeChange={onModeChange}
+            className="text-sm"
+          />
+        </div>
+      )}
+      
+      <div className="w-16 bg-blue-500"> </div>
+      {
+        currentMode === "search" ? (
+          <Image src="/welcome-search.png" alt="Logo" width={150} height={150} className="mb-2 md:mb-4 " />
+        ) : (
+          <Image src="/welcome-generate.png" alt="Logo" width={150} height={150} className="mb-2 md:mb-4 " />
+        )
+      }
+      
+      {/* Different titles and subtitles based on mode */}
       <h2 className="text-xl md:text-2xl font-bold text-slate-900 mb-2 md:mb-3">
-        {t('title')}
+        {currentMode === "search" ? t('searchTitle') : t('generateTitle')}
       </h2>
       <p className="text-sm md:text-base text-slate-600 mb-6 md:mb-8 max-w-md">
-        {t('subtitle')}
+        {currentMode === "search" ? t('searchSubtitle') : t('generateSubtitle')}
       </p>
+      
       <div className="text-sm font-medium text-slate-700 mb-4">
-        {t('suggestionsTitle')}
+        {currentMode === "search" ? t('searchSuggestionsTitle') : t('generateSuggestionsTitle')}
       </div>
+      
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 w-full max-w-2xl">
         {suggestions.map((suggestion, index) => (
           <motion.button

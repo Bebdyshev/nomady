@@ -17,6 +17,8 @@ interface MessagesListProps {
   bookedIds: Set<string>
   onBooked: (bookedItem: any, id: string, type: string) => void
   onSuggestionClick: (text: string) => void
+  currentMode?: "search" | "generate"
+  onModeChange?: (mode: "search" | "generate") => void
 }
 
 export const MessagesList = forwardRef<HTMLDivElement, MessagesListProps>(
@@ -29,13 +31,19 @@ export const MessagesList = forwardRef<HTMLDivElement, MessagesListProps>(
     showTypingIndicator,
     bookedIds,
     onBooked,
-    onSuggestionClick
+    onSuggestionClick,
+    currentMode,
+    onModeChange
   }, ref) => {
     return (
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto p-3 md:p-6">
           {messages.length === 0 && (
-            <WelcomeScreen onSuggestionClick={onSuggestionClick} />
+            <WelcomeScreen
+              onSuggestionClick={onSuggestionClick}
+              currentMode={currentMode}
+              onModeChange={onModeChange}
+            />
           )}
 
           {messages.length > 0 && (

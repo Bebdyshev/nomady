@@ -185,6 +185,7 @@ class ApiClient {
   // Chat methods
   async sendMessage(
     messages: Array<{ role: string; content: string }>, 
+    mode?: string,
     conversationId?: string,
     ipGeolocation?: { ip: string; country: string; country_name: string; city: string; region?: string }
   ) {
@@ -194,6 +195,9 @@ class ApiClient {
     }
 
     const requestBody: any = { messages }
+    if (mode) {
+      requestBody.mode = mode
+    }
     if (ipGeolocation) {
       requestBody.location = {
         country: ipGeolocation.country,

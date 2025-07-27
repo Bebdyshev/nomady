@@ -4,6 +4,7 @@ export interface Message {
   content: string
   timestamp: Date
   toolOutput?: any
+  mode?: "search" | "generate"
 }
 
 export interface Conversation {

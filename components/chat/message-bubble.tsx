@@ -203,59 +203,22 @@ export const MessageBubble = React.memo(function MessageBubble({
   bookedIds,
   onBooked
 }: MessageBubbleProps) {
-  const t = useTranslations('chat.messages')
+  const t = useTranslations('chat')
+  const isUser = message.role === "user"
+  const isAssistant = message.role === "assistant"
+  const isStreamingThisMessage = isStreaming && currentlyStreamingMessageId === message.id
+  const content = isStreamingThisMessage ? streamingMessage : message.content
 
-  // Memoize parsed content to avoid recalculating on every render
-  const parsedContent = useMemo(() => {
-    return parseMessageContent(message.content, message.tool_output)
-  }, [message])
-
-  // Memoize search animation condition
-  const shouldShowSearchAnimation = useMemo(() => {
-    return message.role === "assistant" && 
-           isStreaming && 
-           message.id === currentlyStreamingMessageId &&
-           activeSearches.size > 0
-  }, [message.role, isStreaming, message.id, currentlyStreamingMessageId, activeSearches.size])
-
-  // Memoize streaming cursor condition
-  const shouldShowStreamingCursor = useMemo(() => {
-    return message.role === "assistant" && 
-           isStreaming && 
-           message.content === streamingMessage && 
-           activeSearches.size === 0
-  }, [message.role, isStreaming, message.content, streamingMessage, activeSearches.size])
-
-  console.log("message ", message)
-  const toolOutputDisplay = (
-    message.tool_output && (
-      message.tool_output.type === "hotels" ? (
-        <HotelDisplay
-          toolOutput={findHotelData(message.tool_output)}
-          bookedIds={bookedIds}
-          onBooked={onBooked}
-        />
-      ) : message.tool_output.type === "restaurants" ? (
-        <RestaurantDisplay
-          toolOutput={findRestaurantData(message.tool_output)}
-          bookedIds={bookedIds}
-          onBooked={onBooked}
-        />
-      ) : message.tool_output.type === "activities" ? (
-        <ActivityDisplay
-          toolOutput={findActivityData(message.tool_output)}
-          bookedIds={bookedIds}
-          onBooked={onBooked}
-        />
-      ) : (
-        <TicketDisplay
-          toolOutput={findTicketData(message.tool_output)}
-          bookedIds={bookedIds}
-          onBooked={onBooked}
-        />
-      )
-    )
-  )
+  // Determine mode badge
+  const modeBadge = message.mode === "generate" ? (
+    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mr-2">
+      ✨ Generate
+    </span>
+  ) : message.mode === "search" ? (
+    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
+      🔍 Search
+    </span>
+  ) : null
 
   return (
     <motion.div
@@ -263,54 +226,87 @@ export const MessageBubble = React.memo(function MessageBubble({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
-      className={`flex min-w-0 ${message.role === "user" ? "justify-end" : "justify-start"}`}
+      className={`flex ${isUser ? "justify-end" : "justify-start"}`}
     >
-      <div
-        className={`max-w-[90%] md:max-w-[80%] min-w-0 rounded-lg px-3 md:px-4 py-2 md:py-3 ${
-          message.role === "user"
-            ? "bg-blue-600 text-white"
-            : "bg-white border border-slate-200"
-        }`}
-      >
-        <div className="text-sm md:text-base">
-          {/* Show search animations for assistant messages during streaming when searches are active */}
-          {shouldShowSearchAnimation ? (
-            <div className="space-y-2">
-              <AnimatePresence>
-                {Array.from(activeSearches).map((searchType) => (
-                  <SearchAnimation key={searchType} searchType={searchType} />
-                ))}
-              </AnimatePresence>
-            </div>
-          ) : (
-            <>
-              {message.role === "assistant" ? (
-                <MarkdownMessage content={parsedContent.text} />
-              ) : (
-                parsedContent.text
-              )}
-              {/* Show streaming cursor for assistant messages during streaming */}
-              {shouldShowStreamingCursor && (
-                <motion.span
-                  className="inline-block w-1 h-4 bg-slate-600 ml-1"
-                  animate={{ opacity: [1, 0] }}
-                  transition={{ duration: 0.8, repeat: Number.POSITIVE_INFINITY }}
-                />
-              )}
-            </>
-          )}
-        </div>
+      <div className={`max-w-[85%] ${isUser ? "order-2" : "order-1"}`}>
+        <div className={`flex items-start space-x-2 ${isUser ? "flex-row-reverse space-x-reverse" : ""}`}>
+          {/* Avatar */}
+          <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+            isUser 
+              ? "bg-blue-500 text-white" 
+              : "bg-slate-100 text-slate-600"
+          }`}>
+            {isUser ? "U" : "AI"}
+          </div>
 
-        {message.tool_output && (
-          <motion.div
-            className="mt-3 md:mt-4"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3, delay: 0.1 }}
-          >
-            {toolOutputDisplay}
-          </motion.div>
-        )}
+          {/* Message Content */}
+          <div className={`flex-1 min-w-0 ${isUser ? "text-right" : ""}`}>
+            {/* Mode Badge */}
+            {modeBadge && (
+              <div className={`mb-1 ${isUser ? "text-right" : "text-left"}`}>
+                {modeBadge}
+              </div>
+            )}
+            
+            {/* Message Bubble */}
+            <div className={`inline-block p-3 rounded-lg ${
+              isUser 
+                ? "bg-blue-500 text-white" 
+                : "bg-white border border-slate-200 text-slate-900"
+            }`}>
+              {isAssistant ? (
+                <MarkdownMessage content={content} />
+              ) : (
+                <p className="text-sm whitespace-pre-wrap">{content}</p>
+              )}
+            </div>
+
+            {/* Tool Output Display */}
+            {isAssistant && message.tool_output && (
+              <div className="mt-3">
+                {(() => {
+                  const parsed = parseMessageContent(content, message.tool_output)
+                  if (parsed.showContent) {
+                    return (
+                      <div>
+                        {parsed.toolOutput && (
+                          <div className="mt-3">
+                            {parsed.toolOutput.type === "hotels" ? (
+                              <HotelDisplay
+                                toolOutput={findHotelData(parsed.toolOutput)}
+                                bookedIds={bookedIds}
+                                onBooked={onBooked}
+                              />
+                            ) : parsed.toolOutput.type === "restaurants" ? (
+                              <RestaurantDisplay
+                                toolOutput={findRestaurantData(parsed.toolOutput)}
+                                bookedIds={bookedIds}
+                                onBooked={onBooked}
+                              />
+                            ) : parsed.toolOutput.type === "activities" ? (
+                              <ActivityDisplay
+                                toolOutput={findActivityData(parsed.toolOutput)}
+                                bookedIds={bookedIds}
+                                onBooked={onBooked}
+                              />
+                            ) : (
+                              <TicketDisplay
+                                toolOutput={findTicketData(parsed.toolOutput)}
+                                bookedIds={bookedIds}
+                                onBooked={onBooked}
+                              />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  }
+                  return null
+                })()}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </motion.div>
   )

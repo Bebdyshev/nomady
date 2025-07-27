@@ -39,6 +39,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { apiClient } from "@/lib/api"
 import { InteractiveMap } from "@/components/interactive-map"
 import { MobileMapOverlay, ChatHeader, MessagesList, ChatInput } from "@/components/chat"
+import { ChatModeSwitcher } from "@/components/chat/chat-mode-switcher"
 import { AppSidebar } from "@/components/shared/app-sidebar"
 import { Message, Conversation, IpGeolocation } from "@/types/chat"
 import { HeroHeader } from '@/components/landing/hero-header'
@@ -100,6 +101,7 @@ export default function LandingPage() {
   const [isLoadingLocation, setIsLoadingLocation] = useState(false)
   const [showMobileMap, setShowMobileMap] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [chatMode, setChatMode] = useState<"search" | "generate">("search")
   const [pendingStreamingUpdate, setPendingStreamingUpdate] = useState<string>("")
   const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [activeSearches, setActiveSearches] = useState<Set<string>>(new Set())
@@ -167,13 +169,16 @@ export default function LandingPage() {
     try {
       let response;
       if (isAuthenticated) {
-        response = await apiClient.sendMessage([{ role: "user", content: inputText }]);
+        response = await apiClient.sendMessage([{ role: "user", content: inputText }], chatMode);
       } else {
         const res = await fetch(`${API_BASE_URL}/chat/demo?session_id=${sessionId}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages: [{ role: "user", content: inputText }] })
+            body: JSON.stringify({ 
+              messages: [{ role: "user", content: inputText }],
+              mode: chatMode
+            })
           }
         );
         if (!res.ok) {
@@ -432,6 +437,17 @@ export default function LandingPage() {
                     bookedItemsCount={Object.keys(bookedItems).length}
                   />
             </div>
+                {/* Desktop Header with Mode Switcher */}
+                <div className="hidden md:block sticky top-0 z-30 bg-white border-b border-slate-200">
+                  <div className="flex items-center justify-between p-4">
+                    <div className="flex items-center space-x-4">
+                      <h1 className="text-xl font-semibold text-slate-900">Chat with AI</h1>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      {/* Right side can be used for additional controls if needed */}
+                    </div>
+                  </div>
+                </div>
                 <div className="flex-1 overflow-y-auto min-h-0 h-full" style={{ paddingBottom: isMobile ? 112 : 0 }}>
                   <MessagesList
                     ref={messagesEndRef}
@@ -444,6 +460,8 @@ export default function LandingPage() {
                     bookedIds={bookedIds}
                     onBooked={handleBooked}
                     onSuggestionClick={setInput}
+                    currentMode={chatMode}
+                    onModeChange={setChatMode}
                   />
           </div>
                 <div className="md:static md:mt-0 sticky bottom-0 z-30">

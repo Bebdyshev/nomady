@@ -314,6 +314,10 @@
   "chat": {
     "title": "Chat with AI",
     "subtitle": "Plan your perfect trip",
+    "mode": {
+      "search": "Search",
+      "generate": "Generate"
+    },
     "sidebar": {
       "chats": "Chats",
       "explore": "Explore",
@@ -349,6 +353,12 @@
     "welcome": {
       "title": "Welcome to Nomady AI",
       "subtitle": "Your AI travel assistant is ready to help you plan the perfect trip. Ask me anything about destinations, flights, hotels, or activities.",
+      "searchTitle": "Search for Travel Information",
+      "generateTitle": "Generate Travel Plans",
+      "searchSubtitle": "Find specific flights, hotels, restaurants, and activities. Get real-time information and availability.",
+      "generateSubtitle": "Create personalized travel itineraries and plans. Let AI design your perfect trip from scratch.",
+      "searchSuggestionsTitle": "Try searching for:",
+      "generateSuggestionsTitle": "Try generating:",
       "suggestionsTitle": "Try asking me about:",
       "suggestions": [
         "Plan a weekend trip to Paris",
