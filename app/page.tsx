@@ -546,6 +546,7 @@ export default function LandingPage() {
                     onSuggestionClick={setInput}
                     currentMode={chatMode}
                     onModeChange={setChatMode}
+                    isLoading={isChatLoading}
                   />
           </div>
                 <div className="md:static md:mt-0 sticky bottom-0 z-30">

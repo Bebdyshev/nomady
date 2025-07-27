@@ -12,6 +12,30 @@ import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { Message } from "@/types/chat"
 
+// Thinking Animation Component
+const ThinkingAnimation = () => {
+  return (
+    <div className="flex items-center space-x-1">
+      {[0, 1, 2].map((index) => (
+        <motion.div
+          key={index}
+          className="w-2 h-2 bg-slate-400 rounded-full"
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.5, 1, 0.5],
+          }}
+          transition={{
+            duration: 1.4,
+            repeat: Infinity,
+            delay: index * 0.2,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
 interface MessageBubbleProps {
   message: Message & { tool_output?: any }
   isStreaming: boolean
@@ -20,6 +44,7 @@ interface MessageBubbleProps {
   currentlyStreamingMessageId: string | null
   bookedIds: Set<string>
   onBooked: (bookedItem: any, id: string, type: string) => void
+  isLoading?: boolean
 }
 
 // Markdown Message Component for bot responses
@@ -201,13 +226,15 @@ export const MessageBubble = React.memo(function MessageBubble({
   activeSearches,
   currentlyStreamingMessageId,
   bookedIds,
-  onBooked
+  onBooked,
+  isLoading = false
 }: MessageBubbleProps) {
   const t = useTranslations('chat')
   const isUser = message.role === "user"
   const isAssistant = message.role === "assistant"
   const isStreamingThisMessage = isStreaming && currentlyStreamingMessageId === message.id
   const content = isStreamingThisMessage ? streamingMessage : message.content
+  const showThinkingAnimation = isAssistant && !content && isLoading
 
   // Determine mode badge
   const modeBadge = message.mode === "generate" ? (
@@ -255,7 +282,11 @@ export const MessageBubble = React.memo(function MessageBubble({
                 : "bg-white border border-slate-200 text-slate-900"
             }`}>
               {isAssistant ? (
-                <MarkdownMessage content={content} />
+                content ? (
+                  <MarkdownMessage content={content} />
+                ) : showThinkingAnimation ? (
+                  <ThinkingAnimation />
+                ) : null
               ) : (
                 <p className="text-sm whitespace-pre-wrap">{content}</p>
               )}

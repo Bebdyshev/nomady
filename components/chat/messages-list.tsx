@@ -19,6 +19,7 @@ interface MessagesListProps {
   onSuggestionClick: (text: string) => void
   currentMode?: "search" | "generate"
   onModeChange?: (mode: "search" | "generate") => void
+  isLoading?: boolean
 }
 
 export const MessagesList = forwardRef<HTMLDivElement, MessagesListProps>(
@@ -33,7 +34,8 @@ export const MessagesList = forwardRef<HTMLDivElement, MessagesListProps>(
     onBooked,
     onSuggestionClick,
     currentMode,
-    onModeChange
+    onModeChange,
+    isLoading
   }, ref) => {
     return (
       <div className="flex-1 overflow-y-auto">
@@ -59,6 +61,7 @@ export const MessagesList = forwardRef<HTMLDivElement, MessagesListProps>(
                     currentlyStreamingMessageId={currentlyStreamingMessageId}
                     bookedIds={bookedIds}
                     onBooked={onBooked}
+                    isLoading={isLoading}
                   />
                 ))}
               </AnimatePresence>

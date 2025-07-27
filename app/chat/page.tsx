@@ -648,6 +648,7 @@ export default function ChatPage() {
                 onSuggestionClick={setInput}
                 currentMode={chatMode}
                 onModeChange={setChatMode}
+                isLoading={isLoading}
               />
             </div>
 
