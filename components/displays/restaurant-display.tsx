@@ -40,6 +40,7 @@ interface RestaurantProperty {
   reservation_required?: boolean
   average_meal_price?: number
   currency?: string
+  mode?: string
 }
 
 interface RestaurantsAPIResponse {

@@ -144,7 +144,7 @@ export default function LandingPage() {
             role: m.role,
             content: m.content,
             timestamp: m.timestamp ? new Date(m.timestamp) : new Date(),
-            tool_output: m.tool_output ?? null,
+            toolOutput: m.tool_output ?? null,
             tool_type: m.tool_type ?? null,
           })));
         }
@@ -278,7 +278,7 @@ export default function LandingPage() {
           ? {
               ...msg,
               content: response.data?.response || response.response || "",
-              tool_output: response.data?.tool_output || response.tool_output || null,
+              toolOutput: response.data?.tool_output || response.tool_output || null,
               tool_type: response.data?.tool_type || response.tool_type || null,
             }
           : msg

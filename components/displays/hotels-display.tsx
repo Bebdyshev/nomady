@@ -127,6 +127,7 @@ interface HotelsAPIResponse {
   total_found?: number
   success?: boolean
   ai_recommended_indexes?: number[] // Added for AI recommended hotels
+  mode?: string
 }
 
 interface HotelDisplayProps {

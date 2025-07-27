@@ -135,6 +135,7 @@ interface SearchResult {
   validating_airline_name?: string
   airline_code?: string
   airline_name?: string
+  mode?: string
 }
 
 interface TicketDisplayProps {

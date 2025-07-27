@@ -149,8 +149,8 @@ const parseMessageContent = (content: string, toolOutput?: any) => {
     .replace(/<(?:tickets|hotels|restaurants|activities)>[\s\S]*?<\/(?:tickets|hotels|restaurants|activities)>/g, "")
     .trim()
   
-  // Show content if we have tool_output data (regardless of tags)
-  if (toolOutput) {
+  // Show content if we have tool_output data OR if we have text content
+  if (toolOutput || textContent) {
     return {
       text: textContent,
       showContent: true,
@@ -194,13 +194,18 @@ const findRestaurantData = (toolOutput: any) => {
 const findActivityData = (toolOutput: any) => {
   if (!toolOutput) return null
   
+  // Check if it's already an activities object
+  if (toolOutput.type === "activities" && Array.isArray(toolOutput.activities)) {
+    return toolOutput
+  }
+  
   const isActivityObj = (obj: any) =>
     obj && 
     obj.type === "activities"
 
-  
   // If it's a single object, return it if it contains activity data and is not another type
-  return isActivityObj(toolOutput) ? toolOutput : null
+  const result = isActivityObj(toolOutput) ? toolOutput : null
+  return result
 }
 
 // Helper function to find ticket data in toolOutput  
@@ -283,7 +288,61 @@ export const MessageBubble = React.memo(function MessageBubble({
             }`}>
               {isAssistant ? (
                 content ? (
-                  <MarkdownMessage content={content} />
+                  <div>
+                    <MarkdownMessage content={content} />
+                    {/* Tool Output Display inside bubble */}
+                    {message.toolOutput && (() => {
+                      const parsed = parseMessageContent(content, message.toolOutput)
+                      if (parsed.showContent && parsed.toolOutput) {
+                        // Check if there are any items to display
+                        const hasItems = (() => {
+                          if (parsed.toolOutput.type === "hotels" && parsed.toolOutput.hotels) {
+                            return Array.isArray(parsed.toolOutput.hotels) && parsed.toolOutput.hotels.length > 0
+                          } else if (parsed.toolOutput.type === "restaurants" && parsed.toolOutput.restaurants) {
+                            return Array.isArray(parsed.toolOutput.restaurants) && parsed.toolOutput.restaurants.length > 0
+                          } else if (parsed.toolOutput.type === "activities" && parsed.toolOutput.activities) {
+                            return Array.isArray(parsed.toolOutput.activities) && parsed.toolOutput.activities.length > 0
+                          } else if (parsed.toolOutput.type === "tickets" && parsed.toolOutput.tickets) {
+                            return Array.isArray(parsed.toolOutput.tickets) && parsed.toolOutput.tickets.length > 0
+                          }
+                          return false
+                        })()
+                        
+                        if (!hasItems) return null
+                        
+                        return (
+                          <div className="mt-4">
+                            {parsed.toolOutput.type === "hotels" ? (
+                              <HotelDisplay
+                                toolOutput={parsed.toolOutput}
+                                bookedIds={bookedIds}
+                                onBooked={onBooked}
+                              />
+                            ) : parsed.toolOutput.type === "restaurants" ? (
+                              <RestaurantDisplay
+                                toolOutput={parsed.toolOutput}
+                                bookedIds={bookedIds}
+                                onBooked={onBooked}
+                              />
+                            ) : parsed.toolOutput.type === "activities" ? (
+                              <ActivityDisplay
+                                toolOutput={parsed.toolOutput}
+                                bookedIds={bookedIds}
+                                onBooked={onBooked}
+                              />
+                            ) : (
+                              <TicketDisplay
+                                toolOutput={parsed.toolOutput}
+                                bookedIds={bookedIds}
+                                onBooked={onBooked}
+                              />
+                            )}
+                          </div>
+                        )
+                      }
+                      return null
+                    })()}
+                  </div>
                 ) : showThinkingAnimation ? (
                   <ThinkingAnimation />
                 ) : null
@@ -291,51 +350,6 @@ export const MessageBubble = React.memo(function MessageBubble({
                 <p className="text-sm whitespace-pre-wrap">{content}</p>
               )}
             </div>
-
-            {/* Tool Output Display */}
-            {isAssistant && message.tool_output && (
-              <div className="mt-3">
-                {(() => {
-                  const parsed = parseMessageContent(content, message.tool_output)
-                  if (parsed.showContent) {
-                    return (
-                      <div>
-                        {parsed.toolOutput && (
-                          <div className="mt-3">
-                            {parsed.toolOutput.type === "hotels" ? (
-                              <HotelDisplay
-                                toolOutput={findHotelData(parsed.toolOutput)}
-                                bookedIds={bookedIds}
-                                onBooked={onBooked}
-                              />
-                            ) : parsed.toolOutput.type === "restaurants" ? (
-                              <RestaurantDisplay
-                                toolOutput={findRestaurantData(parsed.toolOutput)}
-                                bookedIds={bookedIds}
-                                onBooked={onBooked}
-                              />
-                            ) : parsed.toolOutput.type === "activities" ? (
-                              <ActivityDisplay
-                                toolOutput={findActivityData(parsed.toolOutput)}
-                                bookedIds={bookedIds}
-                                onBooked={onBooked}
-                              />
-                            ) : (
-                              <TicketDisplay
-                                toolOutput={findTicketData(parsed.toolOutput)}
-                                bookedIds={bookedIds}
-                                onBooked={onBooked}
-                              />
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )
-                  }
-                  return null
-                })()}
-              </div>
-            )}
           </div>
         </div>
       </div>

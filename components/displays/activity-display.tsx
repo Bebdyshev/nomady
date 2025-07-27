@@ -52,6 +52,7 @@ interface ActivitiesAPIResponse {
     date?: string
   }
   total_results?: number
+  mode?: string
 }
 
 interface ActivityDisplayProps {
