@@ -45,6 +45,7 @@ import { HeroHeader } from '@/components/landing/hero-header'
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { TextEffect } from "@/components/motion-primitives/text-effect"
 import { AnimatedGroup } from "@/components/motion-primitives/animated-group"
+import { Marquee } from '@/components/magicui/marquee'
 
 // Lazy-load heavy client-only components to cut initial JS
 const GlobeComponent = dynamic(() => import("@/components/magicui/globe").then(m => m.Globe), { ssr: false })
@@ -283,6 +284,34 @@ export default function LandingPage() {
       rating: 5,
       avatar: "/images/zhuldyz_rakhmet.jpg",
     },
+    {
+      name: t('testimonials.items.manta.name'),
+      role: t('testimonials.items.manta.role'),
+      content: t('testimonials.items.manta.content'),
+      rating: 5,
+      avatar: "/images/manta.jpg",
+    },
+    {
+      name: t('testimonials.items.baha.name'),
+      role: t('testimonials.items.baha.role'),
+      content: t('testimonials.items.baha.content'),
+      rating: 5,
+      avatar: "/images/baha.jpeg",
+    },
+    {
+      name: t('testimonials.items.sana.name'),
+      role: t('testimonials.items.sana.role'),
+      content: t('testimonials.items.sana.content'),
+      rating: 5,
+      avatar: "/images/sana.jpg",
+    },
+    {
+      name: t('testimonials.items.aron.name'),
+      role: t('testimonials.items.aron.role'),
+      content: t('testimonials.items.aron.content'),
+      rating: 5,
+      avatar: "/images/aron.jpg",
+    },
   ]
 
   const stats = [
@@ -292,35 +321,9 @@ export default function LandingPage() {
     { number: "4.9/5", label: t('stats.rating') },
   ]
 
-  const pricingPlans = [
-    {
-      name: t('pricing.plans.free.name'),
-      price: t('pricing.plans.free.price'),
-      period: t('pricing.plans.free.period'),
-      description: t('pricing.plans.free.description'),
-      features: t('pricing.plans.free.features'),
-      popular: false,
-      cta: t('pricing.plans.free.cta'),
-    },
-    {
-      name: t('pricing.plans.pro.name'),
-      price: t('pricing.plans.pro.price'),
-      period: t('pricing.plans.pro.period'),
-      description: t('pricing.plans.pro.description'),
-      features: t('pricing.plans.pro.features'),
-      popular: true,
-      cta: t('pricing.plans.pro.cta'),
-    },
-    {
-      name: t('pricing.plans.team.name'),
-      price: t('pricing.plans.team.price'),
-      period: t('pricing.plans.team.period'),
-      description: t('pricing.plans.team.description'),
-      features: t('pricing.plans.team.features'),
-      popular: false,
-      cta: t('pricing.plans.team.cta'),
-    },
-  ]
+  // Remove the hardcoded pricingPlans array
+  // Use translation-based plans
+  const planKeys = ['free', 'pro', 'team'];
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -389,23 +392,15 @@ export default function LandingPage() {
   if (messages.length > 0) {
     return (
       <>
-        <Dialog
-          open={showLoginPopup}
-          onOpenChange={(open) => {
-            setShowLoginPopup(open);
-            if (!open) sessionStorage.setItem('hideLoginPopup', '1');
-          }}
-        >
+        <Dialog open={showLoginPopup} onOpenChange={setShowLoginPopup}>
           <DialogContent className="max-w-xs w-[90vw] sm:max-w-lg rounded-xl">
             <DialogHeader>
               <DialogTitle>{t('loginPopup.title')}</DialogTitle>
-              <DialogDescription>
-                {t('loginPopup.description')}
-              </DialogDescription>
+              <DialogDescription>{t('loginPopup.description')}</DialogDescription>
             </DialogHeader>
             <DialogFooter className="flex flex-col gap-2">
-              <Button onClick={handleSignIn} className="bg-blue-600 hover:bg-blue-700 text-white focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">{t('loginPopup.signIn')}</Button>
-              <Button variant="outline" onClick={handleContinueAsGuest} className="focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">{t('loginPopup.continueAsGuest')}</Button>
+              <Button onClick={handleSignIn}>{t('loginPopup.signIn')}</Button>
+              <Button variant="outline" onClick={handleContinueAsGuest}>{t('loginPopup.continueAsGuest')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -496,7 +491,7 @@ export default function LandingPage() {
           className="object-cover z-0 opacity-90"
           priority
           placeholder="blur"
-          blurDataURL="/landing/sky-blur.png" // маленькая версия (например, 20x12px, сильно сжатая)
+          blurDataURL="/landing/sky-blur.png"
         />
         <div className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-t from-white/80 to-transparent" />
         <div className="container mx-auto px-6 relative z-20">
@@ -507,77 +502,117 @@ export default function LandingPage() {
                 <Image src="/Launch_SVG_Light.svg" alt="Launch" width={221} height={60} priority />
               </a>
             </div>
-            <AnimatedGroup preset="blur-slide" className="space-y-6">
+            <AnimatedGroup
+              variants={{
+                container: { visible: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } } },
+                item: {
+                  hidden: { opacity: 0, y: 20, filter: 'blur(12px)' },
+                  visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { type: 'spring', bounce: 0.3, duration: 1.2 } },
+                },
+              }}
+              className="inline-flex flex-col items-center w-full"
+            >
               <div className="inline-flex items-center space-x-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
                 <Logo width={16} height={16} />
-                <TextEffect className="text-sm" preset="fade-in-blur" delay={0.1} speedSegment={0.8} as="span">
+                <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3} className="text-sm">
                   {t('hero.badge')}
                 </TextEffect>
               </div>
               <TextEffect
                 as="h1"
-                className="text-5xl md:text-7xl font-bold mb-6 text-center"
                 preset="fade-in-blur"
-                delay={0.2}
-                speedSegment={0.7}
+                speedSegment={0.3}
+                className="text-5xl md:text-7xl font-bold mb-2 text-center"
               >
-                {`${t('hero.title.line1')}
-${t('hero.title.line2')}`}
+                {t('hero.title.line1') + ' ' + t('hero.title.line2')}
               </TextEffect>
               <TextEffect
                 as="p"
-                className="text-xl md:text-2xl text-slate-600 mb-12 leading-relaxed max-w-3xl mx-auto"
                 preset="fade-in-blur"
-                delay={0.3}
-                speedSegment={0.8}
+                speedSegment={0.3}
+                delay={0.2}
+                className="text-xl md:text-2xl text-slate-600 mb-12 leading-relaxed max-w-3xl mx-auto"
               >
                 {t('hero.subtitle')}
               </TextEffect>
-              <form onSubmit={handleSubmit} className="relative max-w-xl mx-auto mb-16">
-                <div className="relative">
-                  <Input
-                    type="text"
-                    placeholder={placeholders[placeholderIndex].slice(0, charIndex)}
-                    value={tripPrompt}
-                    onChange={(e) => setTripPrompt(e.target.value)}
-                    className="text-[1.2rem] py-6 px-6 pr-16 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:scale-[1.02] shadow-lg"
-                    disabled={isLoading}
-                  />
-                  <div className="absolute right-1 inset-y-0 flex items-center">
-                    <Button
-                      type="submit"
-                      size="icon"
-                      disabled={!tripPrompt.trim() || isLoading}
-                      className="h-10 w-10 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
-                    >
-                      {isLoading ? (
-                        <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <ArrowRight className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
+            </AnimatedGroup>
+            {/* Trip Prompt Form */}
+            <AnimatedGroup
+              variants={{
+                container: { visible: { transition: { staggerChildren: 0.08, delayChildren: 0.5 } } },
+                item: {
+                  hidden: { opacity: 0, y: 20, filter: 'blur(12px)' },
+                  visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { type: 'spring', bounce: 0.3, duration: 1.2 } },
+                },
+              }}
+              className="max-w-xl mx-auto mb-16"
+            >
+              <form onSubmit={handleSubmit} className="relative">
+                <Input
+                  type="text"
+                  placeholder={t('hero.placeholder.text1')}
+                  value={tripPrompt}
+                  onChange={(e) => setTripPrompt(e.target.value)}
+                  className="text-[1.2rem] py-6 px-6 pr-16 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:scale-[1.02] shadow-lg"
+                  disabled={isLoading}
+                />
+                <div className="absolute right-1 inset-y-0 flex items-center">
+                  <Button
+                    type="submit"
+                    size="icon"
+                    disabled={!tripPrompt.trim() || isLoading}
+                    className="h-10 w-10 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
+                  >
+                    {isLoading ? (
+                      <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <ArrowRight className="h-4 w-4" />
+                    )}
+                  </Button>
                 </div>
               </form>
-          
-              <div className="flex items-center justify-center mb-6">
-                <div className="group relative mx-auto flex items-center justify-center rounded-full px-4 py-2 shadow-[inset_0_-8px_10px_#ff8f8f1f] transition-all duration-500 ease-out hover:shadow-[inset_0_-5px_10px_#ff8f8f3f] hover:scale-110">
-                  <span
-                    className={cn(
-                      "absolute inset-0 block h-full w-full animate-gradient rounded-[inherit] bg-gradient-to-r from-[#ef4444]/50 via-[#dc2626]/50 to-[#ef4444]/50 bg-[length:300%_100%] p-[1px]",
-                    )}
-                    style={{
-                      WebkitMask:
-                        "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-                      WebkitMaskComposite: "destination-out",
-                      mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-                      maskComposite: "subtract",
-                      WebkitClipPath: "padding-box",
-                    }}
-                  />
-                  <Image src="/nfactorial-logo.png" alt="nFactorial Incubator" width={20} height={20} className="h-5 w-5 mr-2" />
-                  <span className="text-slate-600 text-sm font-medium mr-1">{t('hero.backedBy')}</span>
-                </div>
+              <div className="flex flex-wrap gap-2 mt-4 justify-center">
+                {(t.raw('hero.suggestions') as string[]).map((s, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-700 text-sm border border-slate-200 transition-colors"
+                    onClick={() => setTripPrompt(s)}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </AnimatedGroup>
+            {/* Backed by nFactorial Badge */}
+            <AnimatedGroup
+              variants={{
+                container: { visible: { transition: { staggerChildren: 0.08, delayChildren: 0.8 } } },
+                item: {
+                  hidden: { opacity: 0, y: 20, filter: 'blur(12px)' },
+                  visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { type: 'spring', bounce: 0.3, duration: 1.2 } },
+                },
+              }}
+              className="flex items-center justify-center mb-6"
+            >
+              <div className="group relative mx-auto flex items-center justify-center rounded-full px-4 py-2 shadow-[inset_0_-8px_10px_#ff8f8f1f] transition-all duration-500 ease-out hover:shadow-[inset_0_-5px_10px_#ff8f8f3f] hover:scale-110">
+                <span
+                  className={cn(
+                    "absolute inset-0 block h-full w-full animate-gradient rounded-[inherit] bg-gradient-to-r from-[#ef4444]/50 via-[#dc2626]/50 to-[#ef4444]/50 bg-[length:300%_100%] p-[1px]",
+                  )}
+                  style={{
+                    WebkitMask:
+                      "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                    WebkitMaskComposite: "destination-out",
+                    mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                    maskComposite: "subtract",
+                    WebkitClipPath: "padding-box",
+                  }}
+                />
+                <Image src="/nfactorial-logo.png" alt="nFactorial Incubator" width={20} height={20} className="h-5 w-5 mr-2" />
+                <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3} className="text-slate-600 text-sm font-medium mr-1">
+                  {t('hero.backedBy')}
+                </TextEffect>
               </div>
             </AnimatedGroup>
           </div>
@@ -587,13 +622,24 @@ ${t('hero.title.line2')}`}
       {/* Stats Section */}
       <section className="py-16 bg-slate-50">
         <div className="container mx-auto px-6">
-          <AnimatedGroup preset="fade" className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <AnimatedGroup
+            variants={{
+              container: { visible: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } } },
+              item: {
+                hidden: { opacity: 0, y: 20, filter: 'blur(12px)' },
+                visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { type: 'spring', bounce: 0.3, duration: 1.2 } },
+              },
+            }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-8"
+          >
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
-                <div className="text-3xl md:text-4xl font-bold text-blue-600 mb-2">
+                <TextEffect as="div" preset="fade-in-blur" speedSegment={0.3} className="text-3xl md:text-4xl font-bold text-blue-600 mb-2">
                   {stat.number}
-                </div>
-                <div className="text-slate-600 font-medium">{stat.label}</div>
+                </TextEffect>
+                <TextEffect as="div" preset="fade-in-blur" speedSegment={0.3} className="text-slate-600 font-medium">
+                  {stat.label}
+                </TextEffect>
               </div>
             ))}
           </AnimatedGroup>
@@ -606,103 +652,122 @@ ${t('hero.title.line2')}`}
           <div className="text-center mb-16">
             <TextEffect
               as="h2"
-              className="text-4xl md:text-5xl font-bold text-slate-900 mb-4"
               preset="fade-in-blur"
-              delay={0.1}
-              speedSegment={0.8}
+              speedSegment={0.3}
+              className="text-4xl md:text-5xl font-bold text-slate-900 mb-4"
             >
               {t('howItWorks.title')}
             </TextEffect>
             <TextEffect
               as="p"
-              className="text-xl text-slate-600 max-w-2xl mx-auto"
               preset="fade-in-blur"
-              delay={0.2}
-              speedSegment={0.8}
+              speedSegment={0.3}
+              delay={0.1}
+              className="text-xl text-slate-600 max-w-2xl mx-auto"
             >
               {t('howItWorks.subtitle')}
             </TextEffect>
           </div>
-          <AnimatedGroup preset="fade" className="max-w-4xl mx-auto grid md:grid-cols-3 gap-8">
-            {[
-              {
-                step: "1",
-                title: t('howItWorks.steps.step1.title'),
-                description: t('howItWorks.steps.step1.description'),
-                icon: <MessageCircle className="h-8 w-8" />,
-              },
-              {
-                step: "2",
-                title: t('howItWorks.steps.step2.title'),
-                description: t('howItWorks.steps.step2.description'),
-                icon: <Zap className="h-8 w-8" />,
-              },
-              {
-                step: "3",
-                title: t('howItWorks.steps.step3.title'),
-                description: t('howItWorks.steps.step3.description'),
-                icon: <CheckCircle className="h-8 w-8" />,
-              },
-            ].map((step, index) => (
-              <div key={index} className="text-center relative">
-                <div className="relative">
-                  <div className="h-16 w-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white">
-                    {step.icon}
+
+          <div className="max-w-4xl mx-auto">
+            <AnimatedGroup
+              variants={{
+                container: { visible: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } } },
+                item: {
+                  hidden: { opacity: 0, y: 20, filter: 'blur(12px)' },
+                  visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { type: 'spring', bounce: 0.3, duration: 1.2 } },
+                },
+              }}
+              className="grid md:grid-cols-3 gap-8"
+            >
+              {[
+                {
+                  step: "1",
+                  title: t('howItWorks.steps.step1.title'),
+                  description: t('howItWorks.steps.step1.description'),
+                  icon: <MessageCircle className="h-8 w-8" />,
+                },
+                {
+                  step: "2",
+                  title: t('howItWorks.steps.step2.title'),
+                  description: t('howItWorks.steps.step2.description'),
+                  icon: <Zap className="h-8 w-8" />,
+                },
+                {
+                  step: "3",
+                  title: t('howItWorks.steps.step3.title'),
+                  description: t('howItWorks.steps.step3.description'),
+                  icon: <CheckCircle className="h-8 w-8" />,
+                },
+              ].map((step, index) => (
+                <div key={index} className="text-center relative">
+                  <div className="relative">
+                    <div className="h-16 w-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white">
+                      {step.icon}
+                    </div>
+                    <div className="absolute -top-2 -right-2 h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-bold text-blue-600">{step.step}</span>
+                    </div>
                   </div>
-                  <div className="absolute -top-2 -right-2 h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-bold text-blue-600">{step.step}</span>
-                  </div>
+                  <TextEffect as="div" preset="fade-in-blur" speedSegment={0.3} className="text-xl font-semibold mb-3 text-slate-900">
+                    {step.title}
+                  </TextEffect>
+                  <TextEffect as="div" preset="fade-in-blur" speedSegment={0.3} className="text-slate-600">
+                    {step.description}
+                  </TextEffect>
                 </div>
-                <div className="text-xl font-semibold mb-3 text-slate-900">{step.title}</div>
-                <div className="text-slate-600">{step.description}</div>
-              </div>
-            ))}
-          </AnimatedGroup>
+              ))}
+            </AnimatedGroup>
+          </div>
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section id="testimonials" className="py-20">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <TextEffect
-              as="h2"
-              className="text-4xl md:text-5xl font-bold text-slate-900 mb-4"
-              preset="fade-in-blur"
-              delay={0.1}
-              speedSegment={0.8}
-            >
-              {t('testimonials.title')}
-            </TextEffect>
-            <TextEffect
-              as="p"
-              className="text-xl text-slate-600 max-w-2xl mx-auto"
-              preset="fade-in-blur"
-              delay={0.2}
-              speedSegment={0.8}
-            >
-              {t('testimonials.subtitle')}
-            </TextEffect>
-          </div>
-          <AnimatedGroup preset="fade" className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="p-6 h-full bg-white border-0 shadow-lg">
-                <div className="flex items-center mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-                <div className="text-slate-600 mb-6 leading-relaxed">"{testimonial.content}"</div>
-                <div className="flex items-center">
-                  <img src={testimonial.avatar} alt={testimonial.name} className="h-12 w-12 rounded-full object-cover mr-3 border border-slate-200" />
-                  <div>
-                    <div className="font-semibold text-slate-900">{testimonial.name}</div>
-                    <div className="text-sm text-slate-500">{testimonial.role}</div>
+      {/* Testimonials Section (Marquee) */}
+      <section className="relative py-20">
+        <div className="mx-auto max-w-5xl px-4 md:px-6">
+          <h2 className="text-center text-3xl font-bold md:text-4xl mb-10">{t('testimonials.title') ?? 'What our travelers say'}</h2>
+          <div className="relative flex w-full flex-col items-center justify-center overflow-hidden">
+            <Marquee pauseOnHover className="[--duration:20s]">
+              {testimonials.slice(0, testimonials.length / 2).map((review, idx) => (
+                <figure
+                  key={idx}
+                  className="relative h-full w-64 cursor-pointer overflow-hidden rounded-xl border p-4 mx-2 border-gray-950/[.1] bg-gray-950/[.01] hover:bg-gray-950/[.05] dark:border-gray-50/[.1] dark:bg-gray-50/[.10] dark:hover:bg-gray-50/[.15]"
+                >
+                  <div className="flex flex-row items-center gap-2">
+                    <img className="rounded-full" width="32" height="32" alt="" src={review.avatar} />
+                    <div className="flex flex-col">
+                      <figcaption className="text-sm font-medium text-slate-900">
+                        {review.name}
+                      </figcaption>
+                      <p className="text-xs font-medium text-slate-600">{review.role}</p>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            ))}
-          </AnimatedGroup>
+                  <blockquote className="mt-2 text-sm">{review.content}</blockquote>
+                </figure>
+              ))}
+            </Marquee>
+            <Marquee reverse pauseOnHover className="[--duration:20s]">
+              {testimonials.slice(testimonials.length / 2).map((review, idx) => (
+                <figure
+                  key={idx}
+                  className="relative h-full w-64 cursor-pointer overflow-hidden rounded-xl border p-4 mx-2 border-gray-950/[.1] bg-gray-950/[.01] hover:bg-gray-950/[.05] dark:border-gray-50/[.1] dark:bg-gray-50/[.10] dark:hover:bg-gray-50/[.15]"
+                >
+                  <div className="flex flex-row items-center gap-2">
+                    <img className="rounded-full" width="32" height="32" alt="" src={review.avatar} />
+                    <div className="flex flex-col">
+                      <figcaption className="text-sm font-medium text-slate-900">
+                        {review.name}
+                      </figcaption>
+                      <p className="text-xs font-medium text-slate-600">{review.role}</p>
+                    </div>
+                  </div>
+                  <blockquote className="mt-2 text-sm">{review.content}</blockquote>
+                </figure>
+              ))}
+            </Marquee>
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r from-background"></div>
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-1/4 bg-gradient-to-l from-background"></div>
+          </div>
         </div>
       </section>
 
@@ -710,170 +775,282 @@ ${t('hero.title.line2')}`}
       <section id="pricing" className="py-20 bg-slate-50">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
+                {t('pricing.title')}
+              </h2>
+              <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+                {t('pricing.subtitle')}
+              </p>
+            </motion.div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {planKeys.map((key: string, index: number) => {
+              const plan = t.raw(`pricing.plans.${key}`) as any;
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                >
+                  <Card
+                    className={`p-8 relative ${
+                      plan.popular ? "border-2 border-blue-500 shadow-xl scale-105" : "border-0 shadow-lg"
+                    } bg-white`}
+                  >
+                    {plan.popular && (
+                      <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                        <div className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-medium text-center">
+                          {t('pricing.mostPopular')}
+                        </div>
+                      </div>
+                    )}
+                    <div className="text-center mb-8">
+                      <h3 className="text-2xl font-bold text-slate-900 mb-2">{plan.name}</h3>
+                      <div className="mb-4">
+                        <span className="text-4xl font-bold text-slate-900">{plan.price}</span>
+                        {plan.period && <span className="text-slate-500">/{plan.period}</span>}
+                      </div>
+                      <p className="text-slate-600">{plan.description}</p>
+                    </div>
+                    <ul className="space-y-4 mb-8">
+                      {Array.isArray(plan.features) && plan.features.map((feature: string, featureIndex: number) => (
+                        <li key={featureIndex} className="flex items-center">
+                          <CheckCircle className="h-5 w-5 text-blue-600 mr-3 flex-shrink-0" />
+                          <span className="text-slate-600">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Button
+                      className={`w-full ${
+                        plan.popular
+                          ? "bg-blue-600 hover:bg-blue-700 text-white"
+                          : "bg-slate-100 hover:bg-slate-200 text-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-white"
+                      }`}
+                      onClick={() => router.push("/auth")}
+                    >
+                      {plan.cta}
+                    </Button>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
             <TextEffect
               as="h2"
-              className="text-4xl md:text-5xl font-bold text-slate-900 mb-4"
               preset="fade-in-blur"
-              delay={0.1}
-              speedSegment={0.8}
+              speedSegment={0.3}
+              className="text-4xl md:text-5xl font-bold text-slate-900 mb-4"
             >
-              {t('pricing.title')}
+              {t('faq.title')}
             </TextEffect>
             <TextEffect
               as="p"
-              className="text-xl text-slate-600 max-w-2xl mx-auto"
               preset="fade-in-blur"
-              delay={0.2}
-              speedSegment={0.8}
+              speedSegment={0.3}
+              delay={0.1}
+              className="text-xl text-slate-600 max-w-2xl mx-auto"
             >
-              {t('pricing.subtitle')}
+              {t('faq.subtitle')}
             </TextEffect>
           </div>
-          <AnimatedGroup preset="fade" className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {pricingPlans.map((plan, index) => (
-              <Card
-                key={index}
-                className={`p-8 h-full relative ${
-                  plan.popular ? "border-2 border-blue-500 shadow-xl scale-105" : "border-0 shadow-lg"
-                } bg-white`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <div className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-medium">
-                      {t('pricing.mostPopular')}
-                    </div>
+
+          <div className="mx-auto max-w-4xl">
+            <AnimatedGroup
+              variants={{
+                container: { visible: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } } },
+                item: {
+                  hidden: { opacity: 0, y: 20, filter: 'blur(12px)' },
+                  visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { type: 'spring', bounce: 0.3, duration: 1.2 } },
+                },
+              }}
+            >
+              <div className="bg-card ring-muted w-full rounded-2xl border px-8 py-3 shadow-sm ring-4 dark:ring-0">
+                {Object.keys(t.raw('faq.items')).map((key) => (
+                  <div key={key} className="border-b border-dashed last:border-b-0">
+                    <details className="group">
+                      <summary className="cursor-pointer text-base hover:no-underline py-4 font-medium text-slate-900">
+                        {t(`faq.items.${key}.question`)}
+                      </summary>
+                      <div className="pb-4">
+                        <p className="text-base text-slate-600 leading-relaxed">
+                          {t(`faq.items.${key}.answer`)}
+                        </p>
+                      </div>
+                    </details>
                   </div>
-                )}
-                <div className="text-center mb-8">
-                  <div className="text-2xl font-bold text-slate-900 mb-2">{plan.name}</div>
-                  <div className="mb-4">
-                    <span className="text-4xl font-bold text-slate-900">{plan.price}</span>
-                    <span className="text-slate-500">/{plan.period}</span>
-                  </div>
-                  <div className="text-slate-600">{plan.description}</div>
-                </div>
-                <ul className="space-y-4 mb-8">
-                  {Array.isArray(plan.features) && plan.features.map((feature: string, featureIndex: number) => (
-                    <li key={featureIndex} className="flex items-center">
-                      <CheckCircle className="h-5 w-5 text-blue-600 mr-3 flex-shrink-0" />
-                      <span className="text-slate-600">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  className={`w-full ${
-                    plan.popular
-                      ? "bg-blue-600 hover:bg-blue-700 text-white"
-                      : "bg-slate-100 hover:bg-slate-200 text-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-white"
-                  }`}
-                  onClick={() => router.push("/auth")}
-                >
-                  {plan.cta}
-                </Button>
-              </Card>
-            ))}
-          </AnimatedGroup>
+                ))}
+              </div>
+
+              <div className="text-center mt-8">
+                <p className="text-slate-600">
+                  {t('faq.contactText')}{' '}
+                  <a href="#" className="text-blue-600 font-medium hover:underline">
+                    {t('faq.contactLink')}
+                  </a>
+                </p>
+              </div>
+            </AnimatedGroup>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="bg-slate-900 text-white py-16">
         <div className="container mx-auto px-6">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
+          <AnimatedGroup
+            variants={{
+              container: { visible: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } } },
+              item: {
+                hidden: { opacity: 0, y: 20, filter: 'blur(12px)' },
+                visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { type: 'spring', bounce: 0.3, duration: 1.2 } },
+              },
+            }}
+            className="grid md:grid-cols-4 gap-8 mb-8"
+          >
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <Logo width={32} height={32} className="rounded-lg" />
                 <span className="text-xl font-bold text-blue-400">Nomady</span>
               </div>
-              <p className="text-slate-400 mb-4">
+              <TextEffect as="p" preset="fade-in-blur" speedSegment={0.3} className="text-slate-400 mb-4">
                 {t('footer.description')}
-              </p>
+              </TextEffect>
               <div className="flex space-x-4">{/* Social media icons would go here */}</div>
             </div>
 
             <div>
-              <h4 className="font-semibold mb-4">{t('footer.product')}</h4>
+              <TextEffect as="h4" preset="fade-in-blur" speedSegment={0.3} className="font-semibold mb-4">
+                {t('footer.product')}
+              </TextEffect>
               <ul className="space-y-2 text-slate-400">
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    {t('footer.links.features')}
+                    <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3}>
+                      {t('footer.links.features')}
+                    </TextEffect>
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    {t('footer.links.pricing')}
+                    <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3}>
+                      {t('footer.links.pricing')}
+                    </TextEffect>
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    {t('footer.links.api')}
+                    <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3}>
+                      {t('footer.links.api')}
+                    </TextEffect>
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    {t('footer.links.mobileApp')}
+                    <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3}>
+                      {t('footer.links.mobileApp')}
+                    </TextEffect>
                   </a>
                 </li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-semibold mb-4">{t('footer.company')}</h4>
+              <TextEffect as="h4" preset="fade-in-blur" speedSegment={0.3} className="font-semibold mb-4">
+                {t('footer.company')}
+              </TextEffect>
               <ul className="space-y-2 text-slate-400">
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    {t('footer.links.about')}
+                    <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3}>
+                      {t('footer.links.about')}
+                    </TextEffect>
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    {t('footer.links.blog')}
+                    <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3}>
+                      {t('footer.links.blog')}
+                    </TextEffect>
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    {t('footer.links.careers')}
+                    <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3}>
+                      {t('footer.links.careers')}
+                    </TextEffect>
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    {t('footer.links.contact')}
+                    <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3}>
+                      {t('footer.links.contact')}
+                    </TextEffect>
                   </a>
                 </li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-semibold mb-4">{t('footer.support')}</h4>
+              <TextEffect as="h4" preset="fade-in-blur" speedSegment={0.3} className="font-semibold mb-4">
+                {t('footer.support')}
+              </TextEffect>
               <ul className="space-y-2 text-slate-400">
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    {t('footer.links.helpCenter')}
+                    <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3}>
+                      {t('footer.links.helpCenter')}
+                    </TextEffect>
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    {t('footer.links.privacy')}
+                    <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3}>
+                      {t('footer.links.privacy')}
+                    </TextEffect>
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    {t('footer.links.terms')}
+                    <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3}>
+                      {t('footer.links.terms')}
+                    </TextEffect>
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-white transition-colors">
-                    {t('footer.links.status')}
+                    <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3}>
+                      {t('footer.links.status')}
+                    </TextEffect>
                   </a>
                 </li>
               </ul>
             </div>
-          </div>
+          </AnimatedGroup>
 
           <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-slate-400 text-sm">{t('footer.copyright')}</p>
+            <TextEffect as="p" preset="fade-in-blur" speedSegment={0.3} className="text-slate-400 text-sm">
+              {t('footer.copyright')}
+            </TextEffect>
             <div className="flex items-center space-x-6 mt-4 md:mt-0">
-              <span className="text-slate-400 text-sm">{t('footer.madeWith')}</span>
+              <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3} className="text-slate-400 text-sm">
+                {t('footer.madeWith')}
+              </TextEffect>
             </div>
           </div>
         </div>

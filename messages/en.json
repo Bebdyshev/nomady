@@ -8,14 +8,18 @@
       },
       "subtitle": "Skip the endless research.",
       "placeholder": {
-        "text1": "Plan a 5-day trip to Tokyo for 2 people...",
-        "text2": "Budget-friendly weekend in Barcelona...",
-        "text3": "Romantic honeymoon in Bali for 7 days...",
-        "text4": "Family adventure in Disneyland next summer...",
-        "text5": "Solo backpacking across South America for a month..."
+        "text1": "Describe your dream trip...",
+        "text2": "Plan a 5-day trip to Tokyo for 2 people",
+        "text3": "Budget-friendly weekend in Barcelona",
+        "text4": "Romantic honeymoon in Bali for 7 days"
       },
       "helpText": "No credit card required • Get started in 30 seconds",
-      "backedBy": "Backed by nFactorial Incubator"
+      "backedBy": "Backed by nFactorial Incubator",
+      "suggestions": [
+        "Plan a 5-day trip to Tokyo for 2 people",
+        "Budget-friendly weekend in Barcelona",
+        "Romantic honeymoon in Bali for 7 days"
+      ]
     },
     "stats": {
       "travelers": "Happy Travelers",
@@ -53,6 +57,12 @@
         }
       }
     },
+    "loginPopup": {
+      "title": "Sign in to save your chat",
+      "description": "Sign in to save your chat history, bookings, and get personalized recommendations. Or continue as a guest traveler.",
+      "signIn": "Sign In",
+      "continueAsGuest": "Continue as unknown traveler"
+    },
     "howItWorks": {
       "title": "How It Works",
       "subtitle": "Get from idea to itinerary in three simple steps",
@@ -75,35 +85,40 @@
       "title": "User Reviews",
       "subtitle": "What do travelers say about Nomady?",
       "items": {
-        "sarah": {
-          "name": "Sarah Johnson",
+        "aron": {
+          "name": "Nathalie Aron",
+          "role": "Adventure & Luxury Travel Creator",
+          "content": "Nomady helped me quickly find the best options for my vacation. The AI suggestions were surprisingly on point!"
+        },
+        "sana": {
+          "name": "Sana",
+          "role": "Travel & Food Blogger",
+          "content": "Nomady revolutionized my travel planning! Its AI finds the most amazing hidden restaurants and food tours I would never discover on my own:)"
+        },
+        "manta": {
+          "name": "Brinda Sharma",
           "role": "Travel Blogger",
-          "content": "Nomady planned my entire 2-week Europe trip in minutes. The recommendations were spot-on and I discovered places I never would have found on my own."
+          "content": "Nomady saved me countless hours of planning! As a travel blogger, I can focus on creating content instead of searching for the best routes📸🌍"
         },
-        "mike": {
-          "name": "Mike Chen", 
-          "role": "Business Executive",
-          "content": "As someone who travels frequently for work, Nomady has become indispensable. It saves me hours of planning and always finds the best deals."
-        },
-        "emma": {
-          "name": "Emma Rodriguez",
-          "role": "Family Traveler", 
-          "content": "Planning family trips used to be stressful. Nomady considers everyone's preferences and creates itineraries that keep both kids and adults happy."
+        "baha": {
+          "name": "Bahredin Zurgambaev",
+          "role": "Mountain Guide",
+          "content": "Nomady saved me tons of time and helped me plan the perfect hiking adventure! 🏔️⏱️ Highly recommend for all explorers!"
         },
         "nurzhan": {
           "name": "Nurzhan Algashov",
           "role": "Traveler",
-          "content": "A very convenient service for planning trips! I liked everything."
+          "content": "A super convenient service for planning trips! Everything was smooth, and I found hidden gems I never expected."
         },
         "madiaubakirov": {
           "name": "Madia Aubakirov",
           "role": "Traveler",
-          "content": "Nomady helped me quickly find the best options for my vacation. I recommend it!"
+          "content": "Nomady helped me quickly find the best options for my vacation. The AI suggestions were surprisingly on point!"
         },
         "zhuldyz_rakhmet": {
           "name": "Zhuldyz Rakhmet",
           "role": "Traveler",
-          "content": "Amazing experience! Everything is simple and clear, I will use it again."
+          "content": "Amazing experience! Everything is simple, clear, and inspiring. I’ll definitely use it again for my next trip!"
         }
       }
     },
@@ -112,54 +127,81 @@
       "subtitle": "Choose the plan that fits your travel needs. Upgrade or downgrade anytime.",
       "plans": {
         "free": {
-          "name": "Free",
+          "name": "Free Explorer",
           "price": "$0",
           "period": "forever",
           "description": "Perfect for occasional travelers",
           "popular": false,
           "features": [
-            "3 trip plans per month",
-            "Basic recommendations", 
-            "Email support",
-            "Mobile app access"
+            "5 AI trip suggestions per month",
+            "Basic itinerary planning",
+            "Community support"
           ],
-          "cta": "Get Started Free"
+          "cta": "Start Free"
         },
         "pro": {
-          "name": "Pro",
-          "price": "$9.99", 
-          "period": "per month",
-          "description": "Ideal for frequent travelers",
+          "name": "Pro Traveler",
+          "price": "$3",
+          "period": "month",
+          "description": "For frequent travelers and adventurers",
           "popular": true,
           "features": [
-            "Unlimited trip plans",
-            "Advanced AI recommendations",
-            "Priority support",
-            "Collaborative planning", 
-            "Real-time price alerts",
-            "Offline access"
+            "Unlimited AI trip suggestions",
+            "Advanced itinerary customization",
+            "Priority customer support",
+            "Offline access",
+            "Group planning tools",
+            "Real-time travel updates"
           ],
-          "cta": "Start Pro Plan"
+          "cta": "Start Pro Trial"
         },
         "team": {
-          "name": "Team",
-          "price": "$19.99",
-          "period": "per month", 
-          "description": "Best for travel agencies & groups",
+          "name": "Team Explorer",
+          "price": "Let's talk",
+          "period": "",
+          "description": "Perfect for travel agencies and teams",
           "popular": false,
           "features": [
             "Everything in Pro",
             "Team collaboration tools",
             "White-label options",
             "API access",
-            "Custom integrations", 
+            "Custom integrations",
             "Dedicated account manager"
           ],
-          "cta": "Start Team Plan"
+          "cta": "Contact Sales"
         }
       },
       "mostPopular": "Most Popular"
     },
+    "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Discover quick and comprehensive answers to common questions about our platform, services, and features.",
+    "contactText": "Can't find what you're looking for? Contact our",
+    "contactLink": "customer support team",
+    "items": {
+      "aiPlanning": {
+        "question": "How does AI-powered trip planning work?",
+        "answer": "Our AI analyzes millions of data points including flight prices, hotel reviews, local attractions, and user preferences to create personalized itineraries. Simply describe your dream trip in natural language, and our AI will generate a complete travel plan with flights, hotels, activities, and local recommendations."
+      },
+      "paymentMethods": {
+        "question": "What payment methods do you accept?",
+        "answer": "We accept all major credit cards (Visa, Mastercard, American Express), PayPal, Apple Pay, and Google Pay. For enterprise customers, we also offer invoicing options. All payments are processed securely through our trusted payment partners."
+      },
+      "internationalDestinations": {
+        "question": "Do you work with international destinations?",
+        "answer": "Yes, we cover over 200 countries worldwide with comprehensive travel information. Our AI provides local insights, cultural recommendations, and safety updates for international destinations. We also offer multi-language support for global travelers."
+      },
+      "aiPlanner": {
+        "question": "How does the AI travel planner work?",
+        "answer": "Our AI travel planner uses advanced machine learning to understand your preferences, budget, and travel style. It analyzes real-time data from multiple sources to recommend the best flights, hotels, and activities. The more you use it, the better it learns your preferences."
+      },
+      "dataSecurity": {
+        "question": "Is my data secure?",
+        "answer": "Yes, we take data security seriously. All personal information is encrypted and stored securely. We never share your data with third parties without your consent. Our platform complies with international data protection regulations including GDPR."
+      }
+    }
+  },
     "cta": {
       "title": "Ready to Plan Your Next Adventure?",
       "subtitle": "Join thousands of travelers who trust Nomady to create their perfect trips.",
@@ -177,7 +219,6 @@
         "features": "Features",
         "pricing": "Pricing",
         "api": "API",
-        "mobileApp": "Mobile App",
         "about": "About",
         "blog": "Blog", 
         "careers": "Careers",
@@ -189,12 +230,6 @@
       },
       "copyright": "© 2025 Nomady. All rights reserved.",
       "madeWith": "Made with ❤️ by Unknown Developer"
-    },
-    "loginPopup": {
-      "title": "Sign in to continue",
-      "description": "Sign in to save your trips and chat history, or continue as a guest.",
-      "signIn": "Sign In",
-      "continueAsGuest": "Continue as Guest"
     }
   },
   "auth": {
@@ -469,20 +504,21 @@
         "redirectingToAviasales": "Redirecting to Aviasales! ✈️",
         "aviasalesRedirectDesc": "Opening Aviasales in a new tab to complete your booking."
       }
-    },
-    "loginPopup": {
-      "title": "Sign in to save your chat",
-      "description": "Sign in to save your chat history, bookings, and get personalized recommendations. Or continue as a guest traveler.",
-      "signIn": "Sign In",
-      "continueAsGuest": "Continue as guest"
     }
   },
   "navigation": {
+    "menu": {
+      "features": "Features",
+      "solution": "Solution", 
+      "pricing": "Pricing",
+      "about": "About"
+    },
     "features": "Features",
     "howItWorks": "How it Works", 
     "pricing": "Pricing",
     "reviews": "Reviews",
     "signIn": "Sign In",
+    "planTrip": "Plan your trip",
     "getStarted": "Plan Your Trip"
   },
   "common": {
