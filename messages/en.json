@@ -465,7 +465,8 @@
         "reservationConfirmedDesc": "Your table at {name} has been reserved.",
         "reservationFailed": "Reservation Failed",
         "reservationFailedDesc": "There was an error processing your reservation. Please try again.",
-        "viewAllExternal": "View all on {source}"
+        "viewAllExternal": "View all on {source}",
+        "aiRecommended": "Recommended for you"
       },
       "hotels": {
         "forNights": "for {nights} nights",
