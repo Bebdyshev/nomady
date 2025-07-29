@@ -84,11 +84,6 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll, userLo
   const t = useTranslations('chat.map')
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
 
-  console.log('🗺️ InteractiveMap props:')
-  console.log('  - destinationCity:', destinationCity)
-  console.log('  - destinationCoordinates from props:', destinationCoordinates)
-  console.log('  - userLocation:', userLocation)
-  // Язык карты всегда английский
   const mapLanguage = 'en'
 
   const { isLoaded } = useJsApiLoader({
@@ -203,15 +198,6 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll, userLo
 
   const firstCoord = finalDestinationCoordinates || userLocation || selectedItems.map(item => getCoordinates(item.location)).find(Boolean) || defaultCenter
 
-  console.log('🗺️ Map center calculation:')
-  console.log('  - destinationCoordinates from props:', destinationCoordinates)
-  console.log('  - destinationCoordinatesState:', destinationCoordinatesState)
-  console.log('  - finalDestinationCoordinates:', finalDestinationCoordinates)
-  console.log('  - userLocation:', userLocation)
-  console.log('  - selectedItems coordinates:', selectedItems.map(item => getCoordinates(item.location)).filter(Boolean))
-  console.log('  - final center:', firstCoord)
-  console.log('  - map key:', `map-${finalDestinationCoordinates ? `${finalDestinationCoordinates.lat}-${finalDestinationCoordinates.lng}` : 'default'}`)
-
   // Add visual indicator when destination coordinates are available
   const hasDestinationCoordinates = !!finalDestinationCoordinates
 
@@ -237,24 +223,24 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll, userLo
         {apiKey ? (
           isLoaded ? (
             <div className="relative h-full">
-              <GoogleMap
-                mapContainerStyle={mapContainerStyle}
+            <GoogleMap
+              mapContainerStyle={mapContainerStyle}
                 center={firstCoord}
                 key={`map-${finalDestinationCoordinates ? `${finalDestinationCoordinates.lat}-${finalDestinationCoordinates.lng}` : 'default'}`}
-                zoom={12}
-                options={mapOptions}
-              >
-                {selectedItems.map((item, idx) => {
-                  const coord = getCoordinates(item.location)
-                  return coord ? (
-                    <Marker
-                      key={item.id}
-                      position={coord}
-                      label={`${idx + 1}`}
-                    />
-                  ) : null
-                })}
-              </GoogleMap>
+              zoom={12}
+              options={mapOptions}
+            >
+              {selectedItems.map((item, idx) => {
+                const coord = getCoordinates(item.location)
+                return coord ? (
+                  <Marker
+                    key={item.id}
+                    position={coord}
+                    label={`${idx + 1}`}
+                  />
+                ) : null
+              })}
+            </GoogleMap>
               
             </div>
           ) : (

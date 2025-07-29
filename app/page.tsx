@@ -204,6 +204,7 @@ export default function LandingPage() {
             const decoder = new TextDecoder();
             let fullResponse = "";
             let toolOutput = null;
+            let multipleResults = {};
             let responseConversationId = currentConversationId;
 
             while (true) {
@@ -223,9 +224,21 @@ export default function LandingPage() {
                       setStreamingMessage(fullResponse);
                     } else if (data.type === 'tool_output') {
                       toolOutput = data.data;
+                      // Collect multiple results
+                      if (data.result_type && data.data) {
+                        (multipleResults as any)[data.result_type] = data.data;
+                      }
                     } else if (data.type === 'complete') {
                       responseConversationId = data.conversation_id;
                       toolOutput = data.tool_output;
+                      if (data.search_results) {
+                        // Process search results for multiple results
+                        data.search_results.forEach((sr: any) => {
+                          if (sr.data && sr.search_type) {
+                            (multipleResults as any)[sr.search_type] = sr.data;
+                          }
+                        });
+                      }
                     }
                   } catch (e) {
                     console.error('Error parsing stream data:', e);
@@ -237,7 +250,8 @@ export default function LandingPage() {
             response = {
               response: fullResponse,
               conversation_id: responseConversationId,
-              tool_output: toolOutput
+              tool_output: toolOutput,
+              multiple_results: Object.keys(multipleResults).length > 0 ? multipleResults : undefined
             };
           } catch (error) {
             console.error('Streaming error:', error);
@@ -279,6 +293,7 @@ export default function LandingPage() {
               ...msg,
               content: response.data?.response || response.response || "",
               toolOutput: response.data?.tool_output || response.tool_output || null,
+              multipleResults: response.data?.multiple_results || response.multiple_results || undefined,
               tool_type: response.data?.tool_type || response.tool_type || null,
             }
           : msg

@@ -4,6 +4,7 @@ export interface Message {
   content: string
   timestamp: Date
   toolOutput?: any
+  multipleResults?: { [key: string]: any }  // Для множественных результатов
   mode?: "search" | "generate"
 }
 
@@ -11,6 +12,7 @@ export interface ChatResponse {
   response: string
   conversation_id: string
   tool_output?: any
+  multiple_results?: { [key: string]: any }  // Для множественных результатов
   search_results?: any[]
   destination_city?: string
   destination_coordinates?: { lat: number; lng: number }

@@ -37,7 +37,7 @@ const ThinkingAnimation = () => {
 }
 
 interface MessageBubbleProps {
-  message: Message & { tool_output?: any }
+  message: Message & { tool_output?: any; multiple_results?: { [key: string]: any } }
   isStreaming: boolean
   streamingMessage: string
   activeSearches: Set<string>
@@ -141,6 +141,245 @@ const MarkdownMessage = ({ content }: { content: string }) => {
   )
 }
 
+// Structured Message Component for parsing tags
+const StructuredMessage = ({ content, bookedIds, onBooked, message }: { 
+  content: string
+  bookedIds: Set<string>
+  onBooked: (bookedItem: any, id: string, type: string) => void
+  message: Message & { tool_output?: any; multiple_results?: { [key: string]: any } }
+}) => {
+  // Parse content for tags
+  const parseStructuredContent = (text: string) => {
+    const parts = []
+    let currentIndex = 0
+    
+    // Regular expressions for different tag types
+    const hotelRegex = /<hotel id="(\d+)">([\s\S]*?)<\/hotel>/g
+    const activitiesRegex = /<activities>([\s\S]*?)<\/activities>/g
+    const restaurantsRegex = /<restaurants>([\s\S]*?)<\/restaurants>/g
+    const flightsRegex = /<flights>([\s\S]*?)<\/flights>/g
+    
+    // Find all matches
+    const matches = []
+    
+    // Hotel matches
+    let hotelMatch
+    while ((hotelMatch = hotelRegex.exec(text)) !== null) {
+      matches.push({
+        type: 'hotel',
+        id: hotelMatch[1],
+        content: hotelMatch[2].trim(),
+        start: hotelMatch.index,
+        end: hotelMatch.index + hotelMatch[0].length
+      })
+    }
+    
+    // Activities matches
+    let activitiesMatch
+    while ((activitiesMatch = activitiesRegex.exec(text)) !== null) {
+      matches.push({
+        type: 'activities',
+        content: activitiesMatch[1].trim(),
+        start: activitiesMatch.index,
+        end: activitiesMatch.index + activitiesMatch[0].length
+      })
+    }
+    
+    // Restaurants matches
+    let restaurantsMatch
+    while ((restaurantsMatch = restaurantsRegex.exec(text)) !== null) {
+      matches.push({
+        type: 'restaurants',
+        content: restaurantsMatch[1].trim(),
+        start: restaurantsMatch.index,
+        end: restaurantsMatch.index + restaurantsMatch[0].length
+      })
+    }
+    
+    // Flights matches
+    let flightsMatch
+    while ((flightsMatch = flightsRegex.exec(text)) !== null) {
+      matches.push({
+        type: 'flights',
+        content: flightsMatch[1].trim(),
+        start: flightsMatch.index,
+        end: flightsMatch.index + flightsMatch[0].length
+      })
+    }
+    
+    // Sort matches by start position
+    matches.sort((a, b) => a.start - b.start)
+    
+    // Build parts array
+    for (const match of matches) {
+      // Add text before match
+      if (match.start > currentIndex) {
+        const textBefore = text.slice(currentIndex, match.start)
+        if (textBefore.trim()) {
+          parts.push({ type: 'text', content: textBefore })
+        }
+      }
+      
+      // Add match
+      parts.push({
+        type: match.type,
+        id: match.id,
+        content: match.content
+      })
+      
+      currentIndex = match.end
+    }
+    
+    // Add remaining text
+    if (currentIndex < text.length) {
+      const remainingText = text.slice(currentIndex)
+      if (remainingText.trim()) {
+        parts.push({ type: 'text', content: remainingText })
+      }
+    }
+    
+    return parts
+  }
+  
+  const parts = parseStructuredContent(content)
+  
+  return (
+    <div className="space-y-4">
+      {parts.map((part, index) => {
+        if (part.type === 'text') {
+          return (
+            <div key={index} className="prose prose-sm max-w-none">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  p: ({ children }) => <p className="mb-2 last:mb-0 text-slate-700">{children}</p>,
+                  ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1 text-slate-700">{children}</ul>,
+                  ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1 text-slate-700">{children}</ol>,
+                  li: ({ children }) => <li className="text-sm">{children}</li>,
+                  strong: ({ children }) => <strong className="font-semibold text-slate-900">{children}</strong>,
+                  em: ({ children }) => <em className="italic text-slate-700">{children}</em>,
+                }}
+              >
+                {part.content}
+              </ReactMarkdown>
+            </div>
+          )
+        }
+        
+        if (part.type === 'hotel') {
+          // Try to find real hotel data
+          const hotelData = message.multipleResults?.hotels || 
+                           (message.toolOutput?.type === 'hotels' ? message.toolOutput : null)
+          
+          if (hotelData && hotelData.hotels && Array.isArray(hotelData.hotels) && hotelData.hotels.length > 0) {
+            return (
+              <div key={index} className="border-l-4 border-blue-500 pl-4 py-2 bg-blue-50 rounded-r">
+                <HotelDisplay
+                  toolOutput={hotelData}
+                  bookedIds={bookedIds}
+                  onBooked={onBooked}
+                />
+              </div>
+            )
+          } else {
+            // Show only text content if no real data
+            return (
+              <div key={index} className="border-l-4 border-blue-500 pl-4 py-2 bg-blue-50 rounded-r">
+                <div className="text-sm text-slate-700">
+                  <strong>Hotel Option {part.id}:</strong> {part.content}
+                </div>
+              </div>
+            )
+          }
+        }
+        
+        if (part.type === 'activities') {
+          // Try to find real activity data
+          const activityData = message.multipleResults?.activities || 
+                              (message.toolOutput?.type === 'activities' ? message.toolOutput : null)
+          
+          if (activityData && activityData.activities && Array.isArray(activityData.activities) && activityData.activities.length > 0) {
+            return (
+              <div key={index} className="border-l-4 border-green-500 pl-4 py-2 bg-green-50 rounded-r">
+                <ActivityDisplay
+                  toolOutput={activityData}
+                  bookedIds={bookedIds}
+                  onBooked={onBooked}
+                />
+              </div>
+            )
+          } else {
+            // Show only text content if no real data
+            return (
+              <div key={index} className="border-l-4 border-green-500 pl-4 py-2 bg-green-50 rounded-r">
+                <div className="text-sm text-slate-700">
+                  <strong>Activities:</strong> {part.content}
+                </div>
+              </div>
+            )
+          }
+        }
+        
+        if (part.type === 'restaurants') {
+          // Try to find real restaurant data
+          const restaurantData = message.multipleResults?.restaurants || 
+                               (message.toolOutput?.type === 'restaurants' ? message.toolOutput : null)
+          
+          if (restaurantData && restaurantData.restaurants && Array.isArray(restaurantData.restaurants) && restaurantData.restaurants.length > 0) {
+            return (
+              <div key={index} className="border-l-4 border-orange-500 pl-4 py-2 bg-orange-50 rounded-r">
+                <RestaurantDisplay
+                  toolOutput={restaurantData}
+                  bookedIds={bookedIds}
+                  onBooked={onBooked}
+                />
+              </div>
+            )
+          } else {
+            // Show only text content if no real data
+            return (
+              <div key={index} className="border-l-4 border-orange-500 pl-4 py-2 bg-orange-50 rounded-r">
+                <div className="text-sm text-slate-700">
+                  <strong>Restaurants:</strong> {part.content}
+                </div>
+              </div>
+            )
+          }
+        }
+        
+        if (part.type === 'flights') {
+          // Try to find real flight data
+          const flightData = message.multipleResults?.flights || 
+                           (message.toolOutput?.type === 'flights' ? message.toolOutput : null)
+          
+          if (flightData && flightData.tickets && Array.isArray(flightData.tickets) && flightData.tickets.length > 0) {
+            return (
+              <div key={index} className="border-l-4 border-purple-500 pl-4 py-2 bg-purple-50 rounded-r">
+                <TicketDisplay
+                  toolOutput={flightData}
+                  bookedIds={bookedIds}
+                  onBooked={onBooked}
+                />
+              </div>
+            )
+          } else {
+            // Show only text content if no real data
+            return (
+              <div key={index} className="border-l-4 border-purple-500 pl-4 py-2 bg-purple-50 rounded-r">
+                <div className="text-sm text-slate-700">
+                  <strong>Flights:</strong> {part.content}
+                </div>
+              </div>
+            )
+          }
+        }
+        
+        return null
+      })}
+    </div>
+  )
+}
+
 const parseMessageContent = (content: string, toolOutput?: any) => {
   // Remove all search tags and content tags from content for clean display
   const textContent = content
@@ -202,7 +441,7 @@ const findActivityData = (toolOutput: any) => {
   const isActivityObj = (obj: any) =>
     obj && 
     obj.type === "activities"
-
+  
   // If it's a single object, return it if it contains activity data and is not another type
   const result = isActivityObj(toolOutput) ? toolOutput : null
   return result
@@ -289,10 +528,112 @@ export const MessageBubble = React.memo(function MessageBubble({
               {isAssistant ? (
                 content ? (
                   <div>
-                    <MarkdownMessage content={content} />
+                    {message.role === "assistant" ? (
+                      <StructuredMessage content={content} bookedIds={bookedIds} onBooked={onBooked} message={message} />
+                    ) : (
+                      <MarkdownMessage content={content} />
+                    )}
                     {/* Tool Output Display inside bubble */}
-                    {message.toolOutput && (() => {
+                    {(message.toolOutput || message.multipleResults) && (() => {
                       const parsed = parseMessageContent(content, message.toolOutput)
+                      
+                      // Debug logging
+                      console.log('🔍 Message bubble debug:', {
+                        messageId: message.id,
+                        hasToolOutput: !!message.toolOutput,
+                        hasMultipleResults: !!message.multipleResults,
+                        multipleResultsKeys: message.multipleResults ? Object.keys(message.multipleResults) : [],
+                        multipleResults: message.multipleResults
+                      })
+                      
+                      // Handle multiple results
+                      if (message.multipleResults) {
+                        const results = []
+                        
+                        // Check each result type
+                        if (message.multipleResults.hotels) {
+                          const hotelData = message.multipleResults.hotels
+                          console.log('🏨 Hotel data:', hotelData)
+                          if (hotelData.hotels && Array.isArray(hotelData.hotels) && hotelData.hotels.length > 0) {
+                            console.log('✅ Adding hotel display')
+                            results.push(
+                              <HotelDisplay
+                                key="hotels"
+                                toolOutput={hotelData}
+                                bookedIds={bookedIds}
+                                onBooked={onBooked}
+                              />
+                            )
+                          } else {
+                            console.log('❌ No valid hotel data')
+                          }
+                        }
+                        
+                        if (message.multipleResults.restaurants) {
+                          const restaurantData = message.multipleResults.restaurants
+                          console.log('🍽️ Restaurant data:', restaurantData)
+                          if (restaurantData.restaurants && Array.isArray(restaurantData.restaurants) && restaurantData.restaurants.length > 0) {
+                            console.log('✅ Adding restaurant display')
+                            results.push(
+                              <RestaurantDisplay
+                                key="restaurants"
+                                toolOutput={restaurantData}
+                                bookedIds={bookedIds}
+                                onBooked={onBooked}
+                              />
+                            )
+                          } else {
+                            console.log('❌ No valid restaurant data')
+                          }
+                        }
+                        
+                        if (message.multipleResults.activities) {
+                          const activityData = message.multipleResults.activities
+                          console.log('🎯 Activity data:', activityData)
+                          if (activityData.activities && Array.isArray(activityData.activities) && activityData.activities.length > 0) {
+                            console.log('✅ Adding activity display')
+                            results.push(
+                              <ActivityDisplay
+                                key="activities"
+                                toolOutput={activityData}
+                                bookedIds={bookedIds}
+                                onBooked={onBooked}
+                              />
+                            )
+                          } else {
+                            console.log('❌ No valid activity data')
+                          }
+                        }
+                        
+                        if (message.multipleResults.flights) {
+                          const flightData = message.multipleResults.flights
+                          console.log('✈️ Flight data:', flightData)
+                          if (flightData.tickets && Array.isArray(flightData.tickets) && flightData.tickets.length > 0) {
+                            console.log('✅ Adding flight display')
+                            results.push(
+                              <TicketDisplay
+                                key="flights"
+                                toolOutput={flightData}
+                                bookedIds={bookedIds}
+                                onBooked={onBooked}
+                              />
+                            )
+                          } else {
+                            console.log('❌ No valid flight data')
+                          }
+                        }
+                        
+                        console.log('📊 Total results to display:', results.length)
+                        if (results.length > 0) {
+                          return (
+                            <div className="mt-4 space-y-4">
+                              {results}
+                            </div>
+                          )
+                        }
+                      }
+                      
+                      // Handle single result (backward compatibility)
                       if (parsed.showContent && parsed.toolOutput) {
                         // Check if there are any items to display
                         const hasItems = (() => {
@@ -337,6 +678,87 @@ export const MessageBubble = React.memo(function MessageBubble({
                                 onBooked={onBooked}
                               />
                             )}
+                          </div>
+                        )
+                      }
+                      return null
+                    })()}
+                    
+                    {/* Additional multiple_results display for cases not handled by StructuredMessage */}
+                    {message.multipleResults && !content.includes('<hotel') && !content.includes('<activities') && !content.includes('<restaurants') && !content.includes('<flights') && (() => {
+                      console.log('🔄 Fallback multiple_results display triggered')
+                      const results = []
+                      
+                      // Check each result type
+                      if (message.multipleResults.hotels) {
+                        const hotelData = message.multipleResults.hotels
+                        console.log('🏨 Fallback hotel data:', hotelData)
+                        if (hotelData.hotels && Array.isArray(hotelData.hotels) && hotelData.hotels.length > 0) {
+                          console.log('✅ Adding fallback hotel display')
+                          results.push(
+                            <HotelDisplay
+                              key="hotels"
+                              toolOutput={hotelData}
+                              bookedIds={bookedIds}
+                              onBooked={onBooked}
+                            />
+                          )
+                        }
+                      }
+                      
+                      if (message.multipleResults.restaurants) {
+                        const restaurantData = message.multipleResults.restaurants
+                        console.log('🍽️ Fallback restaurant data:', restaurantData)
+                        if (restaurantData.restaurants && Array.isArray(restaurantData.restaurants) && restaurantData.restaurants.length > 0) {
+                          console.log('✅ Adding fallback restaurant display')
+                          results.push(
+                            <RestaurantDisplay
+                              key="restaurants"
+                              toolOutput={restaurantData}
+                              bookedIds={bookedIds}
+                              onBooked={onBooked}
+                            />
+                          )
+                        }
+                      }
+                      
+                      if (message.multipleResults.activities) {
+                        const activityData = message.multipleResults.activities
+                        console.log('🎯 Fallback activity data:', activityData)
+                        if (activityData.activities && Array.isArray(activityData.activities) && activityData.activities.length > 0) {
+                          console.log('✅ Adding fallback activity display')
+                          results.push(
+                            <ActivityDisplay
+                              key="activities"
+                              toolOutput={activityData}
+                              bookedIds={bookedIds}
+                              onBooked={onBooked}
+                            />
+                          )
+                        }
+                      }
+                      
+                      if (message.multipleResults.flights) {
+                        const flightData = message.multipleResults.flights
+                        console.log('✈️ Fallback flight data:', flightData)
+                        if (flightData.tickets && Array.isArray(flightData.tickets) && flightData.tickets.length > 0) {
+                          console.log('✅ Adding fallback flight display')
+                          results.push(
+                            <TicketDisplay
+                              key="flights"
+                              toolOutput={flightData}
+                              bookedIds={bookedIds}
+                              onBooked={onBooked}
+                            />
+                          )
+                        }
+                      }
+                      
+                      console.log('📊 Fallback total results to display:', results.length)
+                      if (results.length > 0) {
+                        return (
+                          <div className="mt-4 space-y-4">
+                            {results}
                           </div>
                         )
                       }

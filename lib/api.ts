@@ -196,6 +196,7 @@ class ApiClient {
     response: string
     conversation_id: string
     tool_output?: any
+    multiple_results?: { [key: string]: any }  // Для множественных результатов
     destination_city?: string
     destination_coordinates?: { lat: number; lng: number }
     people_count?: number

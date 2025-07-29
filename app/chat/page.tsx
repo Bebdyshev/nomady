@@ -450,6 +450,7 @@ export default function ChatPage() {
                 ...msg,
                 content: response.data?.response || "",
                 toolOutput: response.data?.tool_output || null,
+                multipleResults: response.data?.multiple_results || undefined,
               }
             : msg,
         )
@@ -530,8 +531,10 @@ export default function ChatPage() {
 
   const loadConversation = async (conversationId: string) => {
     const { data } = await apiClient.getConversation(conversationId)
+    console.log('📥 Loaded conversation data:', data)
     if (data && data.messages) {
       const loadedMessages: Message[] = data.messages.map((msg: any) => {
+        console.log('📝 Processing message:', msg.id, 'with multiple_results:', msg.multiple_results)
         let toolOutput = msg.tool_output
         
         // Parse tool_output if it's a string
@@ -543,6 +546,21 @@ export default function ChatPage() {
             toolOutput = null
           }
         }
+        
+        // Parse multiple_results if it exists
+        let multipleResults = msg.multiple_results
+        if (typeof multipleResults === 'string') {
+          try {
+            multipleResults = JSON.parse(multipleResults)
+            console.log('✅ Parsed multiple_results for message', msg.id, ':', multipleResults)
+          } catch (e) {
+            console.warn('Failed to parse multiple_results for message', msg.id, e)
+            multipleResults = undefined
+          }
+        } else if (multipleResults) {
+          console.log('✅ multiple_results already parsed for message', msg.id, ':', multipleResults)
+        }
+        
         let timestamp: Date
         try {
           timestamp = new Date(msg.created_at)
@@ -556,9 +574,12 @@ export default function ChatPage() {
           content: msg.content,
           timestamp,
           toolOutput,
+          multipleResults,
+          mode: msg.mode,
         }
       })
 
+      console.log('📋 Final loaded messages:', loadedMessages)
       setMessages(loadedMessages)
       setCurrentConversationId(conversationId)
       
