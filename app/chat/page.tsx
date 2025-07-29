@@ -61,6 +61,7 @@ export default function ChatPage() {
   const [showMobileMap, setShowMobileMap] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [chatMode, setChatMode] = useState<"search" | "generate">("search")
+  const [destinationCity, setDestinationCity] = useState<string | null>(null)
   
   // Debouncing for streaming updates to reduce DOM thrashing
   const [pendingStreamingUpdate, setPendingStreamingUpdate] = useState<string>("")
@@ -375,6 +376,12 @@ export default function ChatPage() {
 
       console.log('Backend response:', response.data)
 
+      // Extract destination_city from response
+      if (response.data?.destination_city) {
+        setDestinationCity(response.data.destination_city)
+        console.log('Destination city extracted:', response.data.destination_city)
+      }
+
       // Обновить ассистентское сообщение корректно
       setMessages((prev) => {
         const updated = prev.map((msg) =>
@@ -683,6 +690,7 @@ export default function ChatPage() {
               onRemoveItem={handleRemoveItem}
               onClearAll={handleClearAll}
               userLocation={ipGeolocation && typeof (ipGeolocation as any).lat === 'number' && typeof (ipGeolocation as any).lng === 'number' ? { lat: Number((ipGeolocation as any).lat), lng: Number((ipGeolocation as any).lng) } : undefined}
+              destinationCity={destinationCity}
             />
           </div>
         </div>

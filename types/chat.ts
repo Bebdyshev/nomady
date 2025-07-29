@@ -7,6 +7,14 @@ export interface Message {
   mode?: "search" | "generate"
 }
 
+export interface ChatResponse {
+  response: string
+  conversation_id: string
+  tool_output?: any
+  search_results?: any[]
+  destination_city?: string
+}
+
 export interface Conversation {
   id: string
   user_id: number

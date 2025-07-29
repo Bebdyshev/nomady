@@ -213,6 +213,7 @@ class ApiClient {
       response: string
       conversation_id: string
       tool_output?: any
+      destination_city?: string
     }>(url, {
       method: "POST",
       body: JSON.stringify(requestBody),

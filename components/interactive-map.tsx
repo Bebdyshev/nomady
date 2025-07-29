@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -28,6 +28,7 @@ interface InteractiveMapProps {
   onRemoveItem: (id: string) => void
   onClearAll: () => void
   userLocation?: { lat: number, lng: number }
+  destinationCity?: string | null
 }
 
 const mapContainerStyle = {
@@ -76,8 +77,9 @@ declare global {
   }
 }
 
-export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll, userLocation }: InteractiveMapProps) {
+export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll, userLocation, destinationCity }: InteractiveMapProps) {
   const [isDragOver, setIsDragOver] = useState(false)
+  const [destinationCoordinates, setDestinationCoordinates] = useState<{ lat: number; lng: number } | null>(null)
   const t = useTranslations('chat.map')
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
 
@@ -88,6 +90,32 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll, userLo
     googleMapsApiKey: apiKey || '',
     language: mapLanguage,
   })
+
+  // Geocode destination city when it changes
+  useEffect(() => {
+    if (destinationCity && apiKey) {
+      const geocodeCity = async () => {
+        try {
+          const geocoder = new google.maps.Geocoder()
+          const result = await geocoder.geocode({ address: destinationCity })
+          if (result.results[0]) {
+            const location = result.results[0].geometry.location
+            setDestinationCoordinates({
+              lat: location.lat(),
+              lng: location.lng()
+            })
+          }
+        } catch (error) {
+          console.error('Error geocoding destination city:', error)
+          setDestinationCoordinates(null)
+        }
+      }
+      
+      geocodeCity()
+    } else {
+      setDestinationCoordinates(null)
+    }
+  }, [destinationCity, apiKey])
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
@@ -188,7 +216,7 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll, userLo
     return null
   }
 
-  const firstCoord = userLocation || selectedItems.map(item => getCoordinates(item.location)).find(Boolean) || defaultCenter
+  const firstCoord = destinationCoordinates || userLocation || selectedItems.map(item => getCoordinates(item.location)).find(Boolean) || defaultCenter
 
   const mapOptions = {
     mapTypeControl: false,
@@ -213,8 +241,8 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll, userLo
           isLoaded ? (
             <GoogleMap
               mapContainerStyle={mapContainerStyle}
-              center={userLocation || firstCoord}
-              key={userLocation ? `${userLocation.lat}-${userLocation.lng}` : undefined}
+              center={firstCoord}
+              key={destinationCoordinates ? `${destinationCoordinates.lat}-${destinationCoordinates.lng}` : (userLocation ? `${userLocation.lat}-${userLocation.lng}` : 'default')}
               zoom={12}
               options={mapOptions}
             >
