@@ -29,6 +29,7 @@ interface InteractiveMapProps {
   onClearAll: () => void
   userLocation?: { lat: number, lng: number }
   destinationCity?: string | null
+  destinationCoordinates?: { lat: number; lng: number } | null
 }
 
 const mapContainerStyle = {
@@ -77,12 +78,16 @@ declare global {
   }
 }
 
-export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll, userLocation, destinationCity }: InteractiveMapProps) {
+export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll, userLocation, destinationCity, destinationCoordinates }: InteractiveMapProps) {
   const [isDragOver, setIsDragOver] = useState(false)
-  const [destinationCoordinates, setDestinationCoordinates] = useState<{ lat: number; lng: number } | null>(null)
+  const [destinationCoordinatesState, setDestinationCoordinatesState] = useState<{ lat: number; lng: number } | null>(null)
   const t = useTranslations('chat.map')
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
 
+  console.log('🗺️ InteractiveMap props:')
+  console.log('  - destinationCity:', destinationCity)
+  console.log('  - destinationCoordinates from props:', destinationCoordinates)
+  console.log('  - userLocation:', userLocation)
   // Язык карты всегда английский
   const mapLanguage = 'en'
 
@@ -91,31 +96,8 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll, userLo
     language: mapLanguage,
   })
 
-  // Geocode destination city when it changes
-  useEffect(() => {
-    if (destinationCity && apiKey) {
-      const geocodeCity = async () => {
-        try {
-          const geocoder = new google.maps.Geocoder()
-          const result = await geocoder.geocode({ address: destinationCity })
-          if (result.results[0]) {
-            const location = result.results[0].geometry.location
-            setDestinationCoordinates({
-              lat: location.lat(),
-              lng: location.lng()
-            })
-          }
-        } catch (error) {
-          console.error('Error geocoding destination city:', error)
-          setDestinationCoordinates(null)
-        }
-      }
-      
-      geocodeCity()
-    } else {
-      setDestinationCoordinates(null)
-    }
-  }, [destinationCity, apiKey])
+  // Geocoding is now handled by backend, coordinates come from props
+  // useEffect for geocoding removed - coordinates come from backend response
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
@@ -216,7 +198,22 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll, userLo
     return null
   }
 
-  const firstCoord = destinationCoordinates || userLocation || selectedItems.map(item => getCoordinates(item.location)).find(Boolean) || defaultCenter
+  // Use destinationCoordinates from props if available, otherwise use state
+  const finalDestinationCoordinates = destinationCoordinates || destinationCoordinatesState
+
+  const firstCoord = finalDestinationCoordinates || userLocation || selectedItems.map(item => getCoordinates(item.location)).find(Boolean) || defaultCenter
+
+  console.log('🗺️ Map center calculation:')
+  console.log('  - destinationCoordinates from props:', destinationCoordinates)
+  console.log('  - destinationCoordinatesState:', destinationCoordinatesState)
+  console.log('  - finalDestinationCoordinates:', finalDestinationCoordinates)
+  console.log('  - userLocation:', userLocation)
+  console.log('  - selectedItems coordinates:', selectedItems.map(item => getCoordinates(item.location)).filter(Boolean))
+  console.log('  - final center:', firstCoord)
+  console.log('  - map key:', `map-${finalDestinationCoordinates ? `${finalDestinationCoordinates.lat}-${finalDestinationCoordinates.lng}` : 'default'}`)
+
+  // Add visual indicator when destination coordinates are available
+  const hasDestinationCoordinates = !!finalDestinationCoordinates
 
   const mapOptions = {
     mapTypeControl: false,
@@ -239,24 +236,27 @@ export function InteractiveMap({ selectedItems, onRemoveItem, onClearAll, userLo
       >
         {apiKey ? (
           isLoaded ? (
-            <GoogleMap
-              mapContainerStyle={mapContainerStyle}
-              center={firstCoord}
-              key={destinationCoordinates ? `${destinationCoordinates.lat}-${destinationCoordinates.lng}` : (userLocation ? `${userLocation.lat}-${userLocation.lng}` : 'default')}
-              zoom={12}
-              options={mapOptions}
-            >
-              {selectedItems.map((item, idx) => {
-                const coord = getCoordinates(item.location)
-                return coord ? (
-                  <Marker
-                    key={item.id}
-                    position={coord}
-                    label={`${idx + 1}`}
-                  />
-                ) : null
-              })}
-            </GoogleMap>
+            <div className="relative h-full">
+              <GoogleMap
+                mapContainerStyle={mapContainerStyle}
+                center={firstCoord}
+                key={`map-${finalDestinationCoordinates ? `${finalDestinationCoordinates.lat}-${finalDestinationCoordinates.lng}` : 'default'}`}
+                zoom={12}
+                options={mapOptions}
+              >
+                {selectedItems.map((item, idx) => {
+                  const coord = getCoordinates(item.location)
+                  return coord ? (
+                    <Marker
+                      key={item.id}
+                      position={coord}
+                      label={`${idx + 1}`}
+                    />
+                  ) : null
+                })}
+              </GoogleMap>
+              
+            </div>
           ) : (
             <div className="h-full flex items-center justify-center">Loading...</div>
           )

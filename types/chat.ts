@@ -13,6 +13,9 @@ export interface ChatResponse {
   tool_output?: any
   search_results?: any[]
   destination_city?: string
+  destination_coordinates?: { lat: number; lng: number }
+  people_count?: number
+  budget_level?: number  // 1-4: budget, average, high, premium
 }
 
 export interface Conversation {
@@ -35,4 +38,6 @@ export interface IpGeolocation {
   country_name: string
   city: string
   region?: string
+  lat?: number
+  lng?: number
 } 

@@ -1,8 +1,12 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"
 
-export interface ApiResponse<T> {
+export interface ApiResponse<T = any> {
   data?: T
   error?: string
+  destination_city?: string
+  destination_coordinates?: { lat: number; lng: number }
+  people_count?: number
+  budget_level?: number  // 1-4: budget, average, high, premium
 }
 
 // Cookie utilities
@@ -184,11 +188,19 @@ class ApiClient {
 
   // Chat methods
   async sendMessage(
-    messages: Array<{ role: string; content: string }>, 
-    mode?: string,
+    messages: { role: string; content: string }[],
+    mode: string = "search",
     conversationId?: string,
-    ipGeolocation?: { ip: string; country: string; country_name: string; city: string; region?: string }
-  ) {
+    ipGeolocation?: any
+  ): Promise<ApiResponse<{
+    response: string
+    conversation_id: string
+    tool_output?: any
+    destination_city?: string
+    destination_coordinates?: { lat: number; lng: number }
+    people_count?: number
+    budget_level?: number
+  }>> {
     const params = new URLSearchParams()
     if (conversationId && conversationId !== "null" && conversationId !== "undefined") {
       params.append("conversation_id", conversationId)
@@ -214,6 +226,7 @@ class ApiClient {
       conversation_id: string
       tool_output?: any
       destination_city?: string
+      destination_coordinates?: { lat: number; lng: number }
     }>(url, {
       method: "POST",
       body: JSON.stringify(requestBody),
@@ -288,7 +301,22 @@ class ApiClient {
   }
 
   async getConversation(conversationId: string) {
-    return this.request(`/chat/conversation/${conversationId}`)
+    return this.request<{
+      id: string
+      user_id: number
+      created_at: string
+      last_updated: string
+      title?: string
+      destination?: string
+      people_count?: number
+      budget_level?: number
+      messages: Array<{
+        id: number
+        role: string
+        content: string
+        timestamp: string
+      }>
+    }>(`/chat/conversation/${conversationId}`)
   }
 
   async getConversationSearchResults(conversationId: string) {

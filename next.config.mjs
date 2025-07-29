@@ -19,6 +19,16 @@ const nextConfig = {
   // Improve performance
   swcMinify: true,
   
+  // API proxy configuration
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:8000/:path*',
+      },
+    ]
+  },
+  
   // SEO and Security headers
   async headers() {
     return [

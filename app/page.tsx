@@ -1063,13 +1063,6 @@ export default function LandingPage() {
                     </TextEffect>
                   </a>
                 </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    <TextEffect as="span" preset="fade-in-blur" speedSegment={0.3}>
-                      {t('footer.links.mobileApp')}
-                    </TextEffect>
-                  </a>
-                </li>
               </ul>
             </div>
 

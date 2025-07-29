@@ -62,6 +62,9 @@ export default function ChatPage() {
   const [isMobile, setIsMobile] = useState(false)
   const [chatMode, setChatMode] = useState<"search" | "generate">("search")
   const [destinationCity, setDestinationCity] = useState<string | null>(null)
+  const [destinationCoordinates, setDestinationCoordinates] = useState<{ lat: number; lng: number } | null>(null)
+  const [peopleCount, setPeopleCount] = useState<number | null>(1) // Default to 1 person
+  const [budgetLevel, setBudgetLevel] = useState<number | null>(2) // Default to average budget
   
   // Debouncing for streaming updates to reduce DOM thrashing
   const [pendingStreamingUpdate, setPendingStreamingUpdate] = useState<string>("")
@@ -278,6 +281,29 @@ export default function ChatPage() {
           // Validate we got useful location data
           if (locationData.country && locationData.country !== 'Unknown' && locationData.city && locationData.city !== 'Unknown') {
             setIpGeolocation(locationData)
+            
+            // Set default destination city from IP geolocation
+            if (!destinationCity) {
+              setDestinationCity(locationData.city)
+              
+              // Get coordinates for the city
+              try {
+                const geocodeResponse = await fetch('/api/chat/geocode', {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ city: locationData.city }),
+                })
+                const geocodeData = await geocodeResponse.json()
+                if (geocodeData.coordinates) {
+                  setDestinationCoordinates(geocodeData.coordinates)
+                }
+              } catch (error) {
+                console.warn('Failed to geocode IP city:', error)
+              }
+            }
+            
             setIsLoadingLocation(false)
             return
           } else {
@@ -301,6 +327,11 @@ export default function ChatPage() {
         country_name: 'United States',
         city: 'New York'
       })
+      
+      // Set default destination city from fallback
+      if (!destinationCity) {
+        setDestinationCity('New York')
+      }
     } catch (finalError) {
       console.error("Even fallback IP service failed:", finalError)
       // Don't set any geolocation data if everything fails
@@ -379,7 +410,36 @@ export default function ChatPage() {
       // Extract destination_city from response
       if (response.data?.destination_city) {
         setDestinationCity(response.data.destination_city)
-        console.log('Destination city extracted:', response.data.destination_city)
+        console.log('✅ Destination city extracted:', response.data.destination_city)
+      } else {
+        console.log('❌ No destination city in response')
+      }
+
+      // Extract destination_coordinates from response
+      if (response.data?.destination_coordinates) {
+        setDestinationCoordinates(response.data.destination_coordinates)
+        console.log('✅ Destination coordinates extracted:', response.data.destination_coordinates)
+      } else {
+        console.log('❌ No destination coordinates in response')
+        setDestinationCoordinates(null)
+      }
+
+      // Extract people_count from response
+      if (response.data?.people_count) {
+        setPeopleCount(response.data.people_count)
+        console.log('✅ People count extracted:', response.data.people_count)
+      } else {
+        console.log('❌ No people count in response')
+        setPeopleCount(null)
+      }
+
+      // Extract budget_level from response
+      if (response.data?.budget_level) {
+        setBudgetLevel(response.data.budget_level)
+        console.log('✅ Budget level extracted:', response.data.budget_level)
+      } else {
+        console.log('❌ No budget level in response')
+        setBudgetLevel(null)
       }
 
       // Обновить ассистентское сообщение корректно
@@ -451,6 +511,12 @@ export default function ChatPage() {
     localStorage.removeItem("lastConversationId")
     setInput("")
     
+    // Reset trip details and map for new conversation
+    setDestinationCity(null)
+    setDestinationCoordinates(null)
+    setPeopleCount(1) // Reset to default
+    setBudgetLevel(2) // Reset to default
+    
     // Clear conversation ID from URL
     const url = new URL(window.location.href)
     url.searchParams.delete("c")
@@ -464,8 +530,8 @@ export default function ChatPage() {
 
   const loadConversation = async (conversationId: string) => {
     const { data } = await apiClient.getConversation(conversationId)
-    if (data && (data as any).messages) {
-      const loadedMessages: Message[] = (data as any).messages.map((msg: any) => {
+    if (data && data.messages) {
+      const loadedMessages: Message[] = data.messages.map((msg: any) => {
         let toolOutput = msg.tool_output
         
         // Parse tool_output if it's a string
@@ -495,6 +561,44 @@ export default function ChatPage() {
 
       setMessages(loadedMessages)
       setCurrentConversationId(conversationId)
+      
+      // Load trip details from conversation data
+      if (data) {
+        setDestinationCity(data.destination || null)
+        setPeopleCount(data.people_count || null)
+        setBudgetLevel(data.budget_level || null)
+        
+        // Clear previous map coordinates when switching conversations
+        setDestinationCoordinates(null)
+        
+        // If we have destination city, get coordinates for this conversation
+        if (data.destination) {
+          try {
+            const response = await fetch('/api/chat/geocode', {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ city: data.destination }),
+            })
+            const geocodeData = await response.json()
+            if (geocodeData.coordinates) {
+              setDestinationCoordinates(geocodeData.coordinates)
+              console.log(`🗺️ Loaded map for conversation ${conversationId}: ${data.destination} at ${geocodeData.coordinates.lat}, ${geocodeData.coordinates.lng}`)
+            }
+          } catch (error) {
+            console.warn('Failed to geocode destination city for conversation:', error)
+          }
+        } else {
+          // If no destination in conversation, use IP geolocation as fallback
+          if (ipGeolocation && ipGeolocation.city) {
+            setDestinationCity(ipGeolocation.city)
+            if (ipGeolocation.lat && ipGeolocation.lng) {
+              setDestinationCoordinates({ lat: ipGeolocation.lat, lng: ipGeolocation.lng })
+            }
+          }
+        }
+      }
     }
   }
 
@@ -635,7 +739,26 @@ export default function ChatPage() {
                   <h1 className="text-xl font-semibold text-slate-900">{chatTitle}</h1>
                 </div>
                 <div className="flex items-center space-x-4">
-                  {/* Right side can be used for additional controls if needed */}
+                  {/* Trip details in header - right side */}
+                  <div className="flex items-center bg-slate-50 rounded-md border border-slate-200 overflow-hidden">
+                    {destinationCity && (
+                      <div className="px-3 py-1.5 border-r border-slate-200">
+                        <span className="font-semibold text-slate-900 text-sm">{destinationCity}</span>
+                      </div>
+                    )}
+                    {peopleCount && (
+                      <div className="px-3 py-1.5 border-r border-slate-200">
+                        <span className="font-semibold text-slate-900 text-sm">{peopleCount} travelers</span>
+                      </div>
+                    )}
+                    {budgetLevel && (
+                      <div className="px-3 py-1.5">
+                        <span className="text-slate-500 text-sm">
+                          {budgetLevel === 1 ? 'Budget' : budgetLevel === 2 ? 'Average' : budgetLevel === 3 ? 'High' : 'Premium'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -691,6 +814,7 @@ export default function ChatPage() {
               onClearAll={handleClearAll}
               userLocation={ipGeolocation && typeof (ipGeolocation as any).lat === 'number' && typeof (ipGeolocation as any).lng === 'number' ? { lat: Number((ipGeolocation as any).lat), lng: Number((ipGeolocation as any).lng) } : undefined}
               destinationCity={destinationCity}
+              destinationCoordinates={destinationCoordinates}
             />
           </div>
         </div>
