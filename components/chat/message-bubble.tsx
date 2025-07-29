@@ -533,8 +533,8 @@ export const MessageBubble = React.memo(function MessageBubble({
                     ) : (
                       <MarkdownMessage content={content} />
                     )}
-                    {/* Tool Output Display inside bubble */}
-                    {(message.toolOutput || message.multipleResults) && (() => {
+                    {/* Tool Output Display inside bubble - only if no structured content */}
+                    {(message.toolOutput || message.multipleResults) && !content.includes('<hotel') && !content.includes('<activities') && !content.includes('<restaurants') && !content.includes('<flights') && (() => {
                       const parsed = parseMessageContent(content, message.toolOutput)
                       
                       // Debug logging
@@ -678,87 +678,6 @@ export const MessageBubble = React.memo(function MessageBubble({
                                 onBooked={onBooked}
                               />
                             )}
-                          </div>
-                        )
-                      }
-                      return null
-                    })()}
-                    
-                    {/* Additional multiple_results display for cases not handled by StructuredMessage */}
-                    {message.multipleResults && !content.includes('<hotel') && !content.includes('<activities') && !content.includes('<restaurants') && !content.includes('<flights') && (() => {
-                      console.log('🔄 Fallback multiple_results display triggered')
-                      const results = []
-                      
-                      // Check each result type
-                      if (message.multipleResults.hotels) {
-                        const hotelData = message.multipleResults.hotels
-                        console.log('🏨 Fallback hotel data:', hotelData)
-                        if (hotelData.hotels && Array.isArray(hotelData.hotels) && hotelData.hotels.length > 0) {
-                          console.log('✅ Adding fallback hotel display')
-                          results.push(
-                            <HotelDisplay
-                              key="hotels"
-                              toolOutput={hotelData}
-                              bookedIds={bookedIds}
-                              onBooked={onBooked}
-                            />
-                          )
-                        }
-                      }
-                      
-                      if (message.multipleResults.restaurants) {
-                        const restaurantData = message.multipleResults.restaurants
-                        console.log('🍽️ Fallback restaurant data:', restaurantData)
-                        if (restaurantData.restaurants && Array.isArray(restaurantData.restaurants) && restaurantData.restaurants.length > 0) {
-                          console.log('✅ Adding fallback restaurant display')
-                          results.push(
-                            <RestaurantDisplay
-                              key="restaurants"
-                              toolOutput={restaurantData}
-                              bookedIds={bookedIds}
-                              onBooked={onBooked}
-                            />
-                          )
-                        }
-                      }
-                      
-                      if (message.multipleResults.activities) {
-                        const activityData = message.multipleResults.activities
-                        console.log('🎯 Fallback activity data:', activityData)
-                        if (activityData.activities && Array.isArray(activityData.activities) && activityData.activities.length > 0) {
-                          console.log('✅ Adding fallback activity display')
-                          results.push(
-                            <ActivityDisplay
-                              key="activities"
-                              toolOutput={activityData}
-                              bookedIds={bookedIds}
-                              onBooked={onBooked}
-                            />
-                          )
-                        }
-                      }
-                      
-                      if (message.multipleResults.flights) {
-                        const flightData = message.multipleResults.flights
-                        console.log('✈️ Fallback flight data:', flightData)
-                        if (flightData.tickets && Array.isArray(flightData.tickets) && flightData.tickets.length > 0) {
-                          console.log('✅ Adding fallback flight display')
-                          results.push(
-                            <TicketDisplay
-                              key="flights"
-                              toolOutput={flightData}
-                              bookedIds={bookedIds}
-                              onBooked={onBooked}
-                            />
-                          )
-                        }
-                      }
-                      
-                      console.log('📊 Fallback total results to display:', results.length)
-                      if (results.length > 0) {
-                        return (
-                          <div className="mt-4 space-y-4">
-                            {results}
                           </div>
                         )
                       }
