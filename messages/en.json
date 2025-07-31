@@ -631,4 +631,39 @@
       "action": "Explore Destinations"
     }
   }
+  },
+  "success": {
+    "title": "Payment Successful!",
+    "subtitle": "Welcome to premium Nomady",
+    "description": "Your account has been upgraded and you're ready to plan amazing trips with unlimited AI assistance.",
+    "paymentSummary": "Payment Summary",
+    "whatsIncluded": "What's Included",
+    "whatsNext": "What's Next?",
+    "startPlanning": {
+      "title": "Start Planning",
+      "description": "Begin your first premium trip planning session with unlimited AI assistance"
+    },
+    "viewBookings": {
+      "title": "View Bookings", 
+      "description": "Manage all your travel reservations in one convenient place"
+    },
+    "explorePremium": {
+      "title": "Explore Premium",
+      "description": "Discover all the premium features and advanced planning tools"
+    },
+    "readyToPlan": "Ready to Plan Your Dream Trip?",
+    "premiumActive": "Your premium account is now active! Start planning your next adventure with unlimited AI assistance, advanced features, and priority support.",
+    "startPlanningNow": "Start Planning Now",
+    "exploreDestinations": "Explore Destinations",
+    "needHelp": "Need help getting started? Our support team is here to help.",
+    "downloadReceipt": "Download Receipt",
+    "processingPayment": "Processing your payment...",
+    "paymentMissing": "Payment Information Missing",
+    "paymentMissingDesc": "We couldn't find your payment details. Please contact support if you believe this is an error.",
+    "goToDashboard": "Go to Dashboard",
+    "contactSupport": "Contact Support",
+    "plan": "Plan",
+    "amount": "Amount", 
+    "transactionId": "Transaction ID",
+    "email": "Email"
 } 
