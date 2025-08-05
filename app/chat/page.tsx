@@ -143,7 +143,7 @@ export default function ChatPage() {
 
       // Create checkout session
       console.log('🔄 Creating checkout session...');
-      const checkoutResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/polar/checkout?email=${encodeURIComponent(userEmail)}&success_url=${encodeURIComponent(window.location.origin + '/success')}`, {
+      const checkoutResponse = await fetch(`https://d59afbb67f09.ngrok-free.app/polar/checkout?email=${encodeURIComponent(userEmail)}&success_url=${encodeURIComponent(window.location.origin + '/success')}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'

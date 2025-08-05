@@ -73,7 +73,7 @@ export default function SuccessPage() {
                     <Button
             onClick={handleContinue}
             className="w-full bg-blue-600 hover:bg-blue-700"
-          >
+                  >
             Continue to Chat
             <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
