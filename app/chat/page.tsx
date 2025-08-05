@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Send, PaperclipIcon, User, Bot, Loader2, MoreVertical, Menu } from "lucide-react"
+import { Send, PaperclipIcon, User, Bot, Loader2, MoreVertical, Menu, Crown } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Logo } from "@/components/ui/logo"
 import { GoogleSignInButton } from "@/components/google-signin-button"
@@ -86,6 +86,89 @@ export default function ChatPage() {
   const { user, logout, isAuthenticated } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null)
+  const [showUpgradeOverlay, setShowUpgradeOverlay] = useState(false)
+
+  // Check subscription status
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    
+    const checkSubscription = async () => {
+      try {
+        const { data, error } = await apiClient.getMe();
+        if (data && !error) {
+          const userData = data as any; // Type assertion for user data
+          console.log('🔍 Chat Page - Subscription status loaded:', userData.subscription_status);
+          setSubscriptionStatus(userData.subscription_status);
+        } else {
+          console.error('❌ Failed to get user info:', error);
+        }
+      } catch (error) {
+        console.error('Error checking subscription:', error);
+      }
+    };
+
+    checkSubscription();
+  }, [isAuthenticated]);
+
+  // Show upgrade overlay if user is on free plan and trying to use generate mode
+  useEffect(() => {
+    console.log('🔍 Chat Page - Checking overlay conditions:', { subscriptionStatus, chatMode });
+    if ((subscriptionStatus === "inactive" || subscriptionStatus === null || subscriptionStatus === undefined) && chatMode === "generate") {
+      console.log('🚫 Free user or unloaded status detected in generate mode, showing upgrade overlay');
+      setShowUpgradeOverlay(true);
+    } else {
+      console.log('✅ Overlay conditions not met, hiding overlay');
+      setShowUpgradeOverlay(false);
+    }
+  }, [subscriptionStatus, chatMode]);
+
+  // Remove the forced search mode switch - let user stay in generate mode but show overlay
+
+  const handleUpgrade = async () => {
+    console.log('🚀 Starting upgrade process...');
+    try {
+      // Get user info
+      console.log('📋 Getting user info...');
+      const { data, error } = await apiClient.getMe();
+      
+      if (!data || error) {
+        console.error('❌ Failed to get user info:', error);
+        return;
+      }
+
+      const userData = data as any; // Type assertion for user data
+      console.log('✅ User data received:', { email: userData.email });
+      const userEmail = userData.email;
+
+      // Create checkout session
+      console.log('🔄 Creating checkout session...');
+      const checkoutResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/polar/checkout?email=${encodeURIComponent(userEmail)}&success_url=${encodeURIComponent(window.location.origin + '/success')}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+
+      if (checkoutResponse.ok) {
+        const checkoutData = await checkoutResponse.json();
+        console.log('✅ Checkout session created:', checkoutData);
+        
+        // Redirect to checkout URL
+        if (checkoutData.checkout && checkoutData.checkout.url) {
+          console.log('🔗 Redirecting to checkout:', checkoutData.checkout.url);
+          window.location.href = checkoutData.checkout.url;
+        } else {
+          console.error('❌ No checkout URL in response');
+        }
+      } else {
+        console.error('❌ Failed to create checkout session:', checkoutResponse.status, checkoutResponse.statusText);
+        return;
+      }
+
+    } catch (error) {
+      console.error('❌ Error handling upgrade:', error);
+    }
+  };
 
   // Redirect to /auth if not authenticated
   useEffect(() => {
@@ -712,12 +795,9 @@ export default function ChatPage() {
 
   return (
     <div className="flex h-screen bg-slate-50">
-      {/* Mobile overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0 bg-black/50 z-50 md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
-
-      {/* Mobile Map Overlay */}
       <MobileMapOverlay
         showMobileMap={showMobileMap}
         setShowMobileMap={setShowMobileMap}
@@ -725,8 +805,6 @@ export default function ChatPage() {
         onRemoveItem={handleRemoveItem}
         onClearAll={handleClearAll}
       />
-
-      {/* Sidebar */}
       <AppSidebar
         currentConversationId={currentConversationId}
         sidebarOpen={sidebarOpen}
@@ -734,111 +812,113 @@ export default function ChatPage() {
         onConversationSelect={loadConversation}
         onNewChat={startNewConversation}
       />
-
-      {/* Main Content Area with Chat and Map */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-0">
-        {/* Chat and Map Columns */}
-        <div className="flex-1 flex min-w-0 min-h-0">
-          {/* Chat Area */}
-          <div 
-            className="flex flex-col min-w-0 w-full md:w-auto min-h-0" 
-            style={{ width: isMobile ? '100%' : `${100 - mapWidth}%` }}
-          >
-            {/* Mobile Header - make sticky */}
-            <div className="md:hidden sticky top-0 z-30">
-              <ChatHeader
-                setSidebarOpen={setSidebarOpen}
-                setShowMobileMap={setShowMobileMap}
-                bookedItemsCount={Object.keys(bookedItems).length}
-              />
-            </div>
-
-            {/* Desktop Header with Mode Switcher */}
-            <div className="hidden md:block sticky top-0 z-30 bg-white border-b border-slate-200">
-              <div className="flex items-center justify-between p-4">
-                <div className="flex items-center space-x-4">
-                  <h1 className="text-xl font-semibold text-slate-900">{chatTitle}</h1>
-                </div>
-                <div className="flex items-center space-x-4">
-                  {/* Trip details in header - right side */}
-                  <div className="flex items-center bg-slate-50 rounded-md border border-slate-200 overflow-hidden">
-                    {destinationCity && (
-                      <div className="px-3 py-1.5 border-r border-slate-200">
-                        <span className="font-semibold text-slate-900 text-sm">{destinationCity}</span>
-                      </div>
-                    )}
-                    {peopleCount && (
-                      <div className="px-3 py-1.5 border-r border-slate-200">
-                        <span className="font-semibold text-slate-900 text-sm">{peopleCount} travelers</span>
-                      </div>
-                    )}
-                    {budgetLevel && (
-                      <div className="px-3 py-1.5">
-                        <span className="text-slate-500 text-sm">
-                          {budgetLevel === 1 ? 'Budget' : budgetLevel === 2 ? 'Average' : budgetLevel === 3 ? 'High' : 'Premium'}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 relative">
+        {/* Upgrade Overlay for Free Users - Full Page */}
+        {showUpgradeOverlay && (
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[9999] flex items-center justify-center">
+            <div className="bg-white rounded-xl p-8 max-w-md mx-4 text-center shadow-2xl">
+              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Crown className="h-8 w-8 text-yellow-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">Upgrade to Pro</h2>
+              <p className="text-slate-600 mb-6">
+                Generate mode is available only for Pro subscribers. Upgrade to unlock advanced AI features and unlimited trip generation.
+              </p>
+              <div className="space-y-3">
+                <Button onClick={handleUpgrade} className="w-full bg-yellow-600 hover:bg-yellow-700">
+                  <Crown className="h-4 w-4 mr-2" />
+                  Upgrade to Pro
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setChatMode("search")} 
+                  className="w-full"
+                >
+                  Continue with Search Mode
+                </Button>
               </div>
             </div>
-
-            {/* Messages Container - add extra bottom padding on mobile */}
-            <div className="flex-1 overflow-y-auto min-h-0 h-full" style={{ paddingBottom: isMobile ? 112 : 0 }}>
-              <MessagesList
-                ref={messagesEndRef}
-                messages={messages}
-                isStreaming={isStreaming}
-                streamingMessage={streamingMessage}
-                activeSearches={activeSearches}
-                currentlyStreamingMessageId={currentlyStreamingMessageId}
-                showTypingIndicator={showTypingIndicator}
-                bookedIds={bookedIds}
-                onBooked={handleBooked}
-                onSuggestionClick={setInput}
-                currentMode={chatMode}
-                onModeChange={setChatMode}
-                isLoading={isLoading}
-              />
-            </div>
-
-            {/* Input Area - sticky on mobile */}
-            <div className="md:static md:mt-0 sticky bottom-0 z-40">
-              <ChatInput
-                ref={inputRef}
-                input={input}
-                setInput={setInput}
-                onSendMessage={handleSendMessage}
-                isLoading={isLoading}
-                isStreaming={isStreaming}
-              />
-            </div>
           </div>
-
-          {/* Resize Handle - Hidden on mobile */}
-          <div
-            className="hidden md:block w-1 bg-slate-200 hover:bg-blue-500 cursor-col-resize transition-colors relative group"
-            onMouseDown={handleMouseDown}
-          >
-            <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-500/20" />
-          </div>
-
-          {/* Map Area - Hidden on mobile, shown on md and up */}
-          <div
-            className="hidden md:block bg-slate-50 border-l border-slate-200"
-            style={{ width: `${mapWidth}%` }}
-          >
-            <InteractiveMap
-              selectedItems={Object.values(bookedItems)}
-              onRemoveItem={handleRemoveItem}
-              onClearAll={handleClearAll}
-              userLocation={ipGeolocation && typeof (ipGeolocation as any).lat === 'number' && typeof (ipGeolocation as any).lng === 'number' ? { lat: Number((ipGeolocation as any).lat), lng: Number((ipGeolocation as any).lng) } : undefined}
-              destinationCity={destinationCity}
-              destinationCoordinates={destinationCoordinates}
-            />
+        )}
+        
+        <div className="md:hidden sticky top-0 z-30">
+          <ChatHeader
+            setSidebarOpen={setSidebarOpen}
+            setShowMobileMap={setShowMobileMap}
+            bookedItemsCount={Object.keys(bookedItems).length}
+          />
+        </div>
+        {/* Desktop Header with Mode Switcher */}
+        <div className="hidden md:block sticky top-0 z-30 bg-white border-b border-slate-200">
+          <div className="flex items-center justify-between p-4">
+            <div className="flex items-center space-x-4">
+              <h1 className="text-xl font-semibold text-slate-900">{chatTitle}</h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              {/* Trip details in header - right side */}
+              <div className="flex items-center bg-slate-50 rounded-md border border-slate-200 overflow-hidden">
+                {destinationCity && (
+                  <div className="px-3 py-1.5 border-r border-slate-200">
+                    <span className="font-semibold text-slate-900 text-sm">{destinationCity}</span>
+                  </div>
+                )}
+                {peopleCount && (
+                  <div className="px-3 py-1.5 border-r border-slate-200">
+                    <span className="font-semibold text-slate-900 text-sm">{peopleCount} travelers</span>
+                  </div>
+                )}
+                {budgetLevel && (
+                  <div className="px-3 py-1.5">
+                    <span className="text-slate-500 text-sm">
+                      {budgetLevel === 1 ? 'Budget' : budgetLevel === 2 ? 'Average' : budgetLevel === 3 ? 'High' : 'Premium'}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
+        <div className="flex-1 overflow-y-auto min-h-0 h-full" style={{ paddingBottom: isMobile ? 112 : 0 }}>
+          <MessagesList
+            ref={messagesEndRef}
+            messages={messages}
+            isStreaming={isStreaming}
+            streamingMessage={streamingMessage}
+            activeSearches={activeSearches}
+            currentlyStreamingMessageId={currentlyStreamingMessageId}
+            showTypingIndicator={showTypingIndicator}
+            bookedIds={bookedIds}
+            onBooked={handleBooked}
+            onSuggestionClick={setInput}
+            currentMode={chatMode}
+            onModeChange={setChatMode}
+            isLoading={isLoading}
+          />
+        </div>
+        <div className="md:static md:mt-0 sticky bottom-0 z-40">
+          <ChatInput
+            ref={inputRef}
+            input={input}
+            setInput={setInput}
+            onSendMessage={handleSendMessage}
+            isLoading={isLoading}
+            isStreaming={isStreaming}
+          />
+        </div>
+      </div>
+      {/* Resize handle и карта только на md+ */}
+      <div className="hidden md:block w-1 bg-slate-200 hover:bg-blue-500 cursor-col-resize transition-colors relative group" onMouseDown={handleMouseDown}>
+        <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-500/20" />
+      </div>
+      <div className="hidden md:block bg-slate-50 border-l border-slate-200" style={{ width: `${mapWidth}%` }}>
+        <InteractiveMap
+          selectedItems={Object.values(bookedItems)}
+          onRemoveItem={handleRemoveItem}
+          onClearAll={handleClearAll}
+          userLocation={ipGeolocation && typeof (ipGeolocation as any).lat === 'number' && typeof (ipGeolocation as any).lng === 'number' ? { lat: Number((ipGeolocation as any).lat), lng: Number((ipGeolocation as any).lng) } : undefined}
+          destinationCity={destinationCity}
+          destinationCoordinates={destinationCoordinates}
+        />
       </div>
     </div>
   )

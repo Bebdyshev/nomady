@@ -327,6 +327,58 @@ export default function LandingPage() {
   const startNewConversation = () => {/* заглушка или логика */}
   const handleBooked = (bookedItem: any, id: string, type: string) => {/* заглушка или логика */}
 
+  const handlePricingClick = async (planKey: string) => {
+    if (!isAuthenticated) {
+      // Если пользователь не авторизован, сначала редиректим на auth
+      router.push("/auth");
+      return;
+    }
+
+    try {
+      // Получаем информацию о пользователе (email)
+      const userResponse = await fetch(`${API_BASE_URL}/users/me`, {
+        credentials: 'include'
+      });
+      
+      if (!userResponse.ok) {
+        console.error('Failed to get user info');
+        router.push("/auth");
+        return;
+      }
+
+      const userData = await userResponse.json();
+      const userEmail = userData.email;
+
+      // Создаем customer в Polar если его нет
+      let customerId = userData.polar_customer_id;
+      
+      if (!customerId) {
+        const createCustomerResponse = await fetch(`${API_BASE_URL}/polar/customer`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email: userEmail })
+        });
+
+        if (createCustomerResponse.ok) {
+          const customerData = await createCustomerResponse.json();
+          customerId = customerData.customer.id;
+        } else {
+          console.error('Failed to create customer in Polar');
+          return;
+        }
+      }
+
+      // Редиректим на Polar customer portal
+      const portalUrl = `${API_BASE_URL}/polar/portal/${customerId}?return_url=${encodeURIComponent(window.location.origin + '/success')}`;
+      window.location.href = portalUrl;
+
+    } catch (error) {
+      console.error('Error handling pricing click:', error);
+      router.push("/auth");
+    }
+  };
+
   const features = [
     {
       icon: <Plane className="h-8 w-8" />,
@@ -953,7 +1005,7 @@ export default function LandingPage() {
                           ? "bg-blue-600 hover:bg-blue-700 text-white"
                           : "bg-slate-100 hover:bg-slate-200 text-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-white"
                       }`}
-                      onClick={() => router.push("/auth")}
+                      onClick={() => handlePricingClick(key)}
                     >
                       {plan.cta}
                     </Button>
