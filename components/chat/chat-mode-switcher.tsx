@@ -96,7 +96,7 @@ export function ChatModeSwitcher({
                 {mode.isPremium && (subscriptionStatus === "inactive" || subscriptionStatus === null || subscriptionStatus === undefined) ? (
                   <Lock className="h-3 w-3 mr-1.5" />
                 ) : (
-                  <mode.icon className="h-3 w-3 mr-1.5" />
+                <mode.icon className="h-3 w-3 mr-1.5" />
                 )}
                 {mode.label}
                 {mode.isPremium && (subscriptionStatus === "inactive" || subscriptionStatus === null || subscriptionStatus === undefined) && (
