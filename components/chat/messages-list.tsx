@@ -51,19 +51,22 @@ export const MessagesList = forwardRef<HTMLDivElement, MessagesListProps>(
           {messages.length > 0 && (
             <div className="space-y-4 md:space-y-6">
               <AnimatePresence>
-                {messages.map((message) => (
-                  <MessageBubble
-                    key={message.id}
-                    message={message}
-                    isStreaming={isStreaming}
-                    streamingMessage={streamingMessage}
-                    activeSearches={activeSearches}
-                    currentlyStreamingMessageId={currentlyStreamingMessageId}
-                    bookedIds={bookedIds}
-                    onBooked={onBooked}
-                    isLoading={isLoading}
-                  />
-                ))}
+                {messages.map((message) => {
+                  return (
+                    <MessageBubble
+                      key={message.id}
+                      message={message}
+                      conversationMode={currentMode}
+                      isStreaming={isStreaming}
+                      streamingMessage={streamingMessage}
+                      activeSearches={activeSearches}
+                      currentlyStreamingMessageId={currentlyStreamingMessageId}
+                      bookedIds={bookedIds}
+                      onBooked={onBooked}
+                      isLoading={isLoading}
+                    />
+                  )
+                })}
               </AnimatePresence>
 
               {/* Typing Indicator */}

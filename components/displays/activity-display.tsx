@@ -60,6 +60,7 @@ interface ActivityDisplayProps {
   bookedIds?: Set<string>
   onBooked?: (item: any, id: string, type: string) => void
   hideHeaders?: boolean
+  isRoadmap?: boolean
 }
 
 // Get category icon
@@ -189,11 +190,22 @@ const ActivityCard = ({ activity, onBook, isBooked, isBooking, isAIRecommended }
   )
 }
 
-export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked, hideHeaders = false }: ActivityDisplayProps) {
+export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked, hideHeaders = false, isRoadmap }: ActivityDisplayProps) {
   const [bookingStates, setBookingStates] = useState<Record<string, boolean>>({})
   const [sortBy, setSortBy] = useState<"rating" | "name">("rating")
   const { toast } = useToast()
   const t = useTranslations('chat.displays')
+
+  // Log header visibility logic
+  if (isRoadmap) {
+    console.log('🎯 ActivityDisplay: Header hidden due to isRoadmap (roadmap or fallback)')
+  }
+  console.log('🎯 ActivityDisplay debug:', {
+    isRoadmap,
+    hideHeaders,
+    shouldHideHeaders: hideHeaders || isRoadmap,
+    totalActivities: toolOutput.activities?.length || 0
+  })
 
   const handleBooking = async (activity: any, type: string) => {
     const itemId = activity.url || activity.title || `${activity.title}-${Date.now()}`
@@ -269,7 +281,7 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked, h
   const totalResults = toolOutput.total_found || toolOutput.total_results || displayActivities.length
 
   return (
-    <div className="mt-6 space-y-6">
+    <div className={`${hideHeaders || isRoadmap ? '' : 'mt-6'} space-y-6`}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -277,7 +289,7 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked, h
         className="space-y-4"
       >
         {/* Header */}
-        {!hideHeaders && (
+        {!(hideHeaders || isRoadmap) && (
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-gradient-to-br from-green-100 to-blue-100 rounded-lg">

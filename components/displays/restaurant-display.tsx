@@ -300,6 +300,9 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked,
   const t = useTranslations('chat.displays')
 
   // Log header visibility logic
+  if (isRoadmap) {
+    console.log('🍽️ RestaurantDisplay: Header hidden due to isRoadmap (roadmap or fallback)')
+  }
   console.log('🍽️ RestaurantDisplay debug:', {
     isRoadmap,
     hideHeaders,
@@ -374,7 +377,7 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked,
   }
 
   return (
-    <div className="mt-6 space-y-6">
+    <div className={`${hideHeaders || isRoadmap ? '' : 'mt-6'} space-y-6`}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -382,7 +385,7 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked,
         className="space-y-4"
       >
         {/* Header */}
-        {!hideHeaders && !isRoadmap && (
+        {!(hideHeaders || isRoadmap) && (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-gradient-to-br from-orange-100 to-red-100 rounded-lg">

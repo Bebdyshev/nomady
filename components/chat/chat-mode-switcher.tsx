@@ -30,7 +30,6 @@ export function ChatModeSwitcher({
         const { data, error } = await apiClient.getMe();
         if (data && !error) {
           const userData = data as any; // Type assertion for user data
-          console.log('🔍 Subscription status loaded:', userData.subscription_status);
           setSubscriptionStatus(userData.subscription_status);
         } else {
           console.error('❌ Failed to get user info:', error);
@@ -46,16 +45,12 @@ export function ChatModeSwitcher({
   }, []);
 
   const handleModeChange = (mode: "search" | "generate") => {
-    console.log('🔄 Mode change attempt:', mode, 'Subscription status:', subscriptionStatus);
     
     // If subscription status is still loading, prevent mode change
     if (isLoading) {
-      console.log('⏳ Subscription status still loading, preventing mode change');
       return;
     }
     
-    // Allow mode change - the upgrade dialog will be shown in Chat Page if needed
-    console.log('✅ Mode change allowed:', mode);
     onModeChange(mode);
   };
 

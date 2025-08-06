@@ -135,6 +135,7 @@ interface HotelDisplayProps {
   bookedIds?: Set<string>
   onBooked?: (item: any, id: string, type: string) => void
   hideHeaders?: boolean
+  isRoadmap?: boolean
 }
 
 // Hotel Image Gallery Component
@@ -324,6 +325,9 @@ const getAmenityIcon = (amenity: string) => {
 const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking, isAIRecommended }: any) => {
   const t = useTranslations('chat.displays')
   
+  // Debug: log all props to HotelCard
+  console.log('🏨 HotelCard props:', { hotel, searchParams, onBook, isBooked, isBooking, isAIRecommended })
+
   const formatPrice = (priceInput: number | string | null | undefined) => {
     // Handle new format search_price
     if (hotel.search_price && hotel.search_price !== "N/A") {
@@ -836,11 +840,29 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking, isAIRecom
   )
 }
 
-export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked, hideHeaders }: HotelDisplayProps) {
+export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked, hideHeaders, isRoadmap }: HotelDisplayProps) {
   const [bookingStates, setBookingStates] = useState<Record<string, boolean>>({})
   const [sortBy, setSortBy] = useState<"price" | "rating" | "name">("price")
   const { toast } = useToast()
   const t = useTranslations('chat.displays')
+
+  // Log all props for debugging
+  console.log('🏨 HotelDisplay props:', { toolOutput, bookedIds, onBooked, hideHeaders, isRoadmap })
+
+  // Log header visibility logic
+  if (isRoadmap) {
+    console.log('🏨 HotelDisplay: Header hidden due to isRoadmap (roadmap or fallback)')
+  } else if (hideHeaders) {
+    console.log('🏨 HotelDisplay: Header hidden due to hideHeaders')
+  } else {
+    console.log('🏨 HotelDisplay: Header is visible')
+  }
+  console.log('🏨 HotelDisplay debug:', {
+    isRoadmap,
+    hideHeaders,
+    shouldHideHeaders: hideHeaders || isRoadmap,
+    totalHotels: toolOutput.properties?.length || toolOutput.hotels?.length || 0
+  })
 
   const hotels = toolOutput.properties || toolOutput.hotels || []
   const searchParams = toolOutput.search_parameters || toolOutput.search_params
@@ -856,6 +878,27 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked, hide
       ...hotels.filter((_, idx) => !aiRecommendedIndexes.includes(idx))
     ]
   }
+
+  // Debug: log hotels before and after sorting
+  console.log('🏨 sortHotelsAIOnTop input:', hotels)
+  console.log('🏨 sortHotelsAIOnTop aiRecommendedIndexes:', aiRecommendedIndexes)
+  const sortedHotels = sortHotelsAIOnTop([...hotels].sort((a, b) => {
+    switch (sortBy) {
+      case "price":
+        const priceA = a.rate_per_night ?? (typeof a.price === 'number' ? a.price : Infinity)
+        const priceB = b.rate_per_night ?? (typeof b.price === 'number' ? b.price : Infinity)
+        return priceA - priceB
+      case "rating":
+        const ratingA = a.overall_rating ?? (a.details?.rating_score ? parseFloat(a.details.rating_score) : 0)
+        const ratingB = b.overall_rating ?? (b.details?.rating_score ? parseFloat(b.details.rating_score) : 0)
+        return ratingB - ratingA
+      case "name":
+        return a.name.localeCompare(b.name)
+      default:
+        return 0
+    }
+  }))
+  console.log('🏨 sortedHotels:', sortedHotels)
 
   const handleBooking = async (hotel: any, type: string) => {
     // Определяем идентификатор выбранного элемента (индекс или link / detail_url)
@@ -903,24 +946,6 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked, hide
     }
   }
 
-  // Sort hotels
-  const sortedHotels = sortHotelsAIOnTop([...hotels].sort((a, b) => {
-    switch (sortBy) {
-      case "price":
-        const priceA = a.rate_per_night ?? (typeof a.price === 'number' ? a.price : Infinity)
-        const priceB = b.rate_per_night ?? (typeof b.price === 'number' ? b.price : Infinity)
-        return priceA - priceB
-      case "rating":
-        const ratingA = a.overall_rating ?? (a.details?.rating_score ? parseFloat(a.details.rating_score) : 0)
-        const ratingB = b.overall_rating ?? (b.details?.rating_score ? parseFloat(b.details.rating_score) : 0)
-        return ratingB - ratingA
-      case "name":
-        return a.name.localeCompare(b.name)
-      default:
-        return 0
-    }
-  }))
-
   const getHotelId = (hotel: any, idx: number) => {
     return (hotel.id ? hotel.id.toString() : undefined) || hotel.link || hotel.detail_url || `${hotel.name}-${idx}`
   }
@@ -935,8 +960,10 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked, hide
     return bookedIds.has(id)
   }) : sortedHotels
 
+  console.log('🏨 displayHotels:', displayHotels)
+
   return (
-    <div className="mt-6 space-y-6">
+    <div className={`${hideHeaders || isRoadmap ? '' : 'mt-6'} space-y-6`}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -944,7 +971,8 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked, hide
         className="space-y-4"
       >
         {/* Header */}
-        {!hideHeaders && (
+        {(() => { console.log('🏨 HotelDisplay header condition:', !(hideHeaders || isRoadmap), { hideHeaders, isRoadmap }); return null })()}
+        {!(hideHeaders || isRoadmap) && (console.log('🏨 HotelDisplay: Rendering header!'), (
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg">
@@ -974,7 +1002,7 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked, hide
             </select>
           </div>
         </div>
-        )}
+        ))}
         {/* Hotels Grid */}
         <div className="grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))' }}>
           <AnimatePresence>

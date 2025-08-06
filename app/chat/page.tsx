@@ -98,7 +98,6 @@ export default function ChatPage() {
         const { data, error } = await apiClient.getMe();
         if (data && !error) {
           const userData = data as any; // Type assertion for user data
-          console.log('🔍 Chat Page - Subscription status loaded:', userData.subscription_status);
           setSubscriptionStatus(userData.subscription_status);
         } else {
           console.error('❌ Failed to get user info:', error);
@@ -113,12 +112,9 @@ export default function ChatPage() {
 
   // Show upgrade overlay if user is on free plan and trying to use generate mode
   useEffect(() => {
-    console.log('🔍 Chat Page - Checking overlay conditions:', { subscriptionStatus, chatMode });
     if ((subscriptionStatus === "inactive" || subscriptionStatus === null || subscriptionStatus === undefined) && chatMode === "generate") {
-      console.log('🚫 Free user or unloaded status detected in generate mode, showing upgrade overlay');
       setShowUpgradeOverlay(true);
     } else {
-      console.log('✅ Overlay conditions not met, hiding overlay');
       setShowUpgradeOverlay(false);
     }
   }, [subscriptionStatus, chatMode]);
@@ -126,10 +122,8 @@ export default function ChatPage() {
   // Remove the forced search mode switch - let user stay in generate mode but show overlay
 
   const handleUpgrade = async () => {
-    console.log('🚀 Starting upgrade process...');
     try {
       // Get user info
-      console.log('📋 Getting user info...');
       const { data, error } = await apiClient.getMe();
       
       if (!data || error) {
@@ -138,11 +132,9 @@ export default function ChatPage() {
       }
 
       const userData = data as any; // Type assertion for user data
-      console.log('✅ User data received:', { email: userData.email });
       const userEmail = userData.email;
 
       // Create checkout session
-      console.log('🔄 Creating checkout session...');
       const checkoutResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/polar/checkout?email=${encodeURIComponent(userEmail)}&success_url=${encodeURIComponent(window.location.origin + '/success')}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -151,11 +143,9 @@ export default function ChatPage() {
 
       if (checkoutResponse.ok) {
         const checkoutData = await checkoutResponse.json();
-        console.log('✅ Checkout session created:', checkoutData);
         
         // Redirect to checkout URL
         if (checkoutData.checkout && checkoutData.checkout.url) {
-          console.log('🔗 Redirecting to checkout:', checkoutData.checkout.url);
           window.location.href = checkoutData.checkout.url;
         } else {
           console.error('❌ No checkout URL in response');
@@ -488,40 +478,31 @@ export default function ChatPage() {
         ipGeolocation || undefined, // ipGeolocation
       )
 
-      console.log('Backend response:', response.data)
 
       // Extract destination_city from response
       if (response.data?.destination_city) {
         setDestinationCity(response.data.destination_city)
-        console.log('✅ Destination city extracted:', response.data.destination_city)
       } else {
-        console.log('❌ No destination city in response')
       }
 
       // Extract destination_coordinates from response
       if (response.data?.destination_coordinates) {
         setDestinationCoordinates(response.data.destination_coordinates)
-        console.log('✅ Destination coordinates extracted:', response.data.destination_coordinates)
       } else {
-        console.log('❌ No destination coordinates in response')
         setDestinationCoordinates(null)
       }
 
       // Extract people_count from response
       if (response.data?.people_count) {
         setPeopleCount(response.data.people_count)
-        console.log('✅ People count extracted:', response.data.people_count)
       } else {
-        console.log('❌ No people count in response')
         setPeopleCount(null)
       }
 
       // Extract budget_level from response
       if (response.data?.budget_level) {
         setBudgetLevel(response.data.budget_level)
-        console.log('✅ Budget level extracted:', response.data.budget_level)
       } else {
-        console.log('❌ No budget level in response')
         setBudgetLevel(null)
       }
 
@@ -537,7 +518,6 @@ export default function ChatPage() {
               }
             : msg,
         )
-        console.log('Updated messages after setMessages:', updated)
         return updated
       })
 
@@ -614,10 +594,8 @@ export default function ChatPage() {
 
   const loadConversation = async (conversationId: string) => {
     const { data } = await apiClient.getConversation(conversationId)
-    console.log('📥 Loaded conversation data:', data)
     if (data && data.messages) {
       const loadedMessages: Message[] = data.messages.map((msg: any) => {
-        console.log('📝 Processing message:', msg.id, 'with multiple_results:', msg.multiple_results)
         let toolOutput = msg.tool_output
         
         // Parse tool_output if it's a string
@@ -635,13 +613,11 @@ export default function ChatPage() {
         if (typeof multipleResults === 'string') {
           try {
             multipleResults = JSON.parse(multipleResults)
-            console.log('✅ Parsed multiple_results for message', msg.id, ':', multipleResults)
           } catch (e) {
             console.warn('Failed to parse multiple_results for message', msg.id, e)
             multipleResults = undefined
           }
         } else if (multipleResults) {
-          console.log('✅ multiple_results already parsed for message', msg.id, ':', multipleResults)
         }
         
         let timestamp: Date
@@ -662,7 +638,6 @@ export default function ChatPage() {
         }
       })
 
-      console.log('📋 Final loaded messages:', loadedMessages)
       setMessages(loadedMessages)
       setCurrentConversationId(conversationId)
       
@@ -688,7 +663,6 @@ export default function ChatPage() {
             const geocodeData = await response.json()
             if (geocodeData.coordinates) {
               setDestinationCoordinates(geocodeData.coordinates)
-              console.log(`🗺️ Loaded map for conversation ${conversationId}: ${data.destination} at ${geocodeData.coordinates.lat}, ${geocodeData.coordinates.lng}`)
             }
           } catch (error) {
             console.warn('Failed to geocode destination city for conversation:', error)

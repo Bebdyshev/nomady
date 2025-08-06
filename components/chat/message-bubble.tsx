@@ -38,6 +38,7 @@ const ThinkingAnimation = () => {
 
 interface MessageBubbleProps {
   message: Message & { tool_output?: any; multiple_results?: { [key: string]: any } }
+  conversationMode?: string
   isStreaming: boolean
   streamingMessage: string
   activeSearches: Set<string>
@@ -142,23 +143,25 @@ const MarkdownMessage = ({ content }: { content: string }) => {
 }
 
 // Helper function to check if message is from roadmap
-const isRoadmapMessage = (message: Message & { tool_output?: any; multiple_results?: { [key: string]: any } }) => {
-  const result = message.mode === "generate" || message.tool_output?.mode === "generate"
-  console.log('🔍 isRoadmapMessage debug:', {
-    messageMode: message.mode,
-    toolOutputMode: message.tool_output?.mode,
-    toolOutput: message.tool_output,
-    result
-  })
+const isRoadmapMessage = (message: Message & { tool_output?: any; multiple_results?: { [key: string]: any } }, conversationMode?: string) => {
+  let result = message.mode === "generate" || message.tool_output?.mode === "generate" || conversationMode === "generate"
+  // Fallback: if assistant and content has roadmap tags
+  if (!result && message.role === "assistant" && typeof message.content === "string") {
+    if (/<hotel|<activities>|<restaurants>/.test(message.content)) {
+      result = true
+    }
+  }
+
   return result
 }
 
 // Structured Message Component for parsing tags
-const StructuredMessage = ({ content, bookedIds, onBooked, message }: { 
+const StructuredMessage = ({ content, bookedIds, onBooked, message, conversationMode }: { 
   content: string
   bookedIds: Set<string>
   onBooked: (bookedItem: any, id: string, type: string) => void
   message: Message & { tool_output?: any; multiple_results?: { [key: string]: any } }
+  conversationMode?: string
 }) => {
   // Parse content for tags
   const parseStructuredContent = (text: string) => {
@@ -167,9 +170,13 @@ const StructuredMessage = ({ content, bookedIds, onBooked, message }: {
     
     // Regular expressions for different tag types
     const hotelRegex = /<hotel id="(\d+)">([\s\S]*?)<\/hotel>/g
-    const activitiesRegex = /<activities>([\s\S]*?)<\/activities>/g
-    const restaurantsRegex = /<restaurants>([\s\S]*?)<\/restaurants>/g
+    const activitiesRegex = /<activities id="(\d+)">([\s\S]*?)<\/activities>/g
+    const restaurantsRegex = /<restaurants id="(\d+)">([\s\S]*?)<\/restaurants>/g
     const flightsRegex = /<flights>([\s\S]*?)<\/flights>/g
+    
+    // Legacy regex patterns for backward compatibility (without id)
+    const activitiesLegacyRegex = /<activities>([\s\S]*?)<\/activities>/g
+    const restaurantsLegacyRegex = /<restaurants>([\s\S]*?)<\/restaurants>/g
     
     // Find all matches
     const matches = []
@@ -191,9 +198,22 @@ const StructuredMessage = ({ content, bookedIds, onBooked, message }: {
     while ((activitiesMatch = activitiesRegex.exec(text)) !== null) {
       matches.push({
         type: 'activities',
-        content: activitiesMatch[1].trim(),
+        id: activitiesMatch[1],
+        content: activitiesMatch[2].trim(),
         start: activitiesMatch.index,
         end: activitiesMatch.index + activitiesMatch[0].length
+      })
+    }
+    
+    // Activities legacy matches (without id)
+    let activitiesLegacyMatch
+    while ((activitiesLegacyMatch = activitiesLegacyRegex.exec(text)) !== null) {
+      matches.push({
+        type: 'activities',
+        id: null,
+        content: activitiesLegacyMatch[1].trim(),
+        start: activitiesLegacyMatch.index,
+        end: activitiesLegacyMatch.index + activitiesLegacyMatch[0].length
       })
     }
     
@@ -202,9 +222,22 @@ const StructuredMessage = ({ content, bookedIds, onBooked, message }: {
     while ((restaurantsMatch = restaurantsRegex.exec(text)) !== null) {
       matches.push({
         type: 'restaurants',
-        content: restaurantsMatch[1].trim(),
+        id: restaurantsMatch[1],
+        content: restaurantsMatch[2].trim(),
         start: restaurantsMatch.index,
         end: restaurantsMatch.index + restaurantsMatch[0].length
+      })
+    }
+    
+    // Restaurants legacy matches (without id)
+    let restaurantsLegacyMatch
+    while ((restaurantsLegacyMatch = restaurantsLegacyRegex.exec(text)) !== null) {
+      matches.push({
+        type: 'restaurants',
+        id: null,
+        content: restaurantsLegacyMatch[1].trim(),
+        start: restaurantsLegacyMatch.index,
+        end: restaurantsLegacyMatch.index + restaurantsLegacyMatch[0].length
       })
     }
     
@@ -329,6 +362,7 @@ const StructuredMessage = ({ content, bookedIds, onBooked, message }: {
                   bookedIds={bookedIds}
                   onBooked={onBooked}
                   hideHeaders={message.mode === 'generate'}
+                  isRoadmap={isRoadmapMessage(message, conversationMode)}
                 />
               </div>
             )
@@ -347,28 +381,49 @@ const StructuredMessage = ({ content, bookedIds, onBooked, message }: {
         if (part.type === 'activities') {
           // Try to find real activity data from roadmap responses
           let activityData = null
+          let activityIndex = null
+          if (part.id) {
+            // id in tag is 1-based, JS array is 0-based
+            activityIndex = parseInt(part.id, 10) - 1
+          }
           
           // Check for roadmap response with multiple_results
-          if (message.multipleResults?.activities) {
-            activityData = message.multipleResults.activities
+          if (message.multipleResults?.activities && Array.isArray(message.multipleResults.activities.activities)) {
+            const activitiesArr = message.multipleResults.activities.activities
+            if (activityIndex !== null && activityIndex >= 0 && activityIndex < activitiesArr.length) {
+              activityData = {
+                type: 'activities',
+                activities: [activitiesArr[activityIndex]]
+              }
+            }
           }
-          // Check for roadmap response with direct data (backward compatibility)
+          // Fallback: Check for roadmap response with direct data (backward compatibility)
           else if (message.toolOutput?.activities && Array.isArray(message.toolOutput.activities)) {
-            activityData = {
-              type: 'activities',
-              activities: message.toolOutput.activities
+            if (activityIndex !== null && activityIndex >= 0 && activityIndex < message.toolOutput.activities.length) {
+              activityData = {
+                type: 'activities',
+                activities: [message.toolOutput.activities[activityIndex]]
+              }
             }
           }
-          // Check for roadmap response with search_results (backward compatibility)
+          // Fallback: Check for roadmap response with search_results (backward compatibility)
           else if (message.toolOutput?.type === 'roadmap_generation' && message.toolOutput.data?.search_results?.activities) {
-            activityData = {
-              type: 'activities',
-              activities: message.toolOutput.data.search_results.activities
+            const activitiesArr = message.toolOutput.data.search_results.activities
+            if (activityIndex !== null && activityIndex >= 0 && activityIndex < activitiesArr.length) {
+              activityData = {
+                type: 'activities',
+                activities: [activitiesArr[activityIndex]]
+              }
             }
           }
-          // Check for regular activity data
+          // Fallback: Check for regular activity data
           else if (message.toolOutput?.type === 'activities') {
-            activityData = message.toolOutput
+            if (activityIndex !== null && activityIndex >= 0 && activityIndex < message.toolOutput.activities.length) {
+              activityData = {
+                type: 'activities',
+                activities: [message.toolOutput.activities[activityIndex]]
+              }
+            }
           }
           
           if (activityData && activityData.activities && Array.isArray(activityData.activities) && activityData.activities.length > 0) {
@@ -379,6 +434,7 @@ const StructuredMessage = ({ content, bookedIds, onBooked, message }: {
                   bookedIds={bookedIds}
                   onBooked={onBooked}
                   hideHeaders={message.mode === 'generate'}
+                  isRoadmap={isRoadmapMessage(message, conversationMode)}
                 />
               </div>
             )
@@ -387,7 +443,7 @@ const StructuredMessage = ({ content, bookedIds, onBooked, message }: {
             return (
               <div key={index} className="border-l-4 border-green-500 pl-4 py-2 bg-green-50 rounded-r">
                 <div className="text-sm text-slate-700">
-                  <strong>Activities:</strong> {part.content}
+                  <strong>Activities{part.id ? ` (Set ${part.id})` : ''}:</strong> {part.content}
                 </div>
               </div>
             )
@@ -397,28 +453,49 @@ const StructuredMessage = ({ content, bookedIds, onBooked, message }: {
         if (part.type === 'restaurants') {
           // Try to find real restaurant data from roadmap responses
           let restaurantData = null
+          let restaurantIndex = null
+          if (part.id) {
+            // id in tag is 1-based, JS array is 0-based
+            restaurantIndex = parseInt(part.id, 10) - 1
+          }
           
           // Check for roadmap response with multiple_results
-          if (message.multipleResults?.restaurants) {
-            restaurantData = message.multipleResults.restaurants
+          if (message.multipleResults?.restaurants && Array.isArray(message.multipleResults.restaurants.restaurants)) {
+            const restaurantsArr = message.multipleResults.restaurants.restaurants
+            if (restaurantIndex !== null && restaurantIndex >= 0 && restaurantIndex < restaurantsArr.length) {
+              restaurantData = {
+                type: 'restaurants',
+                restaurants: [restaurantsArr[restaurantIndex]]
+              }
+            }
           }
-          // Check for roadmap response with direct data (backward compatibility)
+          // Fallback: Check for roadmap response with direct data (backward compatibility)
           else if (message.toolOutput?.restaurants && Array.isArray(message.toolOutput.restaurants)) {
-            restaurantData = {
-              type: 'restaurants',
-              restaurants: message.toolOutput.restaurants
+            if (restaurantIndex !== null && restaurantIndex >= 0 && restaurantIndex < message.toolOutput.restaurants.length) {
+              restaurantData = {
+                type: 'restaurants',
+                restaurants: [message.toolOutput.restaurants[restaurantIndex]]
+              }
             }
           }
-          // Check for roadmap response with search_results (backward compatibility)
+          // Fallback: Check for roadmap response with search_results (backward compatibility)
           else if (message.toolOutput?.type === 'roadmap_generation' && message.toolOutput.data?.search_results?.restaurants) {
-            restaurantData = {
-              type: 'restaurants',
-              restaurants: message.toolOutput.data.search_results.restaurants
+            const restaurantsArr = message.toolOutput.data.search_results.restaurants
+            if (restaurantIndex !== null && restaurantIndex >= 0 && restaurantIndex < restaurantsArr.length) {
+              restaurantData = {
+                type: 'restaurants',
+                restaurants: [restaurantsArr[restaurantIndex]]
+              }
             }
           }
-          // Check for regular restaurant data
+          // Fallback: Check for regular restaurant data
           else if (message.toolOutput?.type === 'restaurants') {
-            restaurantData = message.toolOutput
+            if (restaurantIndex !== null && restaurantIndex >= 0 && restaurantIndex < message.toolOutput.restaurants.length) {
+              restaurantData = {
+                type: 'restaurants',
+                restaurants: [message.toolOutput.restaurants[restaurantIndex]]
+              }
+            }
           }
           
           if (restaurantData && restaurantData.restaurants && Array.isArray(restaurantData.restaurants) && restaurantData.restaurants.length > 0) {
@@ -428,7 +505,8 @@ const StructuredMessage = ({ content, bookedIds, onBooked, message }: {
                   toolOutput={restaurantData}
                   bookedIds={bookedIds}
                   onBooked={onBooked}
-                  isRoadmap={isRoadmapMessage(message)}
+                  hideHeaders={message.mode === 'generate'}
+                  isRoadmap={isRoadmapMessage(message, conversationMode)}
                 />
               </div>
             )
@@ -437,7 +515,7 @@ const StructuredMessage = ({ content, bookedIds, onBooked, message }: {
             return (
               <div key={index} className="border-l-4 border-orange-500 pl-4 py-2 bg-orange-50 rounded-r">
                 <div className="text-sm text-slate-700">
-                  <strong>Restaurants:</strong> {part.content}
+                  <strong>Restaurants{part.id ? ` (Set ${part.id})` : ''}:</strong> {part.content}
                 </div>
               </div>
             )
@@ -568,7 +646,8 @@ export const MessageBubble = React.memo(function MessageBubble({
   currentlyStreamingMessageId,
   bookedIds,
   onBooked,
-  isLoading = false
+  isLoading = false,
+  conversationMode
 }: MessageBubbleProps) {
   const t = useTranslations('chat')
   const isUser = message.role === "user"
@@ -577,16 +656,8 @@ export const MessageBubble = React.memo(function MessageBubble({
   const content = isStreamingThisMessage ? streamingMessage : message.content
   const showThinkingAnimation = isAssistant && !content && isLoading
 
-  // Debug logging for message
-  console.log('🔍 MessageBubble debug:', {
-    messageId: message.id,
-    messageMode: message.mode,
-    toolOutput: message.tool_output,
-    isRoadmap: isRoadmapMessage(message)
-  })
-
   // Determine mode badge
-  const modeBadge = isRoadmapMessage(message) ? (
+  const modeBadge = isRoadmapMessage(message, conversationMode) ? (
     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mr-2">
       ✨ Generate
     </span>
@@ -634,7 +705,7 @@ export const MessageBubble = React.memo(function MessageBubble({
                 content ? (
                   <div>
                     {message.role === "assistant" ? (
-                      <StructuredMessage content={content} bookedIds={bookedIds} onBooked={onBooked} message={message} />
+                      <StructuredMessage content={content} bookedIds={bookedIds} onBooked={onBooked} message={message} conversationMode={conversationMode} />
                     ) : (
                       <MarkdownMessage content={content} />
                     )}
@@ -647,14 +718,7 @@ export const MessageBubble = React.memo(function MessageBubble({
                      !content.includes('<searching_') && (() => {
                       const parsed = parseMessageContent(content, message.toolOutput)
                       
-                      // Debug logging
-                      console.log('🔍 Message bubble debug:', {
-                        messageId: message.id,
-                        hasToolOutput: !!message.toolOutput,
-                        hasMultipleResults: !!message.multipleResults,
-                        multipleResultsKeys: message.multipleResults ? Object.keys(message.multipleResults) : [],
-                        multipleResults: message.multipleResults
-                      })
+                      
                       
                       // Handle multiple results
                       if (message.multipleResults) {
@@ -663,64 +727,55 @@ export const MessageBubble = React.memo(function MessageBubble({
                         // Check each result type
                         if (message.multipleResults.hotels) {
                           const hotelData = message.multipleResults.hotels
-                          console.log('🏨 Hotel data:', hotelData)
                           if (hotelData.hotels && Array.isArray(hotelData.hotels) && hotelData.hotels.length > 0) {
-                            console.log('✅ Adding hotel display')
                             results.push(
                               <HotelDisplay
                                 key="hotels"
                                 toolOutput={hotelData}
                                 bookedIds={bookedIds}
                                 onBooked={onBooked}
+                                isRoadmap={isRoadmapMessage(message, conversationMode)}
                               />
                             )
                           } else {
-                            console.log('❌ No valid hotel data')
                           }
                         }
                         
                         if (message.multipleResults.restaurants) {
                           const restaurantData = message.multipleResults.restaurants
-                          console.log('🍽️ Restaurant data:', restaurantData)
                           if (restaurantData.restaurants && Array.isArray(restaurantData.restaurants) && restaurantData.restaurants.length > 0) {
-                            console.log('🔍 RestaurantDisplay isRoadmap:', isRoadmapMessage(message))
                             results.push(
                               <RestaurantDisplay
                                 key="restaurants"
                                 toolOutput={restaurantData}
                                 bookedIds={bookedIds}
                                 onBooked={onBooked}
-                                isRoadmap={isRoadmapMessage(message)}
+                                isRoadmap={isRoadmapMessage(message, conversationMode)}
                               />
                             )
                           } else {
-                            console.log('❌ No valid restaurant data')
                           }
                         }
                         
                         if (message.multipleResults.activities) {
                           const activityData = message.multipleResults.activities
-                          console.log('🎯 Activity data:', activityData)
                           if (activityData.activities && Array.isArray(activityData.activities) && activityData.activities.length > 0) {
-                            console.log('✅ Adding activity display')
                             results.push(
                               <ActivityDisplay
                                 key="activities"
                                 toolOutput={activityData}
                                 bookedIds={bookedIds}
                                 onBooked={onBooked}
+                                isRoadmap={isRoadmapMessage(message, conversationMode)}
                               />
                             )
                           } else {
-                            console.log('❌ No valid activity data')
                           }
                         }
                         
                         if (message.multipleResults.flights) {
                           const flightData = message.multipleResults.flights
-                          console.log('✈️ Flight data:', flightData)
                           if (flightData.tickets && Array.isArray(flightData.tickets) && flightData.tickets.length > 0) {
-                            console.log('✅ Adding flight display')
                             results.push(
                               <TicketDisplay
                                 key="flights"
@@ -730,11 +785,9 @@ export const MessageBubble = React.memo(function MessageBubble({
                               />
                             )
                           } else {
-                            console.log('❌ No valid flight data')
                           }
                         }
-                        
-                        console.log('📊 Total results to display:', results.length)
+                      
                         if (results.length > 0) {
                           return (
                             <div className="mt-4 space-y-4">
@@ -769,16 +822,16 @@ export const MessageBubble = React.memo(function MessageBubble({
                                 toolOutput={parsed.toolOutput}
                                 bookedIds={bookedIds}
                                 onBooked={onBooked}
+                                isRoadmap={isRoadmapMessage(message, conversationMode)}
                               />
                             ) : parsed.toolOutput.type === "restaurants" ? (
                               (() => {
-                                console.log('🔍 Single result RestaurantDisplay isRoadmap:', isRoadmapMessage(message))
                                 return (
                                   <RestaurantDisplay
                                     toolOutput={parsed.toolOutput}
                                     bookedIds={bookedIds}
                                     onBooked={onBooked}
-                                    isRoadmap={isRoadmapMessage(message)}
+                                    isRoadmap={isRoadmapMessage(message, conversationMode)}
                                   />
                                 )
                               })()
@@ -787,6 +840,7 @@ export const MessageBubble = React.memo(function MessageBubble({
                                 toolOutput={parsed.toolOutput}
                                 bookedIds={bookedIds}
                                 onBooked={onBooked}
+                                isRoadmap={isRoadmapMessage(message, conversationMode)}
                               />
                             ) : (
                               <TicketDisplay
