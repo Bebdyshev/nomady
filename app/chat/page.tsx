@@ -843,7 +843,7 @@ export default function ChatPage() {
                 )}
                 {budgetLevel && (
                   <div className="px-3 py-1.5">
-                    <span className={`text-sm ${budgetLevel === 1 ? 'text-yellow-500' : budgetLevel === 2 ? 'text-yellow-700' : budgetLevel === 3 ? 'text-yellow-900' : 'text-yellow-900'}`}>
+                    <span className={`text-sm ${budgetLevel === 1 ? 'text-green-500' : budgetLevel === 2 ? 'text-green-700' : budgetLevel === 3 ? 'text-yellow-900' : 'text-red-900'}`}>
                       {budgetLevel === 1 ? '$$' : budgetLevel === 2 ? '$$$' : budgetLevel === 3 ? '$$$$' : '$$$$'}
                     </span>
                   </div>
