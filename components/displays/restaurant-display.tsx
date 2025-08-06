@@ -159,7 +159,7 @@ const RestaurantCard = ({ restaurant, onBook, isBooked, isBooking, isAIRecommend
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
       <Card
-        className={`relative overflow-hidden border-2 border-yellow-400 shadow-yellow-200/40 transition-all duration-300 aspect-[4/3] w-full max-w-[260px] min-w-[200px] h-[220px] p-0 ${isAIRecommended ? 'border-yellow-400' : ''}`}
+        className={`relative overflow-hidden border-2 border-yellow-400 shadow-yellow-200/40 transition-all duration-300 aspect-[16/9] w-full h-auto p-0 ${isAIRecommended ? 'border-yellow-400' : ''}`}
       >
         {/* Always show badge */}
         <div className="absolute top-2 left-2 z-10">
@@ -421,7 +421,7 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked,
         </div>
         )}
         {/* Restaurants Grid */}
-        <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
+        <div className="grid gap-5 grid-cols-1">
           <AnimatePresence>
             {displayRestaurants.slice(0, 12).map((restaurant: RestaurantProperty, index: number) => {
               const itemId = restaurant.url || restaurant.search_result_id || `${restaurant.name}-${index}`

@@ -112,7 +112,7 @@ const ActivityCard = ({ activity, onBook, isBooked, isBooking, isAIRecommended }
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
       <Card
-        className={`relative overflow-hidden cursor-pointer border-2 border-yellow-400 shadow-yellow-200/40 transition-all duration-300 aspect-[4/3] w-full max-w-[260px] min-w-[200px] h-[220px] sm:h-[240px] md:h-[260px] lg:h-[280px] p-0`}
+        className={`relative overflow-hidden cursor-pointer border-2 border-yellow-400 shadow-yellow-200/40 transition-all duration-300 aspect-[16/9] w-full h-auto p-0`}
       >
         {/* Always show badge */}
         <div className="absolute top-2 left-2 z-10">
@@ -321,7 +321,7 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked, h
         )}
 
         {/* Activities Grid */}
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+        <div className="grid gap-3 grid-cols-1">
           <AnimatePresence>
             {displayActivities.slice(0, 12).map((activity: ActivityItem, index: number) => {
               const itemId = activity.url || activity.title || `${activity.title}-${index}`
