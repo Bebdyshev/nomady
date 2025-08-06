@@ -657,15 +657,7 @@ export const MessageBubble = React.memo(function MessageBubble({
   const showThinkingAnimation = isAssistant && !content && isLoading
 
   // Determine mode badge
-  const modeBadge = isRoadmapMessage(message, conversationMode) ? (
-    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mr-2">
-      ✨ Generate
-    </span>
-  ) : message.mode === "search" ? (
-    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
-      🔍 Search
-    </span>
-  ) : null
+  const modeBadge = null
 
   return (
     <motion.div
@@ -699,7 +691,9 @@ export const MessageBubble = React.memo(function MessageBubble({
             <div className={`inline-block p-3 rounded-lg ${
               isUser 
                 ? "bg-blue-500 text-white" 
-                : "bg-white border border-slate-200 text-slate-900"
+                : message.mode === 'generate' 
+                  ? "bg-white border-2 border-yellow-400 text-slate-900 shadow-yellow-200/40"
+                  : "bg-white border border-slate-200 text-slate-900"
             }`}>
               {isAssistant ? (
                 content ? (
