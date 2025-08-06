@@ -141,6 +141,18 @@ const MarkdownMessage = ({ content }: { content: string }) => {
   )
 }
 
+// Helper function to check if message is from roadmap
+const isRoadmapMessage = (message: Message & { tool_output?: any; multiple_results?: { [key: string]: any } }) => {
+  const result = message.mode === "generate" || message.tool_output?.mode === "generate"
+  console.log('🔍 isRoadmapMessage debug:', {
+    messageMode: message.mode,
+    toolOutputMode: message.tool_output?.mode,
+    toolOutput: message.tool_output,
+    result
+  })
+  return result
+}
+
 // Structured Message Component for parsing tags
 const StructuredMessage = ({ content, bookedIds, onBooked, message }: { 
   content: string
@@ -267,9 +279,47 @@ const StructuredMessage = ({ content, bookedIds, onBooked, message }: {
         }
         
         if (part.type === 'hotel') {
-          // Try to find real hotel data
-          const hotelData = message.multipleResults?.hotels || 
-                           (message.toolOutput?.type === 'hotels' ? message.toolOutput : null)
+          // Try to find real hotel data from roadmap responses
+          let hotelData = null
+          let hotelIndex = null
+          if (part.id) {
+            // id in tag is 1-based, JS array is 0-based
+            hotelIndex = parseInt(part.id, 10) - 1
+          }
+          // Check for roadmap response with multiple_results
+          if (message.multipleResults?.hotels && Array.isArray(message.multipleResults.hotels.hotels)) {
+            const hotelsArr = message.multipleResults.hotels.hotels
+            if (hotelIndex !== null && hotelIndex >= 0 && hotelIndex < hotelsArr.length) {
+              hotelData = {
+                hotels: [hotelsArr[hotelIndex]]
+              }
+            }
+          }
+          // Fallback: Check for roadmap response with direct data (backward compatibility)
+          else if (message.toolOutput?.hotels && Array.isArray(message.toolOutput.hotels)) {
+            if (hotelIndex !== null && hotelIndex >= 0 && hotelIndex < message.toolOutput.hotels.length) {
+              hotelData = {
+                hotels: [message.toolOutput.hotels[hotelIndex]]
+              }
+            }
+          }
+          // Fallback: Check for roadmap response with search_results (backward compatibility)
+          else if (message.toolOutput?.type === 'roadmap_generation' && message.toolOutput.data?.search_results?.hotels) {
+            const hotelsArr = message.toolOutput.data.search_results.hotels
+            if (hotelIndex !== null && hotelIndex >= 0 && hotelIndex < hotelsArr.length) {
+              hotelData = {
+                hotels: [hotelsArr[hotelIndex]]
+              }
+            }
+          }
+          // Fallback: Check for regular hotel data
+          else if (message.toolOutput?.type === 'hotels') {
+            if (hotelIndex !== null && hotelIndex >= 0 && hotelIndex < message.toolOutput.hotels.length) {
+              hotelData = {
+                hotels: [message.toolOutput.hotels[hotelIndex]]
+              }
+            }
+          }
           
           if (hotelData && hotelData.hotels && Array.isArray(hotelData.hotels) && hotelData.hotels.length > 0) {
             return (
@@ -278,6 +328,7 @@ const StructuredMessage = ({ content, bookedIds, onBooked, message }: {
                   toolOutput={hotelData}
                   bookedIds={bookedIds}
                   onBooked={onBooked}
+                  hideHeaders={message.mode === 'generate'}
                 />
               </div>
             )
@@ -294,9 +345,31 @@ const StructuredMessage = ({ content, bookedIds, onBooked, message }: {
         }
         
         if (part.type === 'activities') {
-          // Try to find real activity data
-          const activityData = message.multipleResults?.activities || 
-                              (message.toolOutput?.type === 'activities' ? message.toolOutput : null)
+          // Try to find real activity data from roadmap responses
+          let activityData = null
+          
+          // Check for roadmap response with multiple_results
+          if (message.multipleResults?.activities) {
+            activityData = message.multipleResults.activities
+          }
+          // Check for roadmap response with direct data (backward compatibility)
+          else if (message.toolOutput?.activities && Array.isArray(message.toolOutput.activities)) {
+            activityData = {
+              type: 'activities',
+              activities: message.toolOutput.activities
+            }
+          }
+          // Check for roadmap response with search_results (backward compatibility)
+          else if (message.toolOutput?.type === 'roadmap_generation' && message.toolOutput.data?.search_results?.activities) {
+            activityData = {
+              type: 'activities',
+              activities: message.toolOutput.data.search_results.activities
+            }
+          }
+          // Check for regular activity data
+          else if (message.toolOutput?.type === 'activities') {
+            activityData = message.toolOutput
+          }
           
           if (activityData && activityData.activities && Array.isArray(activityData.activities) && activityData.activities.length > 0) {
             return (
@@ -305,6 +378,7 @@ const StructuredMessage = ({ content, bookedIds, onBooked, message }: {
                   toolOutput={activityData}
                   bookedIds={bookedIds}
                   onBooked={onBooked}
+                  hideHeaders={message.mode === 'generate'}
                 />
               </div>
             )
@@ -321,9 +395,31 @@ const StructuredMessage = ({ content, bookedIds, onBooked, message }: {
         }
         
         if (part.type === 'restaurants') {
-          // Try to find real restaurant data
-          const restaurantData = message.multipleResults?.restaurants || 
-                               (message.toolOutput?.type === 'restaurants' ? message.toolOutput : null)
+          // Try to find real restaurant data from roadmap responses
+          let restaurantData = null
+          
+          // Check for roadmap response with multiple_results
+          if (message.multipleResults?.restaurants) {
+            restaurantData = message.multipleResults.restaurants
+          }
+          // Check for roadmap response with direct data (backward compatibility)
+          else if (message.toolOutput?.restaurants && Array.isArray(message.toolOutput.restaurants)) {
+            restaurantData = {
+              type: 'restaurants',
+              restaurants: message.toolOutput.restaurants
+            }
+          }
+          // Check for roadmap response with search_results (backward compatibility)
+          else if (message.toolOutput?.type === 'roadmap_generation' && message.toolOutput.data?.search_results?.restaurants) {
+            restaurantData = {
+              type: 'restaurants',
+              restaurants: message.toolOutput.data.search_results.restaurants
+            }
+          }
+          // Check for regular restaurant data
+          else if (message.toolOutput?.type === 'restaurants') {
+            restaurantData = message.toolOutput
+          }
           
           if (restaurantData && restaurantData.restaurants && Array.isArray(restaurantData.restaurants) && restaurantData.restaurants.length > 0) {
             return (
@@ -332,6 +428,7 @@ const StructuredMessage = ({ content, bookedIds, onBooked, message }: {
                   toolOutput={restaurantData}
                   bookedIds={bookedIds}
                   onBooked={onBooked}
+                  isRoadmap={isRoadmapMessage(message)}
                 />
               </div>
             )
@@ -480,8 +577,16 @@ export const MessageBubble = React.memo(function MessageBubble({
   const content = isStreamingThisMessage ? streamingMessage : message.content
   const showThinkingAnimation = isAssistant && !content && isLoading
 
+  // Debug logging for message
+  console.log('🔍 MessageBubble debug:', {
+    messageId: message.id,
+    messageMode: message.mode,
+    toolOutput: message.tool_output,
+    isRoadmap: isRoadmapMessage(message)
+  })
+
   // Determine mode badge
-  const modeBadge = message.mode === "generate" ? (
+  const modeBadge = isRoadmapMessage(message) ? (
     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mr-2">
       ✨ Generate
     </span>
@@ -534,7 +639,12 @@ export const MessageBubble = React.memo(function MessageBubble({
                       <MarkdownMessage content={content} />
                     )}
                     {/* Tool Output Display inside bubble - only if no structured content */}
-                    {(message.toolOutput || message.multipleResults) && !content.includes('<hotel') && !content.includes('<activities') && !content.includes('<restaurants') && !content.includes('<flights') && (() => {
+                    {(message.toolOutput || message.multipleResults) && 
+                     !content.includes('<hotel') && 
+                     !content.includes('<activities') && 
+                     !content.includes('<restaurants') && 
+                     !content.includes('<flights') && 
+                     !content.includes('<searching_') && (() => {
                       const parsed = parseMessageContent(content, message.toolOutput)
                       
                       // Debug logging
@@ -573,13 +683,14 @@ export const MessageBubble = React.memo(function MessageBubble({
                           const restaurantData = message.multipleResults.restaurants
                           console.log('🍽️ Restaurant data:', restaurantData)
                           if (restaurantData.restaurants && Array.isArray(restaurantData.restaurants) && restaurantData.restaurants.length > 0) {
-                            console.log('✅ Adding restaurant display')
+                            console.log('🔍 RestaurantDisplay isRoadmap:', isRoadmapMessage(message))
                             results.push(
                               <RestaurantDisplay
                                 key="restaurants"
                                 toolOutput={restaurantData}
                                 bookedIds={bookedIds}
                                 onBooked={onBooked}
+                                isRoadmap={isRoadmapMessage(message)}
                               />
                             )
                           } else {
@@ -660,11 +771,17 @@ export const MessageBubble = React.memo(function MessageBubble({
                                 onBooked={onBooked}
                               />
                             ) : parsed.toolOutput.type === "restaurants" ? (
-                              <RestaurantDisplay
-                                toolOutput={parsed.toolOutput}
-                                bookedIds={bookedIds}
-                                onBooked={onBooked}
-                              />
+                              (() => {
+                                console.log('🔍 Single result RestaurantDisplay isRoadmap:', isRoadmapMessage(message))
+                                return (
+                                  <RestaurantDisplay
+                                    toolOutput={parsed.toolOutput}
+                                    bookedIds={bookedIds}
+                                    onBooked={onBooked}
+                                    isRoadmap={isRoadmapMessage(message)}
+                                  />
+                                )
+                              })()
                             ) : parsed.toolOutput.type === "activities" ? (
                               <ActivityDisplay
                                 toolOutput={parsed.toolOutput}

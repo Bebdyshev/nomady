@@ -59,6 +59,7 @@ interface ActivityDisplayProps {
   toolOutput: ActivitiesAPIResponse
   bookedIds?: Set<string>
   onBooked?: (item: any, id: string, type: string) => void
+  hideHeaders?: boolean
 }
 
 // Get category icon
@@ -188,7 +189,7 @@ const ActivityCard = ({ activity, onBook, isBooked, isBooking, isAIRecommended }
   )
 }
 
-export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked }: ActivityDisplayProps) {
+export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked, hideHeaders = false }: ActivityDisplayProps) {
   const [bookingStates, setBookingStates] = useState<Record<string, boolean>>({})
   const [sortBy, setSortBy] = useState<"rating" | "name">("rating")
   const { toast } = useToast()
@@ -276,6 +277,7 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked }:
         className="space-y-4"
       >
         {/* Header */}
+        {!hideHeaders && (
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-gradient-to-br from-green-100 to-blue-100 rounded-lg">
@@ -304,6 +306,7 @@ export function ActivityDisplay({ toolOutput, bookedIds = new Set(), onBooked }:
             </select>
           </div>
         </div>
+        )}
 
         {/* Activities Grid */}
         <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>

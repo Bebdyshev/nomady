@@ -134,6 +134,7 @@ interface HotelDisplayProps {
   toolOutput: HotelsAPIResponse
   bookedIds?: Set<string>
   onBooked?: (item: any, id: string, type: string) => void
+  hideHeaders?: boolean
 }
 
 // Hotel Image Gallery Component
@@ -835,7 +836,7 @@ const HotelCard = ({ hotel, searchParams, onBook, isBooked, isBooking, isAIRecom
   )
 }
 
-export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: HotelDisplayProps) {
+export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked, hideHeaders }: HotelDisplayProps) {
   const [bookingStates, setBookingStates] = useState<Record<string, boolean>>({})
   const [sortBy, setSortBy] = useState<"price" | "rating" | "name">("price")
   const { toast } = useToast()
@@ -943,6 +944,7 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
         className="space-y-4"
       >
         {/* Header */}
+        {!hideHeaders && (
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg">
@@ -972,7 +974,7 @@ export function HotelDisplay({ toolOutput, bookedIds = new Set(), onBooked }: Ho
             </select>
           </div>
         </div>
-
+        )}
         {/* Hotels Grid */}
         <div className="grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))' }}>
           <AnimatePresence>

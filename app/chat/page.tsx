@@ -143,7 +143,7 @@ export default function ChatPage() {
 
       // Create checkout session
       console.log('🔄 Creating checkout session...');
-      const checkoutResponse = await fetch(`https://d59afbb67f09.ngrok-free.app/polar/checkout?email=${encodeURIComponent(userEmail)}&success_url=${encodeURIComponent(window.location.origin + '/success')}`, {
+      const checkoutResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/polar/checkout?email=${encodeURIComponent(userEmail)}&success_url=${encodeURIComponent(window.location.origin + '/success')}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
@@ -483,7 +483,7 @@ export default function ChatPage() {
       const messagesToSend = [{ role: "user", content: input }]
       const response = await apiClient.sendMessage(
         messagesToSend,
-        "search", // mode
+        chatMode, // Use current chatMode instead of hardcoded "search"
         currentConversationId || undefined, // conversationId
         ipGeolocation || undefined, // ipGeolocation
       )

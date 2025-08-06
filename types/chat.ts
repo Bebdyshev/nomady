@@ -26,6 +26,7 @@ export interface Conversation {
   created_at: string
   last_updated: string
   title?: string
+  mode?: "search" | "generate"
   messages: Array<{
     id: number
     role: string

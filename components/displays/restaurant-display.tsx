@@ -66,6 +66,8 @@ interface RestaurantDisplayProps {
   toolOutput: RestaurantsAPIResponse
   bookedIds?: Set<string>
   onBooked?: (item: any, id: string, type: string) => void
+  hideHeaders?: boolean
+  isRoadmap?: boolean
 }
 
 // Price Range Display
@@ -291,11 +293,19 @@ const RestaurantCard = ({ restaurant, onBook, isBooked, isBooking, isAIRecommend
   )
 }
 
-export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked }: RestaurantDisplayProps) {
+export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked, hideHeaders = false, isRoadmap }: RestaurantDisplayProps) {
   const [bookingStates, setBookingStates] = useState<Record<string, boolean>>({})
   const [sortBy, setSortBy] = useState<"rating" | "name">("rating")
   const { toast } = useToast()
   const t = useTranslations('chat.displays')
+
+  // Log header visibility logic
+  console.log('🍽️ RestaurantDisplay debug:', {
+    isRoadmap,
+    hideHeaders,
+    shouldHideHeaders: hideHeaders || isRoadmap,
+    totalRestaurants: toolOutput.restaurants?.length || 0
+  })
 
   const handleBooking = async (restaurant: any, type: string) => {
     const itemId = restaurant.url || restaurant.search_result_id || `${restaurant.name}-${Date.now()}`
@@ -372,6 +382,7 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
         className="space-y-4"
       >
         {/* Header */}
+        {!hideHeaders && !isRoadmap && (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-gradient-to-br from-orange-100 to-red-100 rounded-lg">
@@ -405,7 +416,7 @@ export function RestaurantDisplay({ toolOutput, bookedIds = new Set(), onBooked 
             </select>
           </div>
         </div>
-
+        )}
         {/* Restaurants Grid */}
         <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
           <AnimatePresence>
